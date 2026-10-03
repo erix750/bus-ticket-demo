@@ -113,7 +113,7 @@ function setPartnerPreview(active) {
     partnerLoginScreen.hidden = active;
     dashboard.hidden = !active;
     managementPanel.hidden = !active;
-    document.getElementById("partnerLoginOpen").hidden = active;
+    document.getElementById("partnerLoginOpen").hidden = true;
     document.getElementById("partnerLogout").hidden = !active;
     managementPanel.open = active;
 }

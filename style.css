@@ -99,20 +99,6 @@ input {
     background: var(--leaf);
 }
 
-.login-dialog {
-    position: fixed;
-    width: min(440px, calc(100% - 28px));
-    max-width: none;
-    max-height: calc(100% - 32px);
-    padding: 0;
-    overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--ink);
-    background: var(--white);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
-}
-
 .checkout-dialog {
     position: fixed;
     width: min(480px, calc(100% - 28px));
@@ -125,10 +111,6 @@ input {
     color: var(--ink);
     background: var(--white);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
-}
-
-.login-dialog::backdrop {
-    background: rgba(16, 34, 30, 0.58);
 }
 
 .checkout-dialog::backdrop {
@@ -206,15 +188,53 @@ input {
     width: auto;
 }
 
+.login-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+    width: min(100% - 40px, 920px);
+    min-height: calc(100vh - 68px);
+    margin: 0 auto;
+    padding: 58px 0;
+    align-content: center;
+    align-items: center;
+    gap: 18px 64px;
+}
+
+.login-copy {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    max-width: 430px;
+}
+
+.login-copy h1 {
+    margin: 0;
+    color: var(--forest);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 44px;
+    font-weight: 400;
+    line-height: 1.08;
+}
+
+.login-copy > p:last-child {
+    max-width: 380px;
+    margin: 15px 0 0;
+    color: var(--muted);
+}
+
 .login-form {
     position: relative;
     display: grid;
+    grid-column: 2;
     gap: 14px;
     padding: 30px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    box-shadow: 0 6px 22px rgba(28, 48, 42, 0.06);
 }
 
 .login-form h2 {
-    margin-top: -8px;
+    margin: -8px 0 0;
 }
 
 .login-intro,
@@ -235,6 +255,20 @@ input {
 
 .login-form .form-message {
     margin: -8px 0 0;
+}
+
+.passenger-entry {
+    grid-column: 2;
+    justify-self: center;
+    padding: 5px 8px;
+    border: 0;
+    color: var(--forest);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
 
 .dialog-close {
@@ -733,6 +767,28 @@ summary:focus-visible {
         padding: 6px 9px;
     }
 
+    .login-page {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        gap: 20px;
+        padding: 34px 0;
+    }
+
+    .login-copy,
+    .login-form,
+    .passenger-entry {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .login-copy h1 {
+        font-size: 37px;
+    }
+
+    .login-form {
+        padding: 22px 18px;
+    }
+
     main {
         padding-top: 32px;
     }
@@ -769,6 +825,10 @@ summary:focus-visible {
 }
 
 @media (max-width: 360px) {
+    .login-copy h1 {
+        font-size: 33px;
+    }
+
     .form-grid {
         grid-template-columns: 1fr;
     }

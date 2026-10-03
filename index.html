@@ -16,17 +16,21 @@
             </a>
             <p>Intercity bus booking</p>
             <div class="header-actions">
-                <button class="header-button" id="partnerLoginOpen" type="button">Partner sign in</button>
+                <button class="header-button" id="partnerLoginOpen" type="button" hidden>Partner sign in</button>
                 <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
             </div>
         </div>
     </header>
 
-    <dialog class="login-dialog" id="partnerLoginDialog" aria-labelledby="partnerLoginTitle">
-        <form id="partnerLoginForm" class="login-form">
-            <button class="dialog-close" id="closePartnerLogin" type="button" aria-label="Close partner sign in">&times;</button>
+    <main class="login-page" id="partnerLoginScreen">
+        <section class="login-copy" aria-labelledby="partnerLoginTitle">
             <p class="eyebrow">WAYLINE PARTNERS</p>
-            <h2 id="partnerLoginTitle">Partner sign in</h2>
+            <h1 id="partnerLoginTitle">Your routes.<br>Your dashboard.</h1>
+            <p>Sign in to manage bus schedules and availability, or continue as a passenger to search for a trip.</p>
+        </section>
+        <form id="partnerLoginForm" class="login-form">
+            <p class="eyebrow">BUS COMPANY ACCOUNT</p>
+            <h2>Partner sign in</h2>
             <p class="login-intro">Access your bus schedules and availability.</p>
             <div class="field">
                 <label for="partnerEmail">Email address</label>
@@ -39,10 +43,11 @@
             <button class="button button-primary" type="submit">Sign in</button>
             <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
             <div class="login-divider"><span>DEMO ACCESS</span></div>
-            <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview partner tools</button>
-            <p class="login-note">Password sign-in is not connected yet. Preview access is only for this browser.</p>
+            <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview demo dashboard</button>
+            <p class="login-note">Real password sign-in is not connected yet. Demo access is only for this browser.</p>
         </form>
-    </dialog>
+        <button class="passenger-entry" id="continueAsPassenger" type="button">Continue to passenger booking</button>
+    </main>
 
     <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
         <div class="checkout-content">
@@ -63,7 +68,7 @@
         </div>
     </dialog>
 
-    <main id="top">
+    <main id="top" hidden>
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
             <h1 id="page-title">Where are you<br>headed next?</h1>

@@ -104,24 +104,33 @@ const searchResults = document.getElementById("searchResults");
 const bookingList = document.getElementById("bookingList");
 const busList = document.getElementById("busList");
 const companyFilter = document.getElementById("companyFilter");
-const partnerLoginDialog = document.getElementById("partnerLoginDialog");
 const managementPanel = document.getElementById("managementPanel");
+const partnerLoginScreen = document.getElementById("partnerLoginScreen");
+const dashboard = document.getElementById("top");
 const loginMessage = document.getElementById("loginMessage");
 
 function setPartnerPreview(active) {
+    partnerLoginScreen.hidden = active;
+    dashboard.hidden = !active;
     managementPanel.hidden = !active;
     document.getElementById("partnerLoginOpen").hidden = active;
     document.getElementById("partnerLogout").hidden = !active;
-    if (!active) managementPanel.open = false;
+    managementPanel.open = active;
+}
+
+function showPassengerDashboard() {
+    partnerLoginScreen.hidden = true;
+    dashboard.hidden = false;
+    managementPanel.hidden = true;
+    managementPanel.open = false;
+    document.getElementById("partnerLoginOpen").hidden = false;
+    document.getElementById("partnerLogout").hidden = true;
 }
 
 document.getElementById("partnerLoginOpen").addEventListener("click", function() {
     loginMessage.textContent = "";
-    partnerLoginDialog.showModal();
-});
-
-document.getElementById("closePartnerLogin").addEventListener("click", function() {
-    partnerLoginDialog.close();
+    setPartnerPreview(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 document.getElementById("partnerLoginForm").addEventListener("submit", function(event) {
@@ -132,10 +141,10 @@ document.getElementById("partnerLoginForm").addEventListener("submit", function(
 document.getElementById("demoPartnerAccess").addEventListener("click", function() {
     sessionStorage.setItem("wayline-partner-demo", "true");
     setPartnerPreview(true);
-    partnerLoginDialog.close();
-    managementPanel.open = true;
     managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
+
+document.getElementById("continueAsPassenger").addEventListener("click", showPassengerDashboard);
 
 document.getElementById("partnerLogout").addEventListener("click", function() {
     sessionStorage.removeItem("wayline-partner-demo");

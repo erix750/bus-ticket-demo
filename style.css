@@ -189,21 +189,45 @@ input {
 }
 
 .login-page {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
-    width: min(100% - 40px, 920px);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px) minmax(0, 1fr);
+    width: min(100% - 40px, 1160px);
     min-height: calc(100vh - 68px);
     margin: 0 auto;
     padding: 58px 0;
     align-content: center;
     align-items: center;
-    gap: 18px 64px;
+    gap: 16px 34px;
+}
+
+.login-page::before,
+.login-page::after {
+    grid-row: 1 / span 3;
+    min-height: 520px;
+    border-radius: 6px;
+    background-image: linear-gradient(rgba(245, 245, 239, 0.2), rgba(245, 245, 239, 0.2)), url("bus-background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    content: "";
+}
+
+.login-page::before {
+    grid-column: 1;
+    background-position: left center;
+}
+
+.login-page::after {
+    grid-column: 3;
+    background-position: right center;
 }
 
 .login-copy {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    max-width: 430px;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    max-width: 420px;
+    text-align: center;
 }
 
 .login-copy h1 {
@@ -225,6 +249,7 @@ input {
     position: relative;
     display: grid;
     grid-column: 2;
+    grid-row: 2;
     gap: 14px;
     padding: 30px;
     border: 1px solid var(--line);
@@ -259,6 +284,7 @@ input {
 
 .passenger-entry {
     grid-column: 2;
+    grid-row: 3;
     justify-self: center;
     padding: 5px 8px;
     border: 0;
@@ -768,16 +794,31 @@ summary:focus-visible {
     }
 
     .login-page {
-        grid-template-columns: 1fr;
+        grid-template-columns: 14px minmax(0, 1fr) 14px;
         min-height: auto;
-        gap: 20px;
+        width: calc(100% - 12px);
+        gap: 18px 8px;
         padding: 34px 0;
+    }
+
+    .login-page::before,
+    .login-page::after {
+        min-height: 100%;
+        background-size: auto 100%;
+    }
+
+    .login-page::before {
+        grid-column: 1;
+    }
+
+    .login-page::after {
+        grid-column: 3;
     }
 
     .login-copy,
     .login-form,
     .passenger-entry {
-        grid-column: 1;
+        grid-column: 2;
         grid-row: auto;
     }
 
@@ -825,6 +866,10 @@ summary:focus-visible {
 }
 
 @media (max-width: 360px) {
+    .login-page {
+        grid-template-columns: 10px minmax(0, 1fr) 10px;
+    }
+
     .login-copy h1 {
         font-size: 33px;
     }

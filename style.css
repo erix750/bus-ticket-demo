@@ -1,13 +1,13 @@
 :root {
     color-scheme: light;
-    --ink: #172a27;
-    --muted: #66736f;
-    --forest: #173c37;
-    --forest-hover: #0f302b;
-    --leaf: #cce75b;
+    --ink: #1b2733;
+    --muted: #637181;
+    --forest: #173f70;
+    --forest-hover: #112f54;
+    --leaf: #f2c078;
     --coral: #d66f4d;
-    --paper: #f5f5ef;
-    --line: #dfe4dc;
+    --paper: #f4f7fb;
+    --line: #dce5ef;
     --white: #fff;
 }
 
@@ -19,7 +19,7 @@ body {
     margin: 0;
     color: var(--ink);
     background-color: var(--paper);
-    background-image: linear-gradient(rgba(23, 60, 55, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 60, 55, 0.035) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(23, 63, 112, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 63, 112, 0.035) 1px, transparent 1px);
     background-size: 36px 36px;
     font-family: "Trebuchet MS", Verdana, sans-serif;
     line-height: 1.5;
@@ -72,7 +72,7 @@ input {
 
 .header-inner > p {
     margin: 0;
-    color: #d5e2d9;
+    color: #d8e6f5;
     font-size: 13px;
 }
 
@@ -114,7 +114,7 @@ input {
 }
 
 .checkout-dialog::backdrop {
-    background: rgba(16, 34, 30, 0.58);
+    background: rgba(20, 37, 62, 0.58);
 }
 
 .checkout-content {
@@ -255,7 +255,7 @@ input {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--white);
-    box-shadow: 0 6px 22px rgba(28, 48, 42, 0.06);
+    box-shadow: 0 6px 22px rgba(28, 45, 68, 0.06);
 }
 
 .login-form h2 {
@@ -343,7 +343,7 @@ main {
 
 .eyebrow {
     margin: 0 0 8px;
-    color: #55736a;
+    color: #56718f;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -369,7 +369,7 @@ main {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--white);
-    box-shadow: 0 6px 22px rgba(28, 48, 42, 0.045);
+    box-shadow: 0 6px 22px rgba(28, 45, 68, 0.045);
 }
 
 .search-panel,
@@ -432,7 +432,7 @@ h2 {
 .field label {
     display: block;
     margin: 0 0 6px;
-    color: #3f514c;
+    color: #43566c;
     font-size: 13px;
     font-weight: 700;
 }
@@ -444,14 +444,14 @@ h2 {
     min-width: 0;
     min-height: 46px;
     padding: 10px 12px;
-    border: 1px solid #ccd5cd;
+    border: 1px solid #cbd7e5;
     border-radius: 5px;
     color: var(--ink);
     background: #fff;
 }
 
 .field input::placeholder {
-    color: #89938e;
+    color: #8593a4;
 }
 
 .field input:focus-visible,
@@ -507,7 +507,7 @@ summary:focus-visible {
 }
 
 .button-secondary:hover:not(:disabled) {
-    background: #bddd42;
+    background: #e7af59;
 }
 
 .button-danger {
@@ -534,7 +534,7 @@ summary:focus-visible {
 
 .button:disabled {
     color: #7b8480;
-    background: #e9ece8;
+    background: #e9edf2;
     cursor: not-allowed;
 }
 
@@ -562,7 +562,7 @@ summary:focus-visible {
     padding: 16px;
     border: 1px solid var(--line);
     border-radius: 6px;
-    background: #fbfcf9;
+    background: #f9fbfe;
 }
 
 .result-heading,
@@ -595,7 +595,7 @@ summary:focus-visible {
     padding: 4px 8px;
     border-radius: 4px;
     color: var(--forest);
-    background: #edf4dc;
+    background: #e6f1fa;
     font-size: 11px;
     font-weight: 700;
 }
@@ -620,7 +620,7 @@ summary:focus-visible {
     padding: 9px 11px;
     border-radius: 4px;
     color: var(--forest);
-    background: #edf4dc;
+    background: #e6f1fa;
     font-size: 12px;
     font-weight: 700;
 }
@@ -635,8 +635,8 @@ summary:focus-visible {
 }
 
 .status-badge {
-    color: #2b5a3f;
-    background: #e8f2e7;
+    color: #285170;
+    background: #e6f1fa;
 }
 
 .status-cancelled {
@@ -659,7 +659,7 @@ summary:focus-visible {
 
 .ticket-reference {
     margin: 10px 0 5px;
-    color: #55736a;
+    color: #56718f;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -676,18 +676,18 @@ summary:focus-visible {
     min-height: 36px;
     padding: 7px 11px;
     color: var(--forest);
-    background: #e9efe7;
+    background: #e9f1fa;
     font-size: 12px;
 }
 
 .button-print:hover:not(:disabled) {
-    background: #dce8d8;
+    background: #d9e8f5;
 }
 
 .empty-state {
     margin: 0;
     padding: 15px;
-    border: 1px dashed #cbd4cb;
+    border: 1px dashed #ccd9e7;
     border-radius: 5px;
     color: var(--muted);
     font-size: 13px;

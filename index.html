@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173c37">
+    <title>Bus Booking System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="#top" aria-label="Bus Booking System home">
+                <span class="brand-mark" aria-hidden="true">B</span>
+                <span>Wayline<span class="brand-dot">.</span></span>
+            </a>
+            <p>Intercity bus booking</p>
+            <div class="header-actions">
+                <button class="header-button" id="partnerLoginOpen" type="button">Partner sign in</button>
+                <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <dialog class="login-dialog" id="partnerLoginDialog" aria-labelledby="partnerLoginTitle">
+        <form id="partnerLoginForm" class="login-form">
+            <button class="dialog-close" id="closePartnerLogin" type="button" aria-label="Close partner sign in">&times;</button>
+            <p class="eyebrow">WAYLINE PARTNERS</p>
+            <h2 id="partnerLoginTitle">Partner sign in</h2>
+            <p class="login-intro">Access your bus schedules and availability.</p>
+            <div class="field">
+                <label for="partnerEmail">Email address</label>
+                <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
+            </div>
+            <div class="field">
+                <label for="partnerPassword">Password</label>
+                <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="Enter your password" required>
+            </div>
+            <button class="button button-primary" type="submit">Sign in</button>
+            <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+            <div class="login-divider"><span>DEMO ACCESS</span></div>
+            <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview partner tools</button>
+            <p class="login-note">Password sign-in is not connected yet. Preview access is only for this browser.</p>
+        </form>
+    </dialog>
+
+    <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
+        <div class="checkout-content">
+            <button class="dialog-close" id="closeCheckout" type="button" aria-label="Close checkout">&times;</button>
+            <p class="eyebrow">DEMO CHECKOUT</p>
+            <h2 id="checkoutTitle">Review your trip</h2>
+            <p id="checkoutRoute" class="checkout-route"></p>
+            <div class="checkout-summary">
+                <div><span>Bus fare</span><strong id="checkoutFare"></strong></div>
+                <div><span>Service fee</span><strong id="checkoutFee"></strong></div>
+                <div class="checkout-total"><span>Total</span><strong id="checkoutTotal"></strong></div>
+            </div>
+            <p class="checkout-notice">Demo only. This will save an unpaid test booking. No MTN MoMo request or payment will be made.</p>
+            <div class="checkout-actions">
+                <button class="button button-text" id="cancelCheckout" type="button">Go back</button>
+                <button class="button button-primary" id="confirmDemoBooking" type="button">Save test booking</button>
+            </div>
+        </div>
+    </dialog>
+
+    <main id="top">
+        <section class="intro" aria-labelledby="page-title">
+            <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
+            <h1 id="page-title">Where are you<br>headed next?</h1>
+            <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
+        </section>
+
+        <section class="panel search-panel" aria-labelledby="search-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">PLAN YOUR JOURNEY</p>
+                    <h2 id="search-title">Find a bus</h2>
+                </div>
+                <span class="step-number" aria-hidden="true">01</span>
+            </div>
+            <form id="searchForm" class="form-grid">
+                <div class="field field-wide">
+                    <label for="passengerName">Passenger name</label>
+                    <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Name on the ticket" required>
+                </div>
+                <div class="field">
+                    <label for="companyFilter">Bus company</label>
+                    <select id="companyFilter" name="companyFilter" required>
+                        <option value="">Choose a company</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="from">Leaving from</label>
+                    <input type="text" id="from" name="from" maxlength="60" placeholder="Departure city" required>
+                </div>
+                <div class="field">
+                    <label for="to">Going to</label>
+                    <input type="text" id="to" name="to" maxlength="60" placeholder="Destination city" required>
+                </div>
+                <div class="field">
+                    <label for="date">Travel date</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="field">
+                    <label for="seatCount">Passengers</label>
+                    <input type="number" id="seatCount" name="seatCount" min="1" max="20" value="1" required>
+                </div>
+                <div class="field field-wide form-action">
+                    <button class="button button-primary" type="submit">Search buses <span aria-hidden="true">&#8594;</span></button>
+                </div>
+            </form>
+            <p id="searchMessage" class="form-message" role="status" aria-live="polite"></p>
+            <div id="searchResults" class="results-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel bookings-panel" aria-labelledby="bookings-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">YOUR TRIPS</p>
+                    <h2 id="bookings-title">Bookings</h2>
+                </div>
+                <span id="bookingCount" class="count-badge">0</span>
+            </div>
+            <div id="bookingList" class="record-list"></div>
+        </section>
+
+        <details class="panel management-panel" id="managementPanel" hidden>
+            <summary>
+                <span>
+                    <span class="eyebrow">FOR OPERATORS</span>
+                    <strong>Manage bus schedules</strong>
+                </span>
+                <span class="summary-icon" aria-hidden="true">+</span>
+            </summary>
+            <div class="management-content">
+                <p class="section-note">Add a bus departure to make it available in search.</p>
+                <form id="busForm" class="form-grid">
+                    <div class="field">
+                        <label for="company">Bus company</label>
+                        <input type="text" id="company" name="company" maxlength="60" placeholder="Company name" required>
+                    </div>
+                    <div class="field">
+                        <label for="busName">Bus name or number</label>
+                        <input type="text" id="busName" name="busName" maxlength="60" placeholder="e.g. Coach 24" required>
+                    </div>
+                    <div class="field">
+                        <label for="busFrom">Leaving from</label>
+                        <input type="text" id="busFrom" name="busFrom" maxlength="60" placeholder="Departure city" required>
+                    </div>
+                    <div class="field">
+                        <label for="busTo">Going to</label>
+                        <input type="text" id="busTo" name="busTo" maxlength="60" placeholder="Destination city" required>
+                    </div>
+                    <div class="field">
+                        <label for="busDate">Travel date</label>
+                        <input type="date" id="busDate" name="busDate" required>
+                    </div>
+                    <div class="field">
+                        <label for="departureTime">Departure time</label>
+                        <input type="time" id="departureTime" name="departureTime" required>
+                    </div>
+                    <div class="field">
+                        <label for="seatNumber">Total seats</label>
+                        <input type="number" id="seatNumber" name="seatNumber" min="1" max="100" step="1" placeholder="e.g. 40" required>
+                    </div>
+                    <div class="field">
+                        <label for="fare">Price for this route (RWF per passenger)</label>
+                        <input type="number" id="fare" name="fare" min="0" step="1" placeholder="e.g. 2500" required>
+                    </div>
+                    <div class="field field-wide form-action">
+                        <button class="button button-secondary" type="submit">Add bus schedule</button>
+                    </div>
+                </form>
+                <p id="busMessage" class="form-message" role="status" aria-live="polite"></p>
+                <div class="inventory-heading">
+                    <h3>Current schedules</h3>
+                    <span id="busCount" class="muted-label">0 schedules</span>
+                </div>
+                <div id="busList" class="record-list"></div>
+            </div>
+        </details>
+        <p class="storage-note">A RWF 10 service fee is added per passenger. This demo records bookings but does not collect payment.</p>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

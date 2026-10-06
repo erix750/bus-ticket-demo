@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#173f70">
     <title>Bus Booking System</title>
-    <link rel="stylesheet" href="style.css?v=blue-theme-20261003">
+    <link rel="stylesheet" href="style.css?v=supabase-20261006">
 </head>
 <body>
     <header class="site-header">
@@ -30,21 +30,26 @@
         </section>
         <form id="partnerLoginForm" class="login-form">
             <p class="eyebrow">BUS COMPANY ACCOUNT</p>
-            <h2>Partner sign in</h2>
-            <p class="login-intro">Access your bus schedules and availability.</p>
+            <h2 id="partnerFormTitle">Partner sign in</h2>
+            <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
+            <div class="field" id="companyNameField" hidden>
+                <label for="partnerCompanyName">Company name</label>
+                <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
+            </div>
             <div class="field">
                 <label for="partnerEmail">Email address</label>
                 <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
             </div>
             <div class="field">
                 <label for="partnerPassword">Password</label>
-                <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="Enter your password" required>
+                <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
             </div>
-            <button class="button button-primary" type="submit">Sign in</button>
+            <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
             <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+            <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
             <div class="login-divider"><span>DEMO ACCESS</span></div>
             <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview demo dashboard</button>
-            <p class="login-note">Real password sign-in is not connected yet. Demo access is only for this browser.</p>
+            <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
         </form>
         <button class="passenger-entry" id="continueAsPassenger" type="button">Continue to passenger booking</button>
     </main>
@@ -52,7 +57,7 @@
     <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
         <div class="checkout-content">
             <button class="dialog-close" id="closeCheckout" type="button" aria-label="Close checkout">&times;</button>
-            <p class="eyebrow">DEMO CHECKOUT</p>
+            <p class="eyebrow">SECURE BOOKING</p>
             <h2 id="checkoutTitle">Review your trip</h2>
             <p id="checkoutRoute" class="checkout-route"></p>
             <div class="checkout-summary">
@@ -60,10 +65,18 @@
                 <div><span>Service fee</span><strong id="checkoutFee"></strong></div>
                 <div class="checkout-total"><span>Total</span><strong id="checkoutTotal"></strong></div>
             </div>
-            <p class="checkout-notice">Demo only. This will save an unpaid test booking. No MTN MoMo request or payment will be made.</p>
+            <div class="field payment-method-field">
+                <label for="paymentMethod">How would you like to pay?</label>
+                <select id="paymentMethod" name="paymentMethod" required>
+                    <option value="">Choose a payment method</option>
+                    <option value="MTN Mobile Money">MTN Mobile Money</option>
+                    <option value="Airtel Money">Airtel Money</option>
+                </select>
+            </div>
+            <p class="checkout-notice">Your booking will be saved as unpaid. Payment processing is not available yet.</p>
             <div class="checkout-actions">
                 <button class="button button-text" id="cancelCheckout" type="button">Go back</button>
-                <button class="button button-primary" id="confirmDemoBooking" type="button">Save test booking</button>
+                <button class="button button-primary" id="confirmDemoBooking" type="button">Confirm booking</button>
             </div>
         </div>
     </dialog>
@@ -126,6 +139,7 @@
                 </div>
                 <span id="bookingCount" class="count-badge">0</span>
             </div>
+            <p id="bookingMessage" class="form-message" role="status" aria-live="polite"></p>
             <div id="bookingList" class="record-list"></div>
         </section>
 
@@ -143,6 +157,11 @@
                     <div class="field">
                         <label for="company">Bus company</label>
                         <input type="text" id="company" name="company" maxlength="60" placeholder="Company name" required>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="companyLogo">Company logo or picture (optional)</label>
+                        <input type="file" id="companyLogo" name="companyLogo" accept="image/png,image/jpeg,image/webp">
+                        <p class="field-hint">PNG, JPG, or WebP. Images are resized for display.</p>
                     </div>
                     <div class="field">
                         <label for="busName">Bus name or number</label>
@@ -184,9 +203,15 @@
                 <div id="busList" class="record-list"></div>
             </div>
         </details>
-        <p class="storage-note">A RWF 10 service fee is added per passenger. This demo records bookings but does not collect payment.</p>
+        <p class="storage-note">A RWF 10 service fee is added per passenger. Bookings are shared online; payments are not collected yet.</p>
     </main>
 
-    <script src="script.js?v=login-screen-20261003-2"></script>
+    <footer class="site-footer">
+        <p>Created by <strong>ME Empire</strong></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="database.js?v=supabase-20261006"></script>
+    <script src="script.js?v=supabase-20261006"></script>
 </body>
 </html>

@@ -437,6 +437,12 @@ h2 {
     font-weight: 700;
 }
 
+.field-hint {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
 .field input,
 .field select {
     display: block;
@@ -571,6 +577,37 @@ summary:focus-visible {
     gap: 12px;
     align-items: flex-start;
     justify-content: space-between;
+}
+
+.company-brand {
+    display: flex;
+    min-width: 0;
+    gap: 10px;
+    align-items: center;
+}
+
+.company-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    object-fit: contain;
+}
+
+.record-company-brand {
+    margin-top: 8px;
+}
+
+.record-company-brand .company-logo {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+}
+
+.record-company-brand .record-company {
+    margin: 0;
 }
 
 .result-operator h3,
@@ -771,6 +808,24 @@ summary:focus-visible {
     text-align: center;
 }
 
+.site-footer {
+    width: min(100% - 40px, 920px);
+    margin: 0 auto;
+    padding: 18px 0 24px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.site-footer p {
+    margin: 0;
+}
+
+.site-footer strong {
+    color: var(--forest);
+}
+
 @media (min-width: 720px) {
     .results-list,
     .record-list {
@@ -780,7 +835,8 @@ summary:focus-visible {
 
 @media (max-width: 560px) {
     .header-inner,
-    main {
+    main,
+    .site-footer {
         width: calc(100% - 28px);
     }
 

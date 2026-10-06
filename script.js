@@ -1,99 +1,25 @@
-const databaseName = "wayline-bus-booking";
 const platformFeePerPassenger = 10;
 let database;
+let currentUser = null;
+let isPartnerSignUp = false;
 let buses = [];
 let bookings = [];
 let pendingBooking = null;
 
-function readLegacyRecords(key) {
-    try {
-        const records = JSON.parse(localStorage.getItem(key) || "[]");
-        return Array.isArray(records) ? records : [];
-    } catch {
-        return [];
-    }
-}
-
-function createId() {
-    return window.crypto && window.crypto.randomUUID
-        ? window.crypto.randomUUID()
-        : Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
-function openDatabase() {
-    return new Promise(function(resolve, reject) {
-        const request = indexedDB.open(databaseName, 1);
-        request.onupgradeneeded = function() {
-            const storeDatabase = request.result;
-            if (!storeDatabase.objectStoreNames.contains("buses")) {
-                storeDatabase.createObjectStore("buses", { keyPath: "id" });
-            }
-            if (!storeDatabase.objectStoreNames.contains("bookings")) {
-                storeDatabase.createObjectStore("bookings", { keyPath: "id" });
-            }
-        };
-        request.onsuccess = function() { resolve(request.result); };
-        request.onerror = function() { reject(request.error); };
-    });
-}
-
-function readStoreRecords(storeName) {
-    return new Promise(function(resolve, reject) {
-        const transaction = database.transaction(storeName, "readonly");
-        const request = transaction.objectStore(storeName).getAll();
-        request.onsuccess = function() { resolve(request.result); };
-        request.onerror = function() { reject(request.error); };
-    });
-}
-
-function saveAllRecords() {
-    return new Promise(function(resolve, reject) {
-        const transaction = database.transaction(["buses", "bookings"], "readwrite");
-        const busStore = transaction.objectStore("buses");
-        const bookingStore = transaction.objectStore("bookings");
-        busStore.clear();
-        bookingStore.clear();
-        buses.forEach(function(bus) { busStore.put(bus); });
-        bookings.forEach(function(booking) { bookingStore.put(booking); });
-        transaction.oncomplete = function() { resolve(); };
-        transaction.onerror = function() { reject(transaction.error); };
-        transaction.onabort = function() { reject(transaction.error); };
-    });
-}
-
 function normalizeBus(bus) {
-    const oldSeatCount = Number(bus.totalSeats ?? bus.seats) || 0;
     return {
-        id: bus.id || createId(),
-        company: bus.company || "",
-        name: bus.name || "Unlabeled bus",
-        from: bus.from || "",
-        to: bus.to || "",
-        date: bus.date || "",
-        departureTime: bus.departureTime || "",
-        totalSeats: oldSeatCount,
-        availableSeats: Number(bus.availableSeats ?? bus.seats) || 0,
-        fare: Number(bus.fare) || 0
-    };
-}
-
-function normalizeBooking(booking) {
-    return {
-        id: booking.id || createId(),
-        busId: booking.busId || "",
-        name: booking.name || "Passenger",
-        company: booking.company || "",
-        busName: booking.busName || "",
-        from: booking.from || "",
-        to: booking.to || "",
-        date: booking.date || "",
-        departureTime: booking.departureTime || "",
-        seats: Math.max(1, Number(booking.seats) || 1),
-        baseFare: Number(booking.baseFare ?? booking.totalFare) || 0,
-        platformFee: Number(booking.platformFee) || 0,
-        totalFare: Number(booking.totalFare) || 0,
-        paymentStatus: "demo-unpaid",
-        cancelled: Boolean(booking.cancelled)
+        id: bus.id,
+        companyId: bus.companyId,
+        company: bus.company,
+        name: bus.name,
+        from: bus.from,
+        to: bus.to,
+        date: bus.date,
+        departureTime: bus.departureTime,
+        logo: bus.logo || "",
+        totalSeats: Number(bus.totalSeats),
+        availableSeats: Number(bus.availableSeats),
+        fare: Number(bus.fare)
     };
 }
 
@@ -108,6 +34,8 @@ const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
 const dashboard = document.getElementById("top");
 const loginMessage = document.getElementById("loginMessage");
+const companyNameField = document.getElementById("companyNameField");
+const partnerCompanyName = document.getElementById("partnerCompanyName");
 
 function setPartnerPreview(active) {
     partnerLoginScreen.hidden = active;
@@ -116,6 +44,35 @@ function setPartnerPreview(active) {
     document.getElementById("partnerLoginOpen").hidden = true;
     document.getElementById("partnerLogout").hidden = !active;
     managementPanel.open = active;
+}
+
+function setPartnerFormMode(signUp) {
+    isPartnerSignUp = signUp;
+    companyNameField.hidden = !signUp;
+    partnerCompanyName.required = signUp;
+    document.getElementById("partnerFormTitle").textContent = signUp
+        ? "Create a company account"
+        : "Partner sign in";
+    document.getElementById("partnerFormIntro").textContent = signUp
+        ? "Register your bus company to publish schedules."
+        : "Access your company schedules and bookings.";
+    document.getElementById("partnerSubmitButton").textContent = signUp
+        ? "Create account"
+        : "Sign in";
+    document.getElementById("togglePartnerMode").textContent = signUp
+        ? "Already have an account? Sign in"
+        : "Create a company account";
+    document.getElementById("partnerPassword").autocomplete = signUp ? "new-password" : "current-password";
+    document.getElementById("partnerPassword").placeholder = "At least 6 characters";
+    loginMessage.textContent = "";
+}
+
+async function refreshAppData() {
+    buses = (await window.WaylineDatabase.loadBuses()).map(normalizeBus);
+    bookings = await window.WaylineDatabase.loadBookings();
+    updateCompanyOptions();
+    renderBookings();
+    renderBuses();
 }
 
 function showPassengerDashboard() {
@@ -133,43 +90,96 @@ document.getElementById("partnerLoginOpen").addEventListener("click", function()
     window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-document.getElementById("partnerLoginForm").addEventListener("submit", function(event) {
+document.getElementById("partnerLoginForm").addEventListener("submit", async function(event) {
     event.preventDefault();
-    loginMessage.textContent = "Password sign-in is not connected yet. Use demo access to preview partner tools.";
+    const submitButton = document.getElementById("partnerSubmitButton");
+    submitButton.disabled = true;
+    loginMessage.textContent = "";
+    try {
+        const email = document.getElementById("partnerEmail").value.trim();
+        const password = document.getElementById("partnerPassword").value;
+        if (isPartnerSignUp) {
+            const companyName = partnerCompanyName.value.trim();
+            if (companyName.length < 2) {
+                loginMessage.textContent = "Enter a company name with at least 2 characters.";
+                partnerCompanyName.focus();
+                return;
+            }
+            const result = await window.WaylineDatabase.signUp(email, password, companyName);
+            if (!result.session) {
+                loginMessage.textContent = "Account created. Check your email to verify the address, then sign in.";
+                return;
+            }
+            currentUser = result.user;
+            partnerCompanyName.value = companyName;
+            document.getElementById("company").value = companyName;
+            sessionStorage.removeItem("wayline-partner-demo");
+            await refreshAppData();
+            setPartnerPreview(true);
+            managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+            loginMessage.textContent = "Company account created.";
+            return;
+        }
+
+        const result = await window.WaylineDatabase.signIn(email, password);
+        currentUser = result.user;
+        sessionStorage.removeItem("wayline-partner-demo");
+        const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
+        partnerCompanyName.value = profile.name;
+        document.getElementById("company").value = profile.name;
+        await refreshAppData();
+        setPartnerPreview(true);
+        managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (error) {
+        loginMessage.textContent = error.message || "Could not complete company account sign-in.";
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
+document.getElementById("togglePartnerMode").addEventListener("click", function() {
+    setPartnerFormMode(!isPartnerSignUp);
 });
 
 document.getElementById("demoPartnerAccess").addEventListener("click", function() {
     sessionStorage.setItem("wayline-partner-demo", "true");
+    currentUser = null;
     setPartnerPreview(true);
     managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.getElementById("continueAsPassenger").addEventListener("click", showPassengerDashboard);
 
-document.getElementById("partnerLogout").addEventListener("click", function() {
+document.getElementById("partnerLogout").addEventListener("click", async function() {
+    const button = document.getElementById("partnerLogout");
+    button.disabled = true;
     sessionStorage.removeItem("wayline-partner-demo");
-    setPartnerPreview(false);
+    try {
+        if (currentUser) await window.WaylineDatabase.signOut();
+        currentUser = null;
+        await refreshAppData();
+        setPartnerPreview(false);
+    } catch (error) {
+        loginMessage.textContent = error.message || "Could not sign out.";
+    } finally {
+        button.disabled = false;
+    }
 });
 
-setPartnerPreview(sessionStorage.getItem("wayline-partner-demo") === "true");
-
 async function initializeApp() {
-    database = await openDatabase();
-    const storedBuses = await readStoreRecords("buses");
-    const storedBookings = await readStoreRecords("bookings");
-
-    if (!storedBuses.length && !storedBookings.length) {
-        buses = readLegacyRecords("bus-booking-system-buses").map(normalizeBus);
-        bookings = readLegacyRecords("bus-booking-system-bookings").map(normalizeBooking);
-        if (buses.length || bookings.length) await saveAllRecords();
+    database = await window.WaylineDatabase.open();
+    const sessionResult = await database.auth.getSession();
+    if (sessionResult.error) throw new Error(sessionResult.error.message);
+    currentUser = sessionResult.data.session ? sessionResult.data.session.user : null;
+    if (currentUser) {
+        const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
+        partnerCompanyName.value = profile.name;
+        document.getElementById("company").value = profile.name;
+        setPartnerPreview(true);
     } else {
-        buses = storedBuses.map(normalizeBus);
-        bookings = storedBookings.map(normalizeBooking);
+        setPartnerPreview(sessionStorage.getItem("wayline-partner-demo") === "true");
     }
-
-    updateCompanyOptions();
-    renderBookings();
-    renderBuses();
+    await refreshAppData();
 }
 
 function localDateString(date) {
@@ -211,6 +221,42 @@ function makeElement(tagName, className, text) {
     return element;
 }
 
+function makeCompanyLogo(bus, className) {
+    if (!bus.logo) return null;
+    const logo = document.createElement("img");
+    logo.className = className;
+    logo.src = bus.logo;
+    logo.alt = bus.company + " logo";
+    return logo;
+}
+
+function resizeCompanyLogo(file) {
+    return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onerror = function() { reject(new Error("The selected image could not be read.")); };
+        reader.onload = function() {
+            const image = new Image();
+            image.onerror = function() { reject(new Error("The selected file is not a valid image.")); };
+            image.onload = function() {
+                const maxDimension = 256;
+                const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+                canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+                const context = canvas.getContext("2d");
+                if (!context) {
+                    reject(new Error("Image resizing is not supported by this browser."));
+                    return;
+                }
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL("image/webp", 0.82));
+            };
+            image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 function addEmptyMessage(container, text) {
     container.appendChild(makeElement("p", "empty-state", text));
 }
@@ -236,9 +282,13 @@ function renderSearchResults(matchingBuses, requestedSeats) {
         const result = makeElement("article", "result-card");
         const heading = makeElement("div", "result-heading");
         const operator = makeElement("div", "result-operator");
+        const brand = makeElement("div", "company-brand");
+        const logo = makeCompanyLogo(bus, "company-logo");
+        if (logo) brand.appendChild(logo);
         operator.appendChild(makeElement("h3", "", bus.company));
         operator.appendChild(makeElement("p", "muted-label", bus.name));
-        heading.appendChild(operator);
+        brand.appendChild(operator);
+        heading.appendChild(brand);
         heading.appendChild(makeElement("span", "availability", bus.availableSeats + " seats left"));
 
         const route = makeElement("p", "result-route", bus.from + " to " + bus.to);
@@ -348,7 +398,7 @@ function performSearch() {
     renderSearchResults(matches, requestedSeats);
 }
 
-async function bookTrip(busId, seatCount, baseFare, platformFee, totalFare) {
+async function bookTrip(busId, seatCount, baseFare, platformFee, totalFare, paymentMethod) {
     const bus = buses.find(function(item) { return item.id === busId; });
     const passengerName = document.getElementById("passengerName").value.trim();
 
@@ -359,43 +409,17 @@ async function bookTrip(busId, seatCount, baseFare, platformFee, totalFare) {
     }
     if (!bus || bus.availableSeats < seatCount) {
         searchMessage.textContent = "Those seats are no longer available. Search again for current availability.";
+        await refreshAppData();
         performSearch();
         return false;
     }
 
-    const booking = {
-        id: createId(),
-        busId: bus.id,
-        name: passengerName,
-        company: bus.company,
-        busName: bus.name,
-        from: bus.from,
-        to: bus.to,
-        date: bus.date,
-        departureTime: bus.departureTime,
-        seats: seatCount,
-        baseFare: baseFare,
-        platformFee: platformFee,
-        totalFare: totalFare,
-        paymentStatus: "demo-unpaid",
-        cancelled: false
-    };
-
-    bus.availableSeats -= seatCount;
+    const booking = await window.WaylineDatabase.createBooking(bus, passengerName, seatCount, paymentMethod);
     bookings.unshift(booking);
-    try {
-        await saveAllRecords();
-    } catch {
-        bookings.shift();
-        bus.availableSeats += seatCount;
-        searchMessage.textContent = "Could not save this booking in the browser database. Try again.";
-        return false;
-    }
-
-    document.getElementById("bookingMessage").textContent = "Unpaid demo booking saved. Reference: " + booking.id.slice(0, 8).toUpperCase() + ".";
-    searchMessage.textContent = "Test booking saved. No money was collected.";
-    renderBookings();
-    renderBuses();
+    await refreshAppData();
+    document.getElementById("bookingMessage").textContent =
+        "Unpaid booking saved. Reference: " + booking.id.slice(0, 8).toUpperCase() + ". No payment was collected.";
+    searchMessage.textContent = "Booking confirmed. Payment has not been collected.";
     performSearch();
     return true;
 }
@@ -416,6 +440,11 @@ document.getElementById("checkoutDialog").addEventListener("close", function() {
 
 document.getElementById("confirmDemoBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
+    const paymentMethod = document.getElementById("paymentMethod");
+    if (!paymentMethod.value) {
+        paymentMethod.reportValidity();
+        return;
+    }
     const confirmButton = event.currentTarget;
     confirmButton.disabled = true;
     try {
@@ -424,11 +453,12 @@ document.getElementById("confirmDemoBooking").addEventListener("click", async fu
             pendingBooking.seatCount,
             pendingBooking.baseFare,
             pendingBooking.platformFee,
-            pendingBooking.totalFare
+            pendingBooking.totalFare,
+            paymentMethod.value
         );
         if (saved) document.getElementById("checkoutDialog").close();
-    } catch {
-        document.getElementById("searchMessage").textContent = "Could not save the demo booking. Please try again.";
+    } catch (error) {
+        document.getElementById("searchMessage").textContent = error.message || "Could not save the booking. Please try again.";
     } finally {
         confirmButton.disabled = false;
     }
@@ -449,7 +479,7 @@ function renderBookings() {
         const top = makeElement("div", "record-topline");
         const route = makeElement("h3", "", booking.from + " to " + booking.to);
         top.appendChild(route);
-        const status = booking.cancelled ? "Cancelled" : "Demo / unpaid";
+        const status = booking.cancelled ? "Cancelled" : "Unpaid";
         top.appendChild(makeElement("span", "status-badge" + (booking.cancelled ? " status-cancelled" : " status-demo"), status));
 
         const reference = makeElement("p", "ticket-reference", "TICKET REF  " + booking.id.slice(0, 8).toUpperCase());
@@ -461,6 +491,7 @@ function renderBookings() {
                 "\n" + formatDate(booking.date) +
                 (booking.departureTime ? " at " + booking.departureTime : "") +
                 " | " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
+                "\nPayment method: " + (booking.paymentMethod || "Not selected") +
                 (booking.totalFare > 0 ? "\nFare " + formatFare(booking.baseFare) +
                     " | Service fee " + formatFare(booking.platformFee) +
                     " | Total " + formatFare(booking.totalFare) : "")
@@ -469,7 +500,7 @@ function renderBookings() {
 
         if (!booking.cancelled) {
             const actions = makeElement("div", "record-actions");
-            const printButton = makeElement("button", "button button-print", "Print demo record");
+            const printButton = makeElement("button", "button button-print", "Print booking record");
             printButton.type = "button";
             printButton.addEventListener("click", function() {
                 card.classList.add("is-printing");
@@ -480,7 +511,7 @@ function renderBookings() {
             });
             actions.appendChild(printButton);
 
-            if (booking.busId) {
+            if (booking.busId && !booking.companyView) {
                 const cancelButton = makeElement("button", "button button-danger", "Cancel booking");
                 cancelButton.type = "button";
                 cancelButton.addEventListener("click", function() { cancelBooking(booking.id); });
@@ -494,32 +525,43 @@ function renderBookings() {
 
 function renderBuses() {
     busList.replaceChildren();
-    document.getElementById("busCount").textContent = buses.length + (buses.length === 1 ? " schedule" : " schedules");
+    const manageableBuses = currentUser
+        ? buses.filter(function(bus) { return bus.companyId === currentUser.id; })
+        : buses;
+    document.getElementById("busCount").textContent =
+        manageableBuses.length + (manageableBuses.length === 1 ? " schedule" : " schedules");
 
-    if (buses.length === 0) {
+    if (manageableBuses.length === 0) {
         addEmptyMessage(busList, "No schedules yet. Add a bus above to make it bookable.");
         return;
     }
 
-    buses.forEach(function(bus) {
-        const activeBookings = bookings.filter(function(booking) {
-            return booking.busId === bus.id && !booking.cancelled;
-        }).length;
+    manageableBuses.forEach(function(bus) {
+        const hasBookings = bookings.some(function(booking) {
+            return booking.busId === bus.id;
+        });
         const card = makeElement("article", "record-card schedule-card");
         const top = makeElement("div", "record-topline");
         top.appendChild(makeElement("h3", "", bus.name));
         top.appendChild(makeElement("span", "availability", bus.availableSeats + " / " + bus.totalSeats + " seats"));
 
-        const company = makeElement("p", "record-company", bus.company || "Company not set");
+        const company = makeElement("div", "company-brand record-company-brand");
+        const logo = makeCompanyLogo(bus, "company-logo");
+        if (logo) company.appendChild(logo);
+        company.appendChild(makeElement("p", "record-company", bus.company || "Company not set"));
         const scheduleText = bus.from && bus.to && bus.date && bus.departureTime
             ? bus.from + " to " + bus.to + "\n" + formatDate(bus.date) + " at " + bus.departureTime + " | " + formatFare(bus.fare) + " per passenger"
             : "Older bus record: add a new schedule to make this bus bookable.";
         const details = makeElement("p", "record-details", scheduleText);
         card.append(top, company, details);
 
-        const removeButton = makeElement("button", "button button-text", activeBookings ? "Has active bookings" : "Remove schedule");
+        const removeButton = makeElement(
+            "button",
+            "button button-text",
+            !currentUser ? "Sign in to manage schedules" : (hasBookings ? "Has bookings" : "Remove schedule")
+        );
         removeButton.type = "button";
-        removeButton.disabled = activeBookings > 0;
+        removeButton.disabled = !currentUser || hasBookings;
         removeButton.addEventListener("click", function() { removeBus(bus.id); });
         card.appendChild(removeButton);
         busList.appendChild(card);
@@ -530,46 +572,38 @@ async function cancelBooking(bookingId) {
     const booking = bookings.find(function(item) { return item.id === bookingId; });
     if (!booking || booking.cancelled) return;
 
-    booking.cancelled = true;
-    const bus = buses.find(function(item) { return item.id === booking.busId; });
-    if (bus) bus.availableSeats = Math.min(bus.totalSeats, bus.availableSeats + booking.seats);
-
     try {
-        await saveAllRecords();
-    } catch {
-        booking.cancelled = false;
-        if (bus) bus.availableSeats = Math.max(0, bus.availableSeats - booking.seats);
-        document.getElementById("bookingMessage").textContent = "Could not save the cancellation. Please try again.";
+        await window.WaylineDatabase.cancelBooking(bookingId);
+        await refreshAppData();
+    } catch (error) {
+        document.getElementById("bookingMessage").textContent =
+            error.message || "Could not save the cancellation. Please try again.";
         return;
     }
 
     document.getElementById("bookingMessage").textContent = "Booking cancelled. Reserved seats are available again.";
-    renderBookings();
-    renderBuses();
     if (document.getElementById("date").value) performSearch();
 }
 
 async function removeBus(busId) {
-    const hasActiveBookings = bookings.some(function(booking) {
-        return booking.busId === busId && !booking.cancelled;
+    const hasBookings = bookings.some(function(booking) {
+        return booking.busId === busId;
     });
-    if (hasActiveBookings) return;
+    if (hasBookings || !currentUser) return;
 
-    const index = buses.findIndex(function(bus) { return bus.id === busId; });
-    if (index < 0) return;
-    const removedBus = buses.splice(index, 1)[0];
+    const bus = buses.find(function(item) { return item.id === busId; });
+    if (!bus || bus.companyId !== currentUser.id) return;
 
     try {
-        await saveAllRecords();
-    } catch {
-        buses.splice(index, 0, removedBus);
-        document.getElementById("busMessage").textContent = "Could not update the browser database. Please try again.";
+        await window.WaylineDatabase.deleteSchedule(busId);
+        await refreshAppData();
+    } catch (error) {
+        document.getElementById("busMessage").textContent =
+            error.message || "Could not remove the schedule. Please try again.";
         return;
     }
 
     document.getElementById("busMessage").textContent = "Schedule removed.";
-    updateCompanyOptions();
-    renderBuses();
     if (document.getElementById("date").value) performSearch();
 }
 
@@ -586,6 +620,11 @@ searchForm.addEventListener("submit", function(event) {
 
 busForm.addEventListener("submit", async function(event) {
     event.preventDefault();
+    if (!currentUser) {
+        document.getElementById("busMessage").textContent =
+            "Create and verify a company account, then sign in to publish schedules.";
+        return;
+    }
     const company = document.getElementById("company").value.trim();
     const name = document.getElementById("busName").value.trim();
     const from = document.getElementById("busFrom").value.trim();
@@ -594,6 +633,7 @@ busForm.addEventListener("submit", async function(event) {
     const departureTime = document.getElementById("departureTime").value;
     const totalSeats = Number(document.getElementById("seatNumber").value);
     const fare = Number(document.getElementById("fare").value);
+    const logoFile = document.getElementById("companyLogo").files[0];
     const busMessage = document.getElementById("busMessage");
 
     if (!company || !name || !from || !to || !date || !departureTime) {
@@ -612,9 +652,26 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "Enter 1 to 100 seats and a valid fare of zero or more.";
         return;
     }
+    if (logoFile && !["image/png", "image/jpeg", "image/webp"].includes(logoFile.type)) {
+        busMessage.textContent = "Choose a PNG, JPG, or WebP image for the company logo.";
+        return;
+    }
+    if (logoFile && logoFile.size > 2 * 1024 * 1024) {
+        busMessage.textContent = "The company image must be 2 MB or smaller.";
+        return;
+    }
+
+    let logo = "";
+    if (logoFile) {
+        try {
+            logo = await resizeCompanyLogo(logoFile);
+        } catch (error) {
+            busMessage.textContent = error.message;
+            return;
+        }
+    }
 
     const bus = {
-        id: createId(),
         company: company,
         name: name,
         from: from,
@@ -622,26 +679,25 @@ busForm.addEventListener("submit", async function(event) {
         date: date,
         departureTime: departureTime,
         totalSeats: totalSeats,
-        availableSeats: totalSeats,
         fare: fare
     };
-    buses.unshift(bus);
     try {
-        await saveAllRecords();
-    } catch {
-        buses.shift();
-        busMessage.textContent = "Could not save this schedule in the browser database. Try again.";
+        const savedBus = await window.WaylineDatabase.createSchedule(bus, logo);
+        buses.unshift(savedBus);
+        await refreshAppData();
+    } catch (error) {
+        busMessage.textContent = error.message || "Could not save this schedule. Please try again.";
         return;
     }
 
     busForm.reset();
     busMessage.textContent = "Bus schedule added and ready for booking.";
     updateCompanyOptions();
-    renderBuses();
     if (document.getElementById("date").value) performSearch();
 });
 
 initializeApp().catch(function(error) {
-    document.getElementById("bookingMessage").textContent = "The browser database could not be opened. Run this page from a local web server, then reload.";
+    document.getElementById("bookingMessage").textContent =
+        "Could not connect to the shared booking database. Check your internet connection and reload the page.";
     console.error(error);
 });

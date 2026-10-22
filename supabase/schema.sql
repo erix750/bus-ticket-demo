@@ -18,9 +18,19 @@ create table if not exists public.buses (
     total_seats integer not null check (total_seats between 1 and 100),
     available_seats integer not null check (available_seats between 0 and total_seats),
     fare numeric(12, 2) not null check (fare >= 0),
+    route_distance_km numeric(8, 2) check (route_distance_km between 0.1 and 1000),
+    fare_category text not null default 'intercity' check (fare_category in ('kigali', 'intercity')),
+    is_active boolean not null default true,
     created_at timestamptz not null default now(),
     check (lower(trim(from_city)) <> lower(trim(to_city)))
 );
+
+alter table public.buses
+    add column if not exists route_distance_km numeric(8, 2);
+alter table public.buses
+    add column if not exists fare_category text not null default 'intercity';
+alter table public.buses
+    add column if not exists is_active boolean not null default true;
 
 create table if not exists public.bookings (
     id uuid primary key default gen_random_uuid(),
@@ -41,6 +51,56 @@ create index if not exists buses_search_idx
     on public.buses (travel_date, from_city, to_city, company_id);
 create index if not exists bookings_bus_id_idx on public.bookings (bus_id);
 create index if not exists bookings_cancel_token_idx on public.bookings (cancel_token);
+
+create or replace function public.set_rura_bus_fare()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+    rate_per_km numeric(5, 2);
+begin
+    if new.route_distance_km is null or new.route_distance_km not between 0.1 and 1000 then
+        raise exception 'Enter a route distance from 0.1 to 1,000 km.';
+    end if;
+
+    if new.fare_category = 'kigali' then
+        rate_per_km := 59.28;
+    elsif new.fare_category = 'intercity' then
+        rate_per_km := 41.58;
+    else
+        raise exception 'Choose a valid RURA fare area.';
+    end if;
+
+    new.fare := round(new.route_distance_km * rate_per_km);
+    if tg_op = 'INSERT' then
+        new.available_seats := new.total_seats;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists set_rura_bus_fare_before_save on public.buses;
+create trigger set_rura_bus_fare_before_save
+    before insert or update of route_distance_km, fare_category
+    on public.buses
+    for each row execute function public.set_rura_bus_fare();
+revoke execute on function public.set_rura_bus_fare() from public, anon, authenticated;
+
+do $$
+begin
+    if exists (select 1 from pg_catalog.pg_publication where pubname = 'supabase_realtime')
+       and not exists (
+           select 1
+             from pg_catalog.pg_publication_tables
+            where pubname = 'supabase_realtime'
+              and schemaname = 'public'
+              and tablename = 'buses'
+       ) then
+        alter publication supabase_realtime add table public.buses;
+    end if;
+end;
+$$;
 
 alter table public.companies enable row level security;
 alter table public.buses enable row level security;
@@ -63,7 +123,7 @@ drop policy if exists "Public can view future bus schedules" on public.buses;
 create policy "Public can view future bus schedules"
     on public.buses for select
     to anon, authenticated
-    using (travel_date >= current_date);
+    using (travel_date >= current_date and (is_active or company_id = (select auth.uid())));
 
 drop policy if exists "Companies can add their own schedules" on public.buses;
 create policy "Companies can add their own schedules"
@@ -79,16 +139,16 @@ create policy "Companies can update their own schedules"
     with check (company_id = (select auth.uid()));
 
 drop policy if exists "Companies can remove their own schedules" on public.buses;
-create policy "Companies can remove their own schedules"
-    on public.buses for delete
-    to authenticated
-    using (company_id = (select auth.uid()));
 
 grant usage on schema public to anon, authenticated;
 grant select on public.companies, public.buses to anon, authenticated;
-grant insert, delete on public.buses to authenticated;
-grant update (name, from_city, to_city, travel_date, departure_time, total_seats, fare)
+revoke insert, delete on public.buses from anon, authenticated;
+grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
     on public.buses to authenticated;
+revoke update (fare) on public.buses from anon, authenticated;
+grant update (name, from_city, to_city, travel_date, departure_time, total_seats)
+    on public.buses to authenticated;
+grant update (is_active) on public.buses to authenticated;
 grant update (name, logo_data) on public.companies to authenticated;
 revoke all on public.bookings from anon, authenticated;
 
@@ -150,14 +210,15 @@ begin
       from public.buses
      where id = p_bus_id
        and travel_date >= current_date
-     for update;
+        and is_active
+      for update;
 
     if not found or selected_bus.available_seats < p_seat_count then
         raise exception 'Those seats are no longer available. Search again.';
     end if;
 
     base_amount := selected_bus.fare * p_seat_count;
-    fee_amount := 10 * p_seat_count;
+    fee_amount := 0;
 
     update public.buses
        set available_seats = available_seats - p_seat_count

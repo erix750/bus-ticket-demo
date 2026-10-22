@@ -12,6 +12,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Full buses are excluded from passenger search while their schedules and booking records remain available to operators.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
 - The website can be installed from a supported mobile browser on Android and iPhone.
+- Passengers see trip search first; company account sign-in and registration open from the header.
 
 ## Supabase setup
 

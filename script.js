@@ -39,40 +39,18 @@ const busList = document.getElementById("busList");
 const companyFilter = document.getElementById("companyFilter");
 const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
+const partnerLoginOpen = document.getElementById("partnerLoginOpen");
 const dashboard = document.getElementById("top");
 const loginMessage = document.getElementById("loginMessage");
 const companyNameField = document.getElementById("companyNameField");
 const partnerCompanyName = document.getElementById("partnerCompanyName");
-const experienceButtons = document.querySelectorAll(".experience-toggle");
-const experienceScenes = document.querySelectorAll(".preview-scene");
-
-function setExperienceMode(mode) {
-    const selectedMode = mode === "app" ? "app" : "web";
-    experienceButtons.forEach(function(button) {
-        const isActive = button.dataset.viewMode === selectedMode;
-        button.classList.toggle("is-active", isActive);
-        button.setAttribute("aria-pressed", String(isActive));
-    });
-    experienceScenes.forEach(function(scene) {
-        scene.classList.toggle("is-active", scene.dataset.scene === selectedMode);
-    });
-}
-
-experienceButtons.forEach(function(button) {
-    button.addEventListener("click", function() {
-        setExperienceMode(button.dataset.viewMode);
-    });
-});
-
-setExperienceMode("web");
-
 function setPartnerPreview(active) {
-    partnerLoginScreen.hidden = active;
-    dashboard.hidden = !active;
+    dashboard.hidden = false;
     managementPanel.hidden = !active;
-    document.getElementById("partnerLoginOpen").hidden = true;
+    partnerLoginOpen.hidden = active;
     document.getElementById("partnerLogout").hidden = !active;
     managementPanel.open = active;
+    if (active && partnerLoginScreen.open) partnerLoginScreen.close();
 }
 
 function setPartnerFormMode(signUp) {
@@ -81,7 +59,7 @@ function setPartnerFormMode(signUp) {
     partnerCompanyName.required = signUp;
     document.getElementById("partnerFormTitle").textContent = signUp
         ? "Create a company account"
-        : "Partner sign in";
+        : "Company sign in";
     document.getElementById("partnerFormIntro").textContent = signUp
         ? "Register your bus company to publish schedules."
         : "Access your company schedules and bookings.";
@@ -104,19 +82,14 @@ async function refreshAppData() {
     renderBuses();
 }
 
-function showPassengerDashboard() {
-    partnerLoginScreen.hidden = true;
-    dashboard.hidden = false;
-    managementPanel.hidden = true;
-    managementPanel.open = false;
-    document.getElementById("partnerLoginOpen").hidden = false;
-    document.getElementById("partnerLogout").hidden = true;
-}
-
-document.getElementById("partnerLoginOpen").addEventListener("click", function() {
+partnerLoginOpen.addEventListener("click", function() {
     loginMessage.textContent = "";
-    setPartnerPreview(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setPartnerFormMode(false);
+    partnerLoginScreen.showModal();
+});
+
+document.getElementById("closePartnerLogin").addEventListener("click", function() {
+    partnerLoginScreen.close();
 });
 
 document.getElementById("partnerLoginForm").addEventListener("submit", async function(event) {
@@ -142,7 +115,6 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
             currentUser = result.user;
             partnerCompanyName.value = companyName;
             document.getElementById("company").value = companyName;
-            sessionStorage.removeItem("wayline-partner-demo");
             await refreshAppData();
             setPartnerPreview(true);
             managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -152,7 +124,6 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
 
         const result = await window.WaylineDatabase.signIn(email, password);
         currentUser = result.user;
-        sessionStorage.removeItem("wayline-partner-demo");
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
@@ -170,19 +141,9 @@ document.getElementById("togglePartnerMode").addEventListener("click", function(
     setPartnerFormMode(!isPartnerSignUp);
 });
 
-document.getElementById("demoPartnerAccess").addEventListener("click", function() {
-    sessionStorage.setItem("wayline-partner-demo", "true");
-    currentUser = null;
-    setPartnerPreview(true);
-    managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-});
-
-document.getElementById("continueAsPassenger").addEventListener("click", showPassengerDashboard);
-
 document.getElementById("partnerLogout").addEventListener("click", async function() {
     const button = document.getElementById("partnerLogout");
     button.disabled = true;
-    sessionStorage.removeItem("wayline-partner-demo");
     try {
         if (currentUser) await window.WaylineDatabase.signOut();
         currentUser = null;
@@ -206,7 +167,7 @@ async function initializeApp() {
         document.getElementById("company").value = profile.name;
         setPartnerPreview(true);
     } else {
-        setPartnerPreview(sessionStorage.getItem("wayline-partner-demo") === "true");
+        setPartnerPreview(false);
     }
     await refreshAppData();
     window.WaylineDatabase.subscribeToBusChanges(function() {
@@ -327,7 +288,10 @@ function updateCompanyOptions() {
         return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
             bus.company.trim() && bus.from && bus.to && bus.date >= today;
     }).map(function(bus) { return bus.company.trim(); })));
-    companyFilter.replaceChildren(new Option("Choose a company", ""));
+    companyFilter.replaceChildren(new Option(
+        companies.length ? "Choose a bus company" : "No buses available yet",
+        ""
+    ));
 
     companies.sort(function(first, second) { return first.localeCompare(second); });
     companies.forEach(function(company) {
@@ -420,7 +384,9 @@ function performSearch() {
 
     searchResults.replaceChildren();
     if (!company) {
-        searchMessage.textContent = "Choose a bus company.";
+        searchMessage.textContent = companyFilter.options.length > 1
+            ? "Choose a bus company."
+            : "There are no bookable bus schedules yet. Please check again later.";
         return;
     }
     if (!from || !to) {
@@ -761,7 +727,8 @@ busForm.addEventListener("submit", async function(event) {
 });
 
 initializeApp().catch(function(error) {
-    document.getElementById("bookingMessage").textContent =
+    setPartnerPreview(false);
+    document.getElementById("searchMessage").textContent =
         "Could not connect to the shared booking database. Check your internet connection and reload the page.";
     console.error(error);
 });

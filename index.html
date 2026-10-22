@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=rura-fares-20261022">
+    <link rel="stylesheet" href="style.css?v=passenger-first-20261022-2">
 </head>
 <body>
     <header class="site-header">
@@ -24,43 +24,43 @@
             <p>Intercity bus booking</p>
             <div class="header-actions">
                 <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                <button class="header-button" id="partnerLoginOpen" type="button" hidden>Partner sign in</button>
+                <button class="header-button" id="partnerLoginOpen" type="button">Company sign in</button>
                 <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
             </div>
         </div>
     </header>
 
-    <main class="login-page" id="partnerLoginScreen">
-        <section class="login-copy" aria-labelledby="partnerLoginTitle">
-            <p class="eyebrow">WAYLINE PARTNERS</p>
-            <h1 id="partnerLoginTitle">wayline<br>link people with their places</h1>
-            <p>Sign in to manage bus schedules and availability, or continue as a passenger to search for a trip.</p>
-        </section>
-        <form id="partnerLoginForm" class="login-form">
-            <p class="eyebrow">BUS COMPANY ACCOUNT</p>
-            <h2 id="partnerFormTitle">Partner sign in</h2>
-            <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
-            <div class="field" id="companyNameField" hidden>
-                <label for="partnerCompanyName">Company name</label>
-                <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
-            </div>
-            <div class="field">
-                <label for="partnerEmail">Email address</label>
-                <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required style="border-radius: 20px;">
-            </div>
-            <div class="field">
-                <label for="partnerPassword">Password</label>
-                <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required style="border-radius: 20px;">
-            </div>
-            <button class="button button-primary" id="partnerSubmitButton" type="submit" style="border-radius: 20px;">Sign in</button>
-            <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
-            <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
-            <div class="login-divider"><span>DEMO ACCESS</span></div>
-            <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview demo dashboard</button>
-            <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
-        </form>
-        <button class="passenger-entry" id="continueAsPassenger" type="button">Continue to passenger booking</button>
-    </main>
+    <dialog class="partner-dialog" id="partnerLoginScreen" aria-labelledby="partnerLoginTitle">
+        <button class="dialog-close" id="closePartnerLogin" type="button" aria-label="Close company sign in">&times;</button>
+        <div class="partner-dialog-content">
+            <section class="login-copy" aria-labelledby="partnerLoginTitle">
+                <p class="eyebrow">WAYLINE PARTNERS</p>
+                <h1 id="partnerLoginTitle">For bus companies</h1>
+                <p>Sign in or create a company account to add schedules and manage bookings.</p>
+            </section>
+            <form id="partnerLoginForm" class="login-form">
+                <p class="eyebrow">COMPANY ACCOUNT</p>
+                <h2 id="partnerFormTitle">Company sign in</h2>
+                <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
+                <div class="field" id="companyNameField" hidden>
+                    <label for="partnerCompanyName">Company name</label>
+                    <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
+                </div>
+                <div class="field">
+                    <label for="partnerEmail">Email address</label>
+                    <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
+                </div>
+                <div class="field">
+                    <label for="partnerPassword">Password</label>
+                    <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
+                </div>
+                <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
+                <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+                <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
+                <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
+            </form>
+        </div>
+    </dialog>
 
     <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
         <div class="checkout-content">
@@ -109,7 +109,7 @@
             <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
         </section>
 
-        <section class="panel experience-panel" aria-labelledby="experience-title">
+        <section class="panel experience-panel" aria-labelledby="experience-title" hidden>
             <div class="section-heading">
                 <div>
                     <p class="eyebrow">EXPERIENCE</p>
@@ -317,8 +317,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="database.js?v=rura-fares-20261022"></script>
-    <script src="script.js?v=rura-fares-20261022"></script>
+    <script src="database.js?v=passenger-first-20261022-2"></script>
+    <script src="script.js?v=passenger-first-20261022-2"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

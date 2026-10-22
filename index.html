@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find Rwanda bus trips, check RURA-based fares in RWF, and manage your tickets with Wayline.">
     <meta name="theme-color" content="#173f70">
-    <title>Bus Booking System</title>
-    <link rel="stylesheet" href="style.css?v=supabase-20261006">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Wayline">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/wayline-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/wayline-192.png">
+    <title>Wayline | Rwanda Bus Tickets and Schedules</title>
+    <link rel="stylesheet" href="style.css?v=passenger-first-20261022-2">
 </head>
 <body>
     <header class="site-header">
@@ -16,43 +23,44 @@
             </a>
             <p>Intercity bus booking</p>
             <div class="header-actions">
-                <button class="header-button" id="partnerLoginOpen" type="button" hidden>Partner sign in</button>
+                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
+                <button class="header-button" id="partnerLoginOpen" type="button">Company sign in</button>
                 <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
             </div>
         </div>
     </header>
 
-    <main class="login-page" id="partnerLoginScreen">
-        <section class="login-copy" aria-labelledby="partnerLoginTitle">
-            <p class="eyebrow">WAYLINE PARTNERS</p>
-            <h1 id="partnerLoginTitle">Your routes.<br>Your dashboard.</h1>
-            <p>Sign in to manage bus schedules and availability, or continue as a passenger to search for a trip.</p>
-        </section>
-        <form id="partnerLoginForm" class="login-form">
-            <p class="eyebrow">BUS COMPANY ACCOUNT</p>
-            <h2 id="partnerFormTitle">Partner sign in</h2>
-            <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
-            <div class="field" id="companyNameField" hidden>
-                <label for="partnerCompanyName">Company name</label>
-                <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
-            </div>
-            <div class="field">
-                <label for="partnerEmail">Email address</label>
-                <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
-            </div>
-            <div class="field">
-                <label for="partnerPassword">Password</label>
-                <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
-            </div>
-            <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
-            <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
-            <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
-            <div class="login-divider"><span>DEMO ACCESS</span></div>
-            <button class="button button-secondary" id="demoPartnerAccess" type="button">Preview demo dashboard</button>
-            <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
-        </form>
-        <button class="passenger-entry" id="continueAsPassenger" type="button">Continue to passenger booking</button>
-    </main>
+    <dialog class="partner-dialog" id="partnerLoginScreen" aria-labelledby="partnerLoginTitle">
+        <button class="dialog-close" id="closePartnerLogin" type="button" aria-label="Close company sign in">&times;</button>
+        <div class="partner-dialog-content">
+            <section class="login-copy" aria-labelledby="partnerLoginTitle">
+                <p class="eyebrow">WAYLINE PARTNERS</p>
+                <h1 id="partnerLoginTitle">For bus companies</h1>
+                <p>Sign in or create a company account to add schedules and manage bookings.</p>
+            </section>
+            <form id="partnerLoginForm" class="login-form">
+                <p class="eyebrow">COMPANY ACCOUNT</p>
+                <h2 id="partnerFormTitle">Company sign in</h2>
+                <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
+                <div class="field" id="companyNameField" hidden>
+                    <label for="partnerCompanyName">Company name</label>
+                    <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
+                </div>
+                <div class="field">
+                    <label for="partnerEmail">Email address</label>
+                    <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
+                </div>
+                <div class="field">
+                    <label for="partnerPassword">Password</label>
+                    <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
+                </div>
+                <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
+                <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+                <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
+                <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
+            </form>
+        </div>
+    </dialog>
 
     <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
         <div class="checkout-content">
@@ -62,7 +70,6 @@
             <p id="checkoutRoute" class="checkout-route"></p>
             <div class="checkout-summary">
                 <div><span>Bus fare</span><strong id="checkoutFare"></strong></div>
-                <div><span>Service fee</span><strong id="checkoutFee"></strong></div>
                 <div class="checkout-total"><span>Total</span><strong id="checkoutTotal"></strong></div>
             </div>
             <div class="field payment-method-field">
@@ -81,11 +88,98 @@
         </div>
     </dialog>
 
+    <dialog class="checkout-dialog install-dialog" id="installGuide" aria-labelledby="installGuideTitle">
+        <div class="checkout-content">
+            <button class="dialog-close" id="closeInstallGuide" type="button" aria-label="Close install instructions">&times;</button>
+            <p class="eyebrow">WAYLINE APP</p>
+            <h2 id="installGuideTitle">Add Wayline to your phone</h2>
+            <p id="installGuideIntro" class="checkout-route"></p>
+            <ol id="installGuideSteps" class="install-steps"></ol>
+            <p class="checkout-notice">This adds a Wayline icon to your Home Screen and opens it like an app. If this page opened inside another app, open its link in Safari or Chrome first. The website must be hosted securely (HTTPS).</p>
+            <div class="checkout-actions">
+                <button class="button button-primary" id="doneInstallGuide" type="button">Got it</button>
+            </div>
+        </div>
+    </dialog>
+
     <main id="top" hidden>
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
             <h1 id="page-title">Where are you<br>headed next?</h1>
             <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
+        </section>
+
+        <section class="panel experience-panel" aria-labelledby="experience-title" hidden>
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">EXPERIENCE</p>
+                    <h2 id="experience-title">Web or app view</h2>
+                </div>
+                <div class="experience-switch" aria-label="Choose preview mode">
+                    <button class="experience-toggle is-active" type="button" data-view-mode="web">Web</button>
+                    <button class="experience-toggle" type="button" data-view-mode="app">App</button>
+                </div>
+            </div>
+
+            <div class="experience-preview" aria-live="polite">
+                <div class="preview-scene is-active" data-scene="web" aria-label="Web preview">
+                    <div class="web-window">
+                        <div class="web-chrome">
+                            <div class="window-dots" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="address-bar">wayline.travel / journeys</div>
+                            <span class="window-profile" aria-hidden="true">W</span>
+                        </div>
+                        <div class="web-content">
+                            <div class="web-welcome">
+                                <span class="card-pill accent">Your next trip</span>
+                                <strong>Make the journey yours.</strong>
+                                <small>Simple booking from departure to arrival.</small>
+                            </div>
+                            <div class="web-search-row">
+                                <div><small>FROM</small><strong>Kigali</strong></div>
+                                <span class="route-arrow" aria-hidden="true">→</span>
+                                <div><small>TO</small><strong>Kampala</strong></div>
+                                <div><small>TRAVEL DATE</small><strong>Oct 12, 2026</strong></div>
+                                <span class="web-search-button" aria-hidden="true">Find a bus</span>
+                            </div>
+                            <div class="web-result-row">
+                                <span class="result-icon" aria-hidden="true">W</span>
+                                <div><strong>Wayline Express</strong><small>07:30 AM · 12 seats available</small></div>
+                                <strong class="result-price">RWF 18,500</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-scene" data-scene="app" aria-label="App preview">
+                    <div class="phone-shell">
+                        <div class="phone-status">
+                            <span>9:41</span>
+                            <span aria-hidden="true">● ● ▰</span>
+                        </div>
+                        <div class="phone-header">
+                            <span class="phone-brand"><span class="phone-brand-mark">W</span> Wayline</span>
+                            <span class="phone-avatar" aria-hidden="true">A</span>
+                        </div>
+                        <div class="phone-card main-card">
+                            <small class="phone-card-label">YOUR UPCOMING TRIP</small>
+                            <strong>Kigali <span aria-hidden="true">→</span> Musanze</strong>
+                            <small>Today · 9:15 AM</small>
+                            <div class="phone-ticket">
+                                <span><small>PASSENGERS</small><strong>2 people</strong></span>
+                                <span><small>STATUS</small><strong class="ticket-status">Confirmed</strong></span>
+                            </div>
+                        </div>
+                        <div class="phone-nav">
+                            <span class="is-selected"><b aria-hidden="true">⌂</b>Home</span>
+                            <span><b aria-hidden="true">▤</b>Trips</span>
+                            <span><b aria-hidden="true">○</b>Profile</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="panel search-panel" aria-labelledby="search-title">
@@ -188,8 +282,19 @@
                         <input type="number" id="seatNumber" name="seatNumber" min="1" max="100" step="1" placeholder="e.g. 40" required>
                     </div>
                     <div class="field">
-                        <label for="fare">Price for this route (RWF per passenger)</label>
-                        <input type="number" id="fare" name="fare" min="0" step="1" placeholder="e.g. 2500" required>
+                        <label for="fareCategory">RURA fare area</label>
+                        <select id="fareCategory" name="fareCategory" required>
+                            <option value="">Choose a fare area</option>
+                            <option value="intercity">Intercity / provincial (RWF 41.58 per km)</option>
+                            <option value="kigali">City of Kigali (RWF 59.28 per km)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="routeDistance">One-way route distance (km)</label>
+                        <input type="number" id="routeDistance" name="routeDistance" min="0.1" max="1000" step="0.1" placeholder="e.g. 115" required>
+                    </div>
+                    <div class="field field-wide">
+                        <p class="field-hint" id="calculatedFare" aria-live="polite">Enter the route distance to calculate the RWF fare.</p>
                     </div>
                     <div class="field field-wide form-action">
                         <button class="button button-secondary" type="submit">Add bus schedule</button>
@@ -203,7 +308,7 @@
                 <div id="busList" class="record-list"></div>
             </div>
         </details>
-        <p class="storage-note">A RWF 10 service fee is added per passenger. Bookings are shared online; payments are not collected yet.</p>
+        <p class="storage-note">Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
     </main>
 
     <footer class="site-footer">
@@ -211,7 +316,9 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="database.js?v=supabase-20261006"></script>
-    <script src="script.js?v=supabase-20261006"></script>
+    <script src="config.js"></script>
+    <script src="database.js?v=passenger-first-20261022-2"></script>
+    <script src="script.js?v=passenger-first-20261022-2"></script>
+    <script src="pwa.js"></script>
 </body>
 </html>

@@ -1,8 +1,17 @@
 (function() {
-    const supabase = window.supabase.createClient(
-        "https://fkmpiuoveqqkboolzyid.supabase.co",
-        "sb_publishable_FtiAklhEqFzMvxIBdIc6YA_fSVi3x-P"
-    );
+    if (!window.supabase) {
+        throw new Error("Supabase JavaScript client failed to load. Check the script order in index.html.");
+    }
+
+    const config = window.WaylineConfig || {};
+    const supabaseUrl = (config.supabaseUrl || "").trim();
+    const supabaseAnonKey = (config.supabaseAnonKey || "").trim();
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Missing Supabase configuration. Update config.js with your project URL and anon key.");
+    }
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
     const bookingTokensKey = "wayline-booking-tokens";
 
     function throwIfError(result) {
@@ -34,6 +43,9 @@
             totalSeats: record.total_seats,
             availableSeats: record.available_seats,
             fare: Number(record.fare),
+            routeDistanceKm: Number(record.route_distance_km) || 0,
+            fareCategory: record.fare_category || "intercity",
+            isActive: record.is_active !== false,
             logo: company ? company.logo_data : ""
         };
     }
@@ -69,6 +81,21 @@
             .order("travel_date")
             .order("departure_time");
         return throwIfError(result).map(mapBus);
+    }
+
+    function subscribeToBusChanges(onChange, onError) {
+        return supabase
+            .channel("wayline-bus-availability")
+            .on("postgres_changes", {
+                event: "*",
+                schema: "public",
+                table: "buses"
+            }, onChange)
+            .subscribe(function(status, error) {
+                if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                    onError(new Error(error && error.message ? error.message : "Live bus availability could not connect."));
+                }
+            });
     }
 
     async function loadBookings() {
@@ -120,15 +147,20 @@
             travel_date: bus.date,
             departure_time: bus.departureTime,
             total_seats: bus.totalSeats,
-            available_seats: bus.totalSeats,
-            fare: bus.fare
+            route_distance_km: bus.routeDistanceKm,
+            fare_category: bus.fareCategory
         }).select("*, companies(name, logo_data)").single();
         return mapBus(throwIfError(insertResult));
     }
 
-    async function deleteSchedule(busId) {
-        const result = await supabase.from("buses").delete().eq("id", busId).select("id").maybeSingle();
-        if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to remove it.");
+    async function setScheduleActive(busId, isActive) {
+        const result = await supabase
+            .from("buses")
+            .update({ is_active: isActive })
+            .eq("id", busId)
+            .select("id")
+            .maybeSingle();
+        if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to update it.");
     }
 
     async function createBooking(bus, passengerName, seatCount, paymentMethod) {
@@ -192,10 +224,11 @@
     window.WaylineDatabase = {
         open: function() { return supabase; },
         loadBuses: loadBuses,
+        subscribeToBusChanges: subscribeToBusChanges,
         loadBookings: loadBookings,
         getCompanyProfile: getCompanyProfile,
         createSchedule: createSchedule,
-        deleteSchedule: deleteSchedule,
+        setScheduleActive: setScheduleActive,
         createBooking: createBooking,
         cancelBooking: cancelBooking,
         signIn: signIn,

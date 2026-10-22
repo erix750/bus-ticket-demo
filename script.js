@@ -1,10 +1,14 @@
-const platformFeePerPassenger = 10;
+const ruraFarePerKm = {
+    kigali: 59.28,
+    intercity: 41.58
+};
 let database;
 let currentUser = null;
 let isPartnerSignUp = false;
 let buses = [];
 let bookings = [];
 let pendingBooking = null;
+let busRefreshTimer;
 
 function normalizeBus(bus) {
     return {
@@ -19,7 +23,10 @@ function normalizeBus(bus) {
         logo: bus.logo || "",
         totalSeats: Number(bus.totalSeats),
         availableSeats: Number(bus.availableSeats),
-        fare: Number(bus.fare)
+        fare: Number(bus.fare),
+        routeDistanceKm: Number(bus.routeDistanceKm) || 0,
+        fareCategory: bus.fareCategory || "intercity",
+        isActive: bus.isActive !== false
     };
 }
 
@@ -36,6 +43,28 @@ const dashboard = document.getElementById("top");
 const loginMessage = document.getElementById("loginMessage");
 const companyNameField = document.getElementById("companyNameField");
 const partnerCompanyName = document.getElementById("partnerCompanyName");
+const experienceButtons = document.querySelectorAll(".experience-toggle");
+const experienceScenes = document.querySelectorAll(".preview-scene");
+
+function setExperienceMode(mode) {
+    const selectedMode = mode === "app" ? "app" : "web";
+    experienceButtons.forEach(function(button) {
+        const isActive = button.dataset.viewMode === selectedMode;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+    });
+    experienceScenes.forEach(function(scene) {
+        scene.classList.toggle("is-active", scene.dataset.scene === selectedMode);
+    });
+}
+
+experienceButtons.forEach(function(button) {
+    button.addEventListener("click", function() {
+        setExperienceMode(button.dataset.viewMode);
+    });
+});
+
+setExperienceMode("web");
 
 function setPartnerPreview(active) {
     partnerLoginScreen.hidden = active;
@@ -180,6 +209,20 @@ async function initializeApp() {
         setPartnerPreview(sessionStorage.getItem("wayline-partner-demo") === "true");
     }
     await refreshAppData();
+    window.WaylineDatabase.subscribeToBusChanges(function() {
+        window.clearTimeout(busRefreshTimer);
+        busRefreshTimer = window.setTimeout(function() {
+            refreshAppData().then(function() {
+                if (document.getElementById("date").value) performSearch();
+            }).catch(function(error) {
+                console.error("Could not refresh bus availability after a schedule update.", error);
+                searchMessage.textContent = "Bus availability changed, but could not be refreshed. Reload the page and search again.";
+            });
+        }, 200);
+    }, function(error) {
+        console.error("Live bus availability could not connect.", error);
+        searchMessage.textContent = "Live availability is unavailable. Reload the page to see the latest seats.";
+    });
 }
 
 function localDateString(date) {
@@ -192,6 +235,8 @@ function localDateString(date) {
 const today = localDateString(new Date());
 document.getElementById("date").min = today;
 document.getElementById("busDate").min = today;
+document.getElementById("routeDistance").addEventListener("input", updateCalculatedFare);
+document.getElementById("fareCategory").addEventListener("change", updateCalculatedFare);
 
 function normalizedText(value) {
     return value.trim().toLocaleLowerCase();
@@ -207,11 +252,26 @@ function formatDate(date) {
 }
 
 function formatFare(amount) {
-    return new Intl.NumberFormat("en-RW", {
-        style: "currency",
-        currency: "RWF",
+    return "RWF " + new Intl.NumberFormat("en-RW", {
         maximumFractionDigits: 0
     }).format(Number(amount) || 0);
+}
+
+function calculateFare(routeDistanceKm, fareCategory) {
+    const rate = ruraFarePerKm[fareCategory];
+    if (!Number.isFinite(routeDistanceKm) || routeDistanceKm <= 0 || !rate) return 0;
+    return Math.round(routeDistanceKm * rate);
+}
+
+function updateCalculatedFare() {
+    const distance = Number(document.getElementById("routeDistance").value);
+    const category = document.getElementById("fareCategory").value;
+    const rate = ruraFarePerKm[category];
+    const fare = calculateFare(distance, category);
+    document.getElementById("calculatedFare").textContent = fare
+        ? "Calculated fare: " + formatFare(fare) + " per passenger (" + distance +
+            " km × RWF " + rate + "/km, rounded to the nearest RWF)."
+        : "Enter the route distance to calculate the RWF fare.";
 }
 
 function makeElement(tagName, className, text) {
@@ -264,7 +324,8 @@ function addEmptyMessage(container, text) {
 function updateCompanyOptions() {
     const selectedCompany = companyFilter.value;
     const companies = Array.from(new Set(buses.filter(function(bus) {
-        return bus.company.trim() && bus.from && bus.to && bus.date >= today;
+        return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
+            bus.company.trim() && bus.from && bus.to && bus.date >= today;
     }).map(function(bus) { return bus.company.trim(); })));
     companyFilter.replaceChildren(new Option("Choose a company", ""));
 
@@ -296,16 +357,14 @@ function renderSearchResults(matchingBuses, requestedSeats) {
             "p",
             "result-details",
             formatDate(bus.date) + " | " + bus.departureTime + " | " +
-                formatFare(bus.fare) + " per passenger | " + formatFare(platformFeePerPassenger) + " service fee per passenger"
+                bus.routeDistanceKm + " km | " + formatFare(bus.fare) + " per passenger"
         );
         const baseFare = bus.fare * requestedSeats;
-        const platformFee = platformFeePerPassenger * requestedSeats;
-        const total = baseFare + platformFee;
+        const total = baseFare;
         const priceBreakdown = makeElement(
             "p",
             "result-total",
-            formatFare(bus.fare) + " x " + requestedSeats + " passengers + " +
-                formatFare(platformFee) + " service fee = " + formatFare(total) + " total"
+            formatFare(bus.fare) + " x " + requestedSeats + " passengers = " + formatFare(total) + " total"
         );
         const bookButton = makeElement(
             "button",
@@ -314,7 +373,7 @@ function renderSearchResults(matchingBuses, requestedSeats) {
         );
         bookButton.type = "button";
         bookButton.addEventListener("click", function() {
-            openDemoCheckout(bus.id, requestedSeats, baseFare, platformFee, total);
+            openDemoCheckout(bus.id, requestedSeats, baseFare, total);
         });
 
         result.append(heading, route, details, priceBreakdown, bookButton);
@@ -322,7 +381,7 @@ function renderSearchResults(matchingBuses, requestedSeats) {
     });
 }
 
-function openDemoCheckout(busId, seatCount, baseFare, platformFee, totalFare) {
+function openDemoCheckout(busId, seatCount, baseFare, totalFare) {
     const passengerName = document.getElementById("passengerName").value.trim();
     const bus = buses.find(function(item) { return item.id === busId; });
 
@@ -331,7 +390,7 @@ function openDemoCheckout(busId, seatCount, baseFare, platformFee, totalFare) {
         document.getElementById("passengerName").focus();
         return;
     }
-    if (!bus || bus.availableSeats < seatCount) {
+    if (!bus || !bus.isActive || bus.availableSeats < seatCount) {
         searchMessage.textContent = "Those places are no longer available. Search again for current availability.";
         performSearch();
         return;
@@ -341,7 +400,6 @@ function openDemoCheckout(busId, seatCount, baseFare, platformFee, totalFare) {
         busId: busId,
         seatCount: seatCount,
         baseFare: baseFare,
-        platformFee: platformFee,
         totalFare: totalFare
     };
     document.getElementById("checkoutRoute").textContent =
@@ -349,7 +407,6 @@ function openDemoCheckout(busId, seatCount, baseFare, platformFee, totalFare) {
         " | " + formatDate(bus.date) + " at " + bus.departureTime +
         " | " + seatCount + (seatCount === 1 ? " passenger" : " passengers");
     document.getElementById("checkoutFare").textContent = formatFare(baseFare);
-    document.getElementById("checkoutFee").textContent = formatFare(platformFee);
     document.getElementById("checkoutTotal").textContent = formatFare(totalFare);
     document.getElementById("checkoutDialog").showModal();
 }
@@ -380,7 +437,8 @@ function performSearch() {
     }
 
     const matches = buses.filter(function(bus) {
-        return bus.company === company && bus.from && bus.to && bus.date === date && bus.date >= today &&
+        return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
+            bus.company === company && bus.from && bus.to && bus.date === date && bus.date >= today &&
             normalizedText(bus.from) === normalizedText(from) &&
             normalizedText(bus.to) === normalizedText(to) &&
             bus.availableSeats >= requestedSeats;
@@ -398,7 +456,7 @@ function performSearch() {
     renderSearchResults(matches, requestedSeats);
 }
 
-async function bookTrip(busId, seatCount, baseFare, platformFee, totalFare, paymentMethod) {
+async function bookTrip(busId, seatCount, baseFare, totalFare, paymentMethod) {
     const bus = buses.find(function(item) { return item.id === busId; });
     const passengerName = document.getElementById("passengerName").value.trim();
 
@@ -407,7 +465,7 @@ async function bookTrip(busId, seatCount, baseFare, platformFee, totalFare, paym
         document.getElementById("passengerName").focus();
         return false;
     }
-    if (!bus || bus.availableSeats < seatCount) {
+    if (!bus || !bus.isActive || bus.availableSeats < seatCount) {
         searchMessage.textContent = "Those seats are no longer available. Search again for current availability.";
         await refreshAppData();
         performSearch();
@@ -452,7 +510,6 @@ document.getElementById("confirmDemoBooking").addEventListener("click", async fu
             pendingBooking.busId,
             pendingBooking.seatCount,
             pendingBooking.baseFare,
-            pendingBooking.platformFee,
             pendingBooking.totalFare,
             paymentMethod.value
         );
@@ -493,7 +550,7 @@ function renderBookings() {
                 " | " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
                 "\nPayment method: " + (booking.paymentMethod || "Not selected") +
                 (booking.totalFare > 0 ? "\nFare " + formatFare(booking.baseFare) +
-                    " | Service fee " + formatFare(booking.platformFee) +
+                    (booking.platformFee > 0 ? " | Service fee " + formatFare(booking.platformFee) : "") +
                     " | Total " + formatFare(booking.totalFare) : "")
         );
         card.append(top, reference, details);
@@ -512,7 +569,7 @@ function renderBookings() {
             actions.appendChild(printButton);
 
             if (booking.busId && !booking.companyView) {
-                const cancelButton = makeElement("button", "button button-danger", "Cancel booking");
+                const cancelButton = makeElement("button", "button button-danger", "Cancel ticket");
                 cancelButton.type = "button";
                 cancelButton.addEventListener("click", function() { cancelBooking(booking.id); });
                 actions.appendChild(cancelButton);
@@ -537,20 +594,26 @@ function renderBuses() {
     }
 
     manageableBuses.forEach(function(bus) {
-        const hasBookings = bookings.some(function(booking) {
-            return booking.busId === bus.id;
-        });
         const card = makeElement("article", "record-card schedule-card");
         const top = makeElement("div", "record-topline");
         top.appendChild(makeElement("h3", "", bus.name));
-        top.appendChild(makeElement("span", "availability", bus.availableSeats + " / " + bus.totalSeats + " seats"));
+        const availabilityText = !bus.isActive
+            ? "Hidden from passengers"
+            : bus.availableSeats === 0
+                ? "Full — unavailable to passengers"
+                : bus.availableSeats + " / " + bus.totalSeats + " seats";
+        top.appendChild(makeElement("span", "availability", availabilityText));
 
         const company = makeElement("div", "company-brand record-company-brand");
         const logo = makeCompanyLogo(bus, "company-logo");
         if (logo) company.appendChild(logo);
         company.appendChild(makeElement("p", "record-company", bus.company || "Company not set"));
         const scheduleText = bus.from && bus.to && bus.date && bus.departureTime
-            ? bus.from + " to " + bus.to + "\n" + formatDate(bus.date) + " at " + bus.departureTime + " | " + formatFare(bus.fare) + " per passenger"
+            ? bus.routeDistanceKm > 0
+                ? bus.from + " to " + bus.to + "\n" + formatDate(bus.date) + " at " + bus.departureTime +
+                    " | " + bus.routeDistanceKm + " km | " + formatFare(bus.fare) + " per passenger"
+                : bus.from + " to " + bus.to + "\n" + formatDate(bus.date) +
+                    " | Add a new schedule with route distance to apply RURA fares."
             : "Older bus record: add a new schedule to make this bus bookable.";
         const details = makeElement("p", "record-details", scheduleText);
         card.append(top, company, details);
@@ -558,11 +621,11 @@ function renderBuses() {
         const removeButton = makeElement(
             "button",
             "button button-text",
-            !currentUser ? "Sign in to manage schedules" : (hasBookings ? "Has bookings" : "Remove schedule")
+            !currentUser ? "Sign in to manage schedules" : (bus.isActive ? "Hide schedule" : "Show schedule")
         );
         removeButton.type = "button";
-        removeButton.disabled = !currentUser || hasBookings;
-        removeButton.addEventListener("click", function() { removeBus(bus.id); });
+        removeButton.disabled = !currentUser;
+        removeButton.addEventListener("click", function() { setScheduleActive(bus.id, !bus.isActive); });
         card.appendChild(removeButton);
         busList.appendChild(card);
     });
@@ -581,29 +644,26 @@ async function cancelBooking(bookingId) {
         return;
     }
 
-    document.getElementById("bookingMessage").textContent = "Booking cancelled. Reserved seats are available again.";
+    document.getElementById("bookingMessage").textContent = "Ticket cancelled. Reserved seats are available again.";
     if (document.getElementById("date").value) performSearch();
 }
 
-async function removeBus(busId) {
-    const hasBookings = bookings.some(function(booking) {
-        return booking.busId === busId;
-    });
-    if (hasBookings || !currentUser) return;
-
+async function setScheduleActive(busId, isActive) {
     const bus = buses.find(function(item) { return item.id === busId; });
-    if (!bus || bus.companyId !== currentUser.id) return;
+    if (!currentUser || !bus || bus.companyId !== currentUser.id) return;
 
     try {
-        await window.WaylineDatabase.deleteSchedule(busId);
+        await window.WaylineDatabase.setScheduleActive(busId, isActive);
         await refreshAppData();
     } catch (error) {
         document.getElementById("busMessage").textContent =
-            error.message || "Could not remove the schedule. Please try again.";
+            error.message || "Could not update the schedule. Please try again.";
         return;
     }
 
-    document.getElementById("busMessage").textContent = "Schedule removed.";
+    document.getElementById("busMessage").textContent = isActive
+        ? "Schedule is visible to passengers again."
+        : "Schedule hidden from passengers. Its records and bookings are kept.";
     if (document.getElementById("date").value) performSearch();
 }
 
@@ -632,7 +692,8 @@ busForm.addEventListener("submit", async function(event) {
     const date = document.getElementById("busDate").value;
     const departureTime = document.getElementById("departureTime").value;
     const totalSeats = Number(document.getElementById("seatNumber").value);
-    const fare = Number(document.getElementById("fare").value);
+    const routeDistanceKm = Number(document.getElementById("routeDistance").value);
+    const fareCategory = document.getElementById("fareCategory").value;
     const logoFile = document.getElementById("companyLogo").files[0];
     const busMessage = document.getElementById("busMessage");
 
@@ -648,8 +709,10 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "A bus schedule cannot be in the past.";
         return;
     }
-    if (!Number.isInteger(totalSeats) || totalSeats < 1 || totalSeats > 100 || !Number.isFinite(fare) || fare < 0) {
-        busMessage.textContent = "Enter 1 to 100 seats and a valid fare of zero or more.";
+    if (!Number.isInteger(totalSeats) || totalSeats < 1 || totalSeats > 100 ||
+        !Number.isFinite(routeDistanceKm) || routeDistanceKm < 0.1 || routeDistanceKm > 1000 ||
+        !ruraFarePerKm[fareCategory]) {
+        busMessage.textContent = "Enter 1 to 100 seats, a route distance from 0.1 to 1,000 km, and a RURA fare area.";
         return;
     }
     if (logoFile && !["image/png", "image/jpeg", "image/webp"].includes(logoFile.type)) {
@@ -679,7 +742,8 @@ busForm.addEventListener("submit", async function(event) {
         date: date,
         departureTime: departureTime,
         totalSeats: totalSeats,
-        fare: fare
+        routeDistanceKm: routeDistanceKm,
+        fareCategory: fareCategory
     };
     try {
         const savedBus = await window.WaylineDatabase.createSchedule(bus, logo);
@@ -691,7 +755,7 @@ busForm.addEventListener("submit", async function(event) {
     }
 
     busForm.reset();
-    busMessage.textContent = "Bus schedule added and ready for booking.";
+    busMessage.textContent = "Bus schedule added. The fare is calculated automatically using the RURA tariff.";
     updateCompanyOptions();
     if (document.getElementById("date").value) performSearch();
 });

@@ -139,6 +139,10 @@ create policy "Companies can update their own schedules"
     with check (company_id = (select auth.uid()));
 
 drop policy if exists "Companies can remove their own schedules" on public.buses;
+create policy "Companies can remove their own schedules"
+    on public.buses for delete
+    to authenticated
+    using (company_id = (select auth.uid()));
 
 grant usage on schema public to anon, authenticated;
 grant select on public.companies, public.buses to anon, authenticated;
@@ -149,6 +153,7 @@ revoke update (fare) on public.buses from anon, authenticated;
 grant update (name, from_city, to_city, travel_date, departure_time, total_seats)
     on public.buses to authenticated;
 grant update (is_active) on public.buses to authenticated;
+grant delete on public.buses to authenticated;
 grant update (name, logo_data) on public.companies to authenticated;
 revoke all on public.bookings from anon, authenticated;
 

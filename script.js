@@ -10,6 +10,40 @@ let bookings = [];
 let pendingBooking = null;
 let busRefreshTimer;
 
+const themeToggle = document.getElementById("themeToggle");
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+function setColorTheme(theme, persist) {
+    const isDark = theme === "dark";
+    document.documentElement.dataset.theme = isDark ? "dark" : "light";
+    themeToggle.setAttribute("aria-pressed", String(isDark));
+    themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+    themeToggle.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
+    themeToggle.title = isDark ? "Turn off dark mode" : "Turn on dark mode";
+    themeColorMeta.content = isDark ? "#0d1620" : "#173f70";
+
+    if (persist) {
+        try {
+            localStorage.setItem("wayline-theme", isDark ? "dark" : "light");
+        } catch (error) {
+            console.error("Could not save the Wayline color theme preference.", error);
+        }
+    }
+}
+
+let savedTheme = "light";
+try {
+    if (localStorage.getItem("wayline-theme") === "dark") savedTheme = "dark";
+} catch (error) {
+    console.error("Could not read the Wayline color theme preference.", error);
+}
+setColorTheme(savedTheme, false);
+
+themeToggle.addEventListener("click", function() {
+    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    setColorTheme(nextTheme, true);
+});
+
 function normalizeBus(bus) {
     return {
         id: bus.id,
@@ -82,6 +116,39 @@ async function refreshAppData() {
     renderBookings();
     renderBuses();
 }
+
+let isRefreshingAvailability = false;
+
+async function refreshBusAvailability(showSuccess) {
+    if (isRefreshingAvailability) return;
+    isRefreshingAvailability = true;
+    const refreshButton = document.getElementById("refreshAvailability");
+    refreshButton.disabled = true;
+    refreshButton.textContent = "Refreshing...";
+
+    try {
+        buses = (await window.WaylineDatabase.loadBuses()).map(normalizeBus);
+        updateCompanyOptions();
+        renderBuses();
+        if (document.getElementById("date").value) performSearch();
+        if (showSuccess) {
+            document.getElementById("availabilityStatus").textContent =
+                "Seat availability updated just now.";
+        }
+    } catch (error) {
+        console.error("Could not refresh bus availability.", error);
+        document.getElementById("availabilityStatus").textContent =
+            "Could not refresh seats. Check your connection and try again.";
+    } finally {
+        refreshButton.disabled = false;
+        refreshButton.textContent = "Refresh seats";
+        isRefreshingAvailability = false;
+    }
+}
+
+document.getElementById("refreshAvailability").addEventListener("click", function() {
+    refreshBusAvailability(true);
+});
 
 partnerLoginOpen.addEventListener("click", function() {
     loginMessage.textContent = "";
@@ -174,16 +241,25 @@ async function initializeApp() {
     window.WaylineDatabase.subscribeToBusChanges(function() {
         window.clearTimeout(busRefreshTimer);
         busRefreshTimer = window.setTimeout(function() {
-            refreshAppData().then(function() {
-                if (document.getElementById("date").value) performSearch();
-            }).catch(function(error) {
-                console.error("Could not refresh bus availability after a schedule update.", error);
-                searchMessage.textContent = "Bus availability changed, but could not be refreshed. Reload the page and search again.";
-            });
+            refreshBusAvailability(false);
         }, 200);
-    }, function(error) {
-        console.error("Live bus availability could not connect.", error);
-        searchMessage.textContent = "Live availability is unavailable. Reload the page to see the latest seats.";
+    }, function(status, error) {
+        if (status === "SUBSCRIBED") {
+            document.getElementById("availabilityStatus").textContent = "Live seat updates connected.";
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            console.error("Live bus availability could not connect.", error);
+            document.getElementById("availabilityStatus").textContent =
+                "Live updates are disconnected. Seats will refresh automatically every 30 seconds.";
+        }
+    });
+    window.setInterval(function() {
+        refreshBusAvailability(false);
+    }, 30000);
+    window.addEventListener("focus", function() {
+        refreshBusAvailability(false);
+    });
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "visible") refreshBusAvailability(false);
     });
 }
 
@@ -538,7 +614,9 @@ function renderBookings() {
             if (booking.busId && !booking.companyView) {
                 const cancelButton = makeElement("button", "button button-danger", "Cancel ticket");
                 cancelButton.type = "button";
-                cancelButton.addEventListener("click", function() { cancelBooking(booking.id); });
+                cancelButton.addEventListener("click", function() {
+                    cancelBooking(booking.id, cancelButton);
+                });
                 actions.appendChild(cancelButton);
             }
             card.appendChild(actions);
@@ -585,34 +663,59 @@ function renderBuses() {
         const details = makeElement("p", "record-details", scheduleText);
         card.append(top, company, details);
 
-        const removeButton = makeElement(
-            "button",
-            "button button-text",
-            !currentUser ? "Sign in to manage schedules" : (bus.isActive ? "Hide schedule" : "Show schedule")
-        );
-        removeButton.type = "button";
-        removeButton.disabled = !currentUser;
-        removeButton.addEventListener("click", function() { setScheduleActive(bus.id, !bus.isActive); });
-        card.appendChild(removeButton);
+        if (!currentUser) {
+            const signInMessage = makeElement("p", "muted-label", "Sign in to manage schedules.");
+            card.appendChild(signInMessage);
+        } else {
+            const actions = makeElement("div", "record-actions");
+            const visibilityButton = makeElement(
+                "button",
+                "button button-text",
+                bus.isActive ? "Hide schedule" : "Show schedule"
+            );
+            visibilityButton.type = "button";
+            visibilityButton.addEventListener("click", function() {
+                setScheduleActive(bus.id, !bus.isActive);
+            });
+            const removeButton = makeElement("button", "button button-danger", "Remove schedule");
+            removeButton.type = "button";
+            removeButton.addEventListener("click", function() {
+                removeSchedule(bus.id);
+            });
+            actions.append(visibilityButton, removeButton);
+            card.appendChild(actions);
+        }
         busList.appendChild(card);
     });
 }
 
-async function cancelBooking(bookingId) {
+async function cancelBooking(bookingId, cancelButton) {
     const booking = bookings.find(function(item) { return item.id === bookingId; });
     if (!booking || booking.cancelled) return;
 
+    cancelButton.disabled = true;
+    cancelButton.textContent = "Cancelling...";
     try {
         await window.WaylineDatabase.cancelBooking(bookingId);
-        await refreshAppData();
     } catch (error) {
         document.getElementById("bookingMessage").textContent =
             error.message || "Could not save the cancellation. Please try again.";
+        cancelButton.disabled = false;
+        cancelButton.textContent = "Cancel ticket";
         return;
     }
 
+    booking.cancelled = true;
+    renderBookings();
     document.getElementById("bookingMessage").textContent = "Ticket cancelled. Reserved seats are available again.";
-    if (document.getElementById("date").value) performSearch();
+    try {
+        await refreshAppData();
+    } catch (error) {
+        console.error("The ticket was cancelled, but the booking list could not refresh.", error);
+        document.getElementById("bookingMessage").textContent =
+            "Ticket cancelled, but the latest booking details could not load. Refresh the page to update them.";
+    }
+    await refreshBusAvailability(false);
 }
 
 async function setScheduleActive(busId, isActive) {
@@ -632,6 +735,22 @@ async function setScheduleActive(busId, isActive) {
         ? "Schedule is visible to passengers again."
         : "Schedule hidden from passengers. Its records and bookings are kept.";
     if (document.getElementById("date").value) performSearch();
+}
+
+async function removeSchedule(busId) {
+    const bus = buses.find(function(item) { return item.id === busId; });
+    if (!currentUser || !bus || bus.companyId !== currentUser.id) return;
+    if (!window.confirm("Permanently remove " + bus.name + "? Schedules with ticket records cannot be removed.")) return;
+
+    try {
+        await window.WaylineDatabase.removeSchedule(busId);
+        await refreshAppData();
+        document.getElementById("busMessage").textContent = "Schedule permanently removed.";
+        if (document.getElementById("date").value) performSearch();
+    } catch (error) {
+        document.getElementById("busMessage").textContent =
+            error.message || "Could not remove the schedule. Please try again.";
+    }
 }
 
 searchForm.addEventListener("submit", function(event) {

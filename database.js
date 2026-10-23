@@ -83,7 +83,7 @@
         return throwIfError(result).map(mapBus);
     }
 
-    function subscribeToBusChanges(onChange, onError) {
+    function subscribeToBusChanges(onChange, onStatus) {
         return supabase
             .channel("wayline-bus-availability")
             .on("postgres_changes", {
@@ -91,11 +91,7 @@
                 schema: "public",
                 table: "buses"
             }, onChange)
-            .subscribe(function(status, error) {
-                if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-                    onError(new Error(error && error.message ? error.message : "Live bus availability could not connect."));
-                }
-            });
+            .subscribe(onStatus);
     }
 
     async function loadBookings() {
@@ -163,6 +159,19 @@
         if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to update it.");
     }
 
+    async function removeSchedule(busId) {
+        const result = await supabase
+            .from("buses")
+            .delete()
+            .eq("id", busId)
+            .select("id")
+            .maybeSingle();
+        if (result.error && result.error.code === "23503") {
+            throw new Error("This schedule has ticket records and cannot be removed. Hide it instead to keep those records.");
+        }
+        if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to remove it.");
+    }
+
     async function createBooking(bus, passengerName, seatCount, paymentMethod) {
         const result = await supabase.rpc("book_bus", {
             p_bus_id: bus.id,
@@ -174,7 +183,7 @@
         const tokens = readBookingTokens().filter(function(item) { return item.id !== booking.id; });
         tokens.unshift({ id: booking.id, token: booking.cancel_token });
         try {
-            localStorage.setItem(bookingTokensKey, JSON.stringify(tokens.slice(0, 50)));
+            localStorage.setItem(bookingTokensKey, JSON.stringify(tokens));
         } catch {
             const rollback = await supabase.rpc("cancel_my_booking", {
                 p_booking_id: booking.id,
@@ -229,6 +238,7 @@
         getCompanyProfile: getCompanyProfile,
         createSchedule: createSchedule,
         setScheduleActive: setScheduleActive,
+        removeSchedule: removeSchedule,
         createBooking: createBooking,
         cancelBooking: cancelBooking,
         signIn: signIn,

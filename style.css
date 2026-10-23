@@ -107,6 +107,22 @@ input {
     gap: 8px;
 }
 
+.search-heading-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.availability-status {
+    margin: -10px 0 14px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.availability-status:empty {
+    display: none;
+}
+
 .header-button {
     min-height: 38px;
     padding: 7px 12px;
@@ -1516,5 +1532,180 @@ summary:focus-visible {
 
     body.printing-ticket .record-actions {
         display: none !important;
+    }
+}
+
+.scrolling-text {
+  white-space: nowrap;
+  animation: moveText 10s linear infinite;
+}
+
+@keyframes moveText {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #e5edf5;
+    --muted: #a8b8c9;
+    --forest: #77c99a;
+    --forest-hover: #50a978;
+    --paper: #15212e;
+    --line: #35485a;
+    --white: #1c2a39;
+}
+
+html[data-theme="dark"] body {
+    background: #0d1620;
+}
+
+html[data-theme="dark"] body::before {
+    filter: brightness(0.3) blur(2px);
+}
+
+html[data-theme="dark"] body::after {
+    background:
+        linear-gradient(180deg, rgba(4, 10, 17, 0.72), rgba(4, 10, 17, 0.64) 42%, rgba(4, 10, 17, 0.82)),
+        linear-gradient(90deg, rgba(4, 10, 17, 0.48), transparent 55%, rgba(4, 10, 17, 0.42));
+}
+
+html[data-theme="dark"] .site-header {
+    background: rgba(10, 20, 31, 0.92);
+}
+
+html[data-theme="dark"] .header-button:hover {
+    color: #17251c;
+}
+
+html[data-theme="dark"] .brand-mark {
+    color: #17251c;
+}
+
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .partner-dialog,
+html[data-theme="dark"] .checkout-dialog,
+html[data-theme="dark"] .login-form {
+    border-color: var(--line);
+    background: var(--white);
+}
+
+html[data-theme="dark"] .experience-panel {
+    background: rgba(28, 42, 57, 0.96);
+}
+
+html[data-theme="dark"] .field label {
+    color: #d5e0eb;
+}
+
+html[data-theme="dark"] .field input,
+html[data-theme="dark"] .field select {
+    border-color: #465b70;
+    color: var(--ink);
+    background: #142130;
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] .field input::placeholder {
+    color: #9aabba;
+}
+
+html[data-theme="dark"] .result-card,
+html[data-theme="dark"] .record-card {
+    background: #172635;
+}
+
+html[data-theme="dark"] .availability,
+html[data-theme="dark"] .count-badge,
+html[data-theme="dark"] .status-badge,
+html[data-theme="dark"] .result-total,
+html[data-theme="dark"] .button-print {
+    color: #c5e6ff;
+    background: #263b50;
+}
+
+html[data-theme="dark"] .status-cancelled {
+    color: #f0c5ba;
+    background: #49332f;
+}
+
+html[data-theme="dark"] .status-demo {
+    color: #f1d6a7;
+    background: #493b27;
+}
+
+html[data-theme="dark"] .checkout-summary {
+    background: #172635;
+}
+
+html[data-theme="dark"] .checkout-notice {
+    border-left-color: #e39172;
+    color: #f0c7b7;
+    background: #3c2c2a;
+}
+
+html[data-theme="dark"] .empty-state {
+    border-color: #465b70;
+    background: #172635;
+}
+
+html[data-theme="dark"] .experience-switch {
+    background: #172635;
+}
+
+html[data-theme="dark"] .availability-status {
+    color: #c2d0de;
+}
+
+html[data-theme="dark"] .button-primary,
+html[data-theme="dark"] .experience-toggle.is-active {
+    color: #fff;
+    background: #28754f;
+}
+
+html[data-theme="dark"] .button-primary:hover:not(:disabled),
+html[data-theme="dark"] .experience-toggle.is-active:hover {
+    background: #338a60;
+}
+
+html[data-theme="dark"] .button-secondary {
+    color: #17251c;
+}
+
+html[data-theme="dark"] .button-danger {
+    color: #f0c5ba;
+    background: #49332f;
+}
+
+html[data-theme="dark"] .button-text {
+    color: #f0a28d;
+}
+
+html[data-theme="dark"] .button-print:hover:not(:disabled) {
+    background: #324b63;
+}
+
+html[data-theme="dark"] .partner-dialog .login-copy {
+    color: #fff;
+    background: #235f43;
+}
+
+@media (max-width: 560px) {
+    .header-inner {
+        flex-wrap: wrap;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .search-heading-actions {
+        gap: 8px;
     }
 }

@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=passenger-first-20261022-2">
+    <link rel="stylesheet" href="style.css?v=booking-actions-20261023-1">
 </head>
 <body>
     <header class="site-header">
@@ -23,6 +23,7 @@
             </a>
             <p>Intercity bus booking</p>
             <div class="header-actions">
+                <button class="header-button" id="themeToggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Turn on dark mode">Dark mode</button>
                 <button class="header-button" id="installApp" type="button" hidden>Install app</button>
                 <button class="header-button" id="partnerLoginOpen" type="button">Company sign in</button>
                 <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
@@ -105,7 +106,13 @@
     <main id="top" hidden>
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
-            <h1 id="page-title">Where are you<br>headed next?</h1>
+
+<div class="scrolling-text">
+  <h1>Where are you headed next?</h1>
+</div>
+
+
+
             <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
         </section>
 
@@ -118,7 +125,8 @@
                 <div class="experience-switch" aria-label="Choose preview mode">
                     <button class="experience-toggle is-active" type="button" data-view-mode="web">Web</button>
                     <button class="experience-toggle" type="button" data-view-mode="app">App</button>
-                </div>
+           
+                 </div>
             </div>
 
             <div class="experience-preview" aria-live="polite">
@@ -188,8 +196,12 @@
                     <p class="eyebrow">PLAN YOUR JOURNEY</p>
                     <h2 id="search-title">Find a bus</h2>
                 </div>
-                <span class="step-number" aria-hidden="true">01</span>
+                <div class="search-heading-actions">
+                    <button class="button button-text" id="refreshAvailability" type="button">Refresh seats</button>
+                    <span class="step-number" aria-hidden="true">01</span>
+                </div>
             </div>
+            <p class="availability-status" id="availabilityStatus" role="status" aria-live="polite"></p>
             <form id="searchForm" class="form-grid">
                 <div class="field field-wide">
                     <label for="passengerName">Passenger name</label>
@@ -317,8 +329,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="database.js?v=passenger-first-20261022-2"></script>
-    <script src="script.js?v=passenger-first-20261022-2"></script>
+    <script src="database.js?v=booking-actions-20261023-1"></script>
+    <script src="script.js?v=booking-actions-20261023-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

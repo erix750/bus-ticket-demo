@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=booking-actions-20261023-1">
+    <link rel="stylesheet" href="style.css?v=route-suggestions-20261028-1">
 </head>
 <body>
     <header class="site-header">
@@ -57,8 +57,25 @@
                 </div>
                 <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
                 <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+                <button class="button button-text" id="forgotPassword" type="button">Forgot your password?</button>
                 <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
-                <p class="login-note">Company registration requires email verification. Payments are not processed yet.</p>
+                <p class="login-note">Company registration requires email verification. Payments are not processed yet. Password reset links return to this site.</p>
+            </form>
+            <form id="passwordRecoveryForm" class="login-form" hidden>
+                <p class="eyebrow">ACCOUNT RECOVERY</p>
+                <h2>Choose a new password</h2>
+                <p class="login-intro">Enter a new password for your company account.</p>
+                <div class="field">
+                    <label for="newPartnerPassword">New password</label>
+                    <input type="password" id="newPartnerPassword" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required>
+                </div>
+                <div class="field">
+                    <label for="confirmPartnerPassword">Confirm new password</label>
+                    <input type="password" id="confirmPartnerPassword" autocomplete="new-password" minlength="6" placeholder="Enter the password again" required>
+                </div>
+                <button class="button button-primary" id="saveNewPassword" type="submit">Save new password</button>
+                <p class="form-message" id="passwordRecoveryMessage" role="status" aria-live="polite"></p>
+                <button class="button button-text" id="backToSignIn" type="button">Back to sign in</button>
             </form>
         </div>
     </dialog>
@@ -106,13 +123,12 @@
     <main id="top" hidden>
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
-
-<div class="scrolling-text">
-  <h1>Where are you headed next?</h1>
-</div>
-
-
-
+            <div class="scrolling-text">
+                <div class="scrolling-text-track">
+                    <h1 id="page-title">Where are you headed next?</h1>
+                    <h1 aria-hidden="true">Where are you headed next?</h1>
+                </div>
+            </div>
             <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
         </section>
 
@@ -202,10 +218,18 @@
                 </div>
             </div>
             <p class="availability-status" id="availabilityStatus" role="status" aria-live="polite"></p>
+            <div class="popular-routes" role="group" aria-label="Popular routes">
+                <span>Popular routes</span>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Musanze">Kigali to Musanze</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Rubavu">Kigali to Rubavu</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Huye">Kigali to Huye</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Nyagatare">Kigali to Nyagatare</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Rusizi">Kigali to Rusizi</button>
+            </div>
             <form id="searchForm" class="form-grid">
                 <div class="field field-wide">
                     <label for="passengerName">Passenger name</label>
-                    <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Name on the ticket" required>
+                    <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Enter your name" required>
                 </div>
                 <div class="field">
                     <label for="companyFilter">Bus company</label>
@@ -215,11 +239,11 @@
                 </div>
                 <div class="field">
                     <label for="from">Leaving from</label>
-                    <input type="text" id="from" name="from" maxlength="60" placeholder="Departure city" required>
+                    <input type="text" id="from" name="from" list="citySuggestions" maxlength="60" placeholder="Departure city" required>
                 </div>
                 <div class="field">
                     <label for="to">Going to</label>
-                    <input type="text" id="to" name="to" maxlength="60" placeholder="Destination city" required>
+                    <input type="text" id="to" name="to" list="citySuggestions" maxlength="60" placeholder="Destination city" required>
                 </div>
                 <div class="field">
                     <label for="date">Travel date</label>
@@ -233,6 +257,23 @@
                     <button class="button button-primary" type="submit">Search buses <span aria-hidden="true">&#8594;</span></button>
                 </div>
             </form>
+            <datalist id="citySuggestions">
+                <option value="Kigali"></option>
+                <option value="Musanze"></option>
+                <option value="Rubavu"></option>
+                <option value="Huye"></option>
+                <option value="Nyagatare"></option>
+                <option value="Rusizi"></option>
+                <option value="Muhanga"></option>
+                <option value="Rwamagana"></option>
+                <option value="Kayonza"></option>
+                <option value="Karongi"></option>
+                <option value="Nyanza"></option>
+                <option value="Gicumbi"></option>
+                <option value="Nyamagabe"></option>
+                <option value="Ngoma"></option>
+                <option value="Kirehe"></option>
+            </datalist>
             <p id="searchMessage" class="form-message" role="status" aria-live="polite"></p>
             <div id="searchResults" class="results-list" aria-live="polite"></div>
         </section>
@@ -329,8 +370,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="database.js?v=booking-actions-20261023-1"></script>
-    <script src="script.js?v=booking-actions-20261023-1"></script>
+    <script src="database.js?v=password-recovery-20261023-1"></script>
+    <script src="script.js?v=route-suggestions-20261028-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

@@ -12,6 +12,23 @@ let busRefreshTimer;
 
 const themeToggle = document.getElementById("themeToggle");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const commonCities = [
+    "Gicumbi",
+    "Huye",
+    "Kayonza",
+    "Karongi",
+    "Kigali",
+    "Kirehe",
+    "Muhanga",
+    "Musanze",
+    "Ngoma",
+    "Nyagatare",
+    "Nyamagabe",
+    "Nyanza",
+    "Rubavu",
+    "Rusizi",
+    "Rwamagana"
+];
 
 function setColorTheme(theme, persist) {
     const isDark = theme === "dark";
@@ -78,6 +95,21 @@ const dashboard = document.getElementById("top");
 const loginMessage = document.getElementById("loginMessage");
 const companyNameField = document.getElementById("companyNameField");
 const partnerCompanyName = document.getElementById("partnerCompanyName");
+const passwordRecoveryForm = document.getElementById("passwordRecoveryForm");
+
+function showPasswordRecoveryForm() {
+    document.getElementById("partnerLoginForm").hidden = true;
+    passwordRecoveryForm.hidden = false;
+    document.getElementById("passwordRecoveryMessage").textContent = "";
+    if (!partnerLoginScreen.open) partnerLoginScreen.showModal();
+    document.getElementById("newPartnerPassword").focus();
+}
+
+function showPartnerLoginForm() {
+    passwordRecoveryForm.hidden = true;
+    document.getElementById("partnerLoginForm").hidden = false;
+    document.getElementById("passwordRecoveryForm").reset();
+}
 
 function setPartnerPreview(active) {
     dashboard.hidden = false;
@@ -112,6 +144,7 @@ function setPartnerFormMode(signUp) {
 async function refreshAppData() {
     buses = (await window.WaylineDatabase.loadBuses()).map(normalizeBus);
     bookings = await window.WaylineDatabase.loadBookings();
+    updateCitySuggestions();
     updateCompanyOptions();
     renderBookings();
     renderBuses();
@@ -128,6 +161,7 @@ async function refreshBusAvailability(showSuccess) {
 
     try {
         buses = (await window.WaylineDatabase.loadBuses()).map(normalizeBus);
+        updateCitySuggestions();
         updateCompanyOptions();
         renderBuses();
         if (document.getElementById("date").value) performSearch();
@@ -150,14 +184,94 @@ document.getElementById("refreshAvailability").addEventListener("click", functio
     refreshBusAvailability(true);
 });
 
+document.querySelectorAll(".route-chip").forEach(function(button) {
+    button.addEventListener("click", function() {
+        const from = button.dataset.from;
+        const to = button.dataset.to;
+        document.getElementById("from").value = from;
+        document.getElementById("to").value = to;
+
+        const routeCompanies = Array.from(new Set(buses.filter(function(bus) {
+            return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
+                bus.date >= today && normalizedText(bus.from) === normalizedText(from) &&
+                normalizedText(bus.to) === normalizedText(to);
+        }).map(function(bus) { return bus.company; })));
+        companyFilter.value = routeCompanies.length === 1 ? routeCompanies[0] : "";
+        document.getElementById("searchResults").replaceChildren();
+        searchMessage.textContent = routeCompanies.length
+            ? "Route selected. Choose your travel date and passenger details, then search."
+            : "Route selected. Choose a bus company and travel date, then search.";
+        document.getElementById("date").focus();
+    });
+});
+
 partnerLoginOpen.addEventListener("click", function() {
     loginMessage.textContent = "";
+    showPartnerLoginForm();
     setPartnerFormMode(false);
     partnerLoginScreen.showModal();
 });
 
 document.getElementById("closePartnerLogin").addEventListener("click", function() {
     partnerLoginScreen.close();
+});
+
+document.getElementById("forgotPassword").addEventListener("click", async function() {
+    const emailInput = document.getElementById("partnerEmail");
+    const email = emailInput.value.trim();
+    if (!email) {
+        loginMessage.textContent = "Enter your account email address first.";
+        emailInput.focus();
+        return;
+    }
+    if (!emailInput.validity.valid) {
+        emailInput.reportValidity();
+        return;
+    }
+
+    const button = document.getElementById("forgotPassword");
+    button.disabled = true;
+    loginMessage.textContent = "";
+    try {
+        await window.WaylineDatabase.sendPasswordRecovery(email);
+        loginMessage.textContent = "If an account exists for that email, a password reset link has been sent.";
+    } catch (error) {
+        loginMessage.textContent = error.message || "Could not send a password reset email. Please try again.";
+    } finally {
+        button.disabled = false;
+    }
+});
+
+passwordRecoveryForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const password = document.getElementById("newPartnerPassword").value;
+    const confirmation = document.getElementById("confirmPartnerPassword").value;
+    const message = document.getElementById("passwordRecoveryMessage");
+    if (password !== confirmation) {
+        message.textContent = "The passwords do not match.";
+        document.getElementById("confirmPartnerPassword").focus();
+        return;
+    }
+
+    const submitButton = document.getElementById("saveNewPassword");
+    submitButton.disabled = true;
+    message.textContent = "";
+    try {
+        await window.WaylineDatabase.updatePassword(password);
+        await database.auth.signOut();
+        showPartnerLoginForm();
+        setPartnerFormMode(false);
+        loginMessage.textContent = "Password updated. Sign in with your new password.";
+    } catch (error) {
+        message.textContent = error.message || "Could not update your password. Request a new reset link and try again.";
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
+document.getElementById("backToSignIn").addEventListener("click", function() {
+    showPartnerLoginForm();
+    setPartnerFormMode(false);
 });
 
 document.getElementById("partnerLoginForm").addEventListener("submit", async function(event) {
@@ -226,6 +340,9 @@ document.getElementById("partnerLogout").addEventListener("click", async functio
 
 async function initializeApp() {
     database = await window.WaylineDatabase.open();
+    database.auth.onAuthStateChange(function(event) {
+        if (event === "PASSWORD_RECOVERY") showPasswordRecoveryForm();
+    });
     const sessionResult = await database.auth.getSession();
     if (sessionResult.error) throw new Error(sessionResult.error.message);
     currentUser = sessionResult.data.session ? sessionResult.data.session.user : null;
@@ -375,6 +492,29 @@ function updateCompanyOptions() {
         companyFilter.appendChild(new Option(company, company));
     });
     if (companies.includes(selectedCompany)) companyFilter.value = selectedCompany;
+}
+
+function updateCitySuggestions() {
+    const cities = new Map();
+    commonCities.forEach(function(city) {
+        cities.set(normalizedText(city), city);
+    });
+    buses.forEach(function(bus) {
+        [bus.from, bus.to].forEach(function(city) {
+            const trimmedCity = city.trim();
+            if (trimmedCity) cities.set(normalizedText(trimmedCity), trimmedCity);
+        });
+    });
+
+    document.getElementById("citySuggestions").replaceChildren(
+        ...Array.from(cities.values())
+            .sort(function(first, second) { return first.localeCompare(second); })
+            .map(function(city) {
+                const option = document.createElement("option");
+                option.value = city;
+                return option;
+            })
+    );
 }
 
 function renderSearchResults(matchingBuses, requestedSeats) {

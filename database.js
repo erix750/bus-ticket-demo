@@ -216,6 +216,18 @@
         return throwIfError(result);
     }
 
+    async function sendPasswordRecovery(email) {
+        const result = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href.split("#")[0]
+        });
+        throwIfError(result);
+    }
+
+    async function updatePassword(password) {
+        const result = await supabase.auth.updateUser({ password: password });
+        return throwIfError(result);
+    }
+
     async function signUp(email, password, companyName) {
         const result = await supabase.auth.signUp({
             email: email,
@@ -242,6 +254,8 @@
         createBooking: createBooking,
         cancelBooking: cancelBooking,
         signIn: signIn,
+        sendPasswordRecovery: sendPasswordRecovery,
+        updatePassword: updatePassword,
         signUp: signUp,
         signOut: signOut
     };

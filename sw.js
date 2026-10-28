@@ -1,4 +1,4 @@
-const CACHE_NAME = "wayline-shell-v4";
+const CACHE_NAME = "wayline-shell-v8";
 const APP_SHELL = [
     "./",
     "./index.html",
@@ -7,7 +7,7 @@ const APP_SHELL = [
     "./database.js",
     "./script.js",
     "./pwa.js",
-    "./bus-background.jpg",
+    "./bus-background.png",
     "./manifest.webmanifest",
     "./icons/wayline-192.png",
     "./icons/wayline-512.png",

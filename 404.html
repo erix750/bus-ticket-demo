@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Returning to Wayline</title>
+</head>
+<body>
+    <p>Returning to Wayline...</p>
+    <script>
+        const pathParts = window.location.pathname.split("/").filter(Boolean);
+        if (pathParts.length > 1) {
+            const appPath = "/" + pathParts[0] + "/";
+            window.location.replace(appPath + window.location.search + window.location.hash);
+        }
+    </script>
+    <p><a href="/bus-ticket-demo/">Open Wayline</a></p>
+</body>
+</html>

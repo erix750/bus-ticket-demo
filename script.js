@@ -216,7 +216,7 @@ document.getElementById("closePartnerLogin").addEventListener("click", function(
     partnerLoginScreen.close();
 });
 
-document.getElementById("forgotPassword").addEventListener("click", async function() {
+async function sendPasswordResetLink(button) {
     const emailInput = document.getElementById("partnerEmail");
     const email = emailInput.value.trim();
     if (!email) {
@@ -229,7 +229,6 @@ document.getElementById("forgotPassword").addEventListener("click", async functi
         return;
     }
 
-    const button = document.getElementById("forgotPassword");
     button.disabled = true;
     loginMessage.textContent = "";
     try {
@@ -240,6 +239,14 @@ document.getElementById("forgotPassword").addEventListener("click", async functi
     } finally {
         button.disabled = false;
     }
+}
+
+document.getElementById("forgotPassword").addEventListener("click", function() {
+    sendPasswordResetLink(this);
+});
+
+document.getElementById("resendPasswordReset").addEventListener("click", function() {
+    sendPasswordResetLink(this);
 });
 
 passwordRecoveryForm.addEventListener("submit", async function(event) {

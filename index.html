@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-fullscreen-reveal-20261029-1">
+    <link rel="stylesheet" href="style.css?v=reset-link-help-20261029-1">
 </head>
 <body>
     <div class="brand-reveal" aria-hidden="true">
@@ -63,6 +63,11 @@
                 <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
                 <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
                 <button class="button button-text" id="forgotPassword" type="button">Forgot your password?</button>
+                <details class="reset-link-help">
+                    <summary>Didn't get the reset link?</summary>
+                    <p>Check your spam or junk folder and make sure you entered the email used for your company account. If it still hasn't arrived, you can send another link.</p>
+                    <button class="button button-text" id="resendPasswordReset" type="button">Send another reset link</button>
+                </details>
                 <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
                 <p class="login-note">Company registration requires email verification. Payments are not processed yet. Password reset links return to this site.</p>
             </form>
@@ -376,7 +381,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=route-suggestions-20261028-1"></script>
+    <script src="script.js?v=reset-link-help-20261029-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

@@ -489,6 +489,31 @@ input {
     margin: -8px 0 0;
 }
 
+.reset-link-help {
+    margin-top: -8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.reset-link-help summary {
+    width: fit-content;
+    color: var(--forest);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.reset-link-help p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.reset-link-help .button {
+    width: auto;
+    min-height: 34px;
+    padding: 5px 0;
+    text-align: left;
+}
+
 .dialog-close {
     position: absolute;
     top: 14px;

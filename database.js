@@ -217,8 +217,10 @@
     }
 
     async function sendPasswordRecovery(email) {
+        const siteUrl = (config.siteUrl || "").trim();
+        if (!siteUrl) throw new Error("Set the published Wayline URL in config.js before requesting a password reset.");
         const result = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.href.split("#")[0]
+            redirectTo: siteUrl
         });
         throwIfError(result);
     }

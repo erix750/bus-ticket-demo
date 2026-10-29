@@ -15,6 +15,92 @@
     box-sizing: border-box;
 }
 
+.brand-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+        linear-gradient(rgba(2, 9, 22, 0.3), rgba(2, 9, 22, 0.56)),
+        url("assets/wayline-splash-reference.png") center / cover no-repeat,
+        #020916;
+    animation: brand-reveal-exit 550ms ease 2700ms forwards;
+}
+
+.brand-reveal-art {
+    position: relative;
+    width: min(100vw, 177.777vh);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(110vw) rotate(2deg) scale(0.96);
+    animation: brand-art-reveal 1150ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.brand-reveal-art img {
+    display: block;
+    width: 118.333%;
+    max-width: none;
+    transform: translate(-4.577%, -13.855%);
+}
+
+.brand-reveal-art::after {
+    position: absolute;
+    top: -35%;
+    bottom: -35%;
+    left: -40%;
+    width: 24%;
+    content: "";
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.14) 28%,
+        rgba(255, 245, 204, 0.92) 50%,
+        rgba(255, 255, 255, 0.2) 72%,
+        transparent
+    );
+    filter: blur(7px);
+    transform: skewX(-18deg);
+    animation: brand-light-sweep 1400ms cubic-bezier(0.2, 0.65, 0.3, 1) 900ms both;
+}
+
+@keyframes brand-art-reveal {
+    0% {
+        opacity: 0;
+        transform: translateX(110vw) rotate(2deg) scale(0.96);
+    }
+
+    68% {
+        opacity: 1;
+        transform: translateX(-2vw) rotate(-0.4deg) scale(1);
+    }
+
+    84% {
+        transform: translateX(0.7vw) rotate(0.15deg) scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) rotate(0) scale(1);
+    }
+}
+
+@keyframes brand-light-sweep {
+    to {
+        left: 125%;
+    }
+}
+
+@keyframes brand-reveal-exit {
+    to {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
 body {
     position: relative;
     isolation: isolate;
@@ -1521,6 +1607,10 @@ summary:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .brand-reveal {
+        display: none;
+    }
+
     *,
     *::before,
     *::after {

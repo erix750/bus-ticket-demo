@@ -993,6 +993,17 @@ busForm.addEventListener("submit", async function(event) {
     if (document.getElementById("date").value) performSearch();
 });
 
+const recoveryError = new URLSearchParams(window.location.hash.slice(1));
+if (recoveryError.get("error_code") === "otp_expired") {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    showPartnerLoginForm();
+    setPartnerFormMode(false);
+    loginMessage.textContent =
+        "This password reset link has expired or was already used. Enter your email below and request a new link.";
+    document.querySelector(".reset-link-help").open = true;
+    partnerLoginScreen.showModal();
+}
+
 initializeApp().catch(function(error) {
     setPartnerPreview(false);
     searchMessage.textContent =

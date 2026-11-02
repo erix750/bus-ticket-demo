@@ -108,7 +108,7 @@ html[data-theme="dark"] .original-search-panel {
     z-index: 1;
     display: grid;
     place-items: center;
-    width: min(75vw, 1100px);
+    width: 100vw;
     transform-origin: center;
     animation: introWordReveal 1.4s cubic-bezier(0.18, 0.8, 0.22, 1) 0.12s both;
 }
@@ -2207,7 +2207,7 @@ html[data-theme="dark"] .partner-dialog .login-copy {
     z-index: 1;
     display: grid;
     place-items: center;
-    width: min(75vw, 1100px);
+    width: 100vw;
     transform-origin: center;
     animation: introWordReveal 1.4s cubic-bezier(0.18, 0.8, 0.22, 1) 0.12s both;
 }

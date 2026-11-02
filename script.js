@@ -44,7 +44,7 @@ if (introReveal) {
         }
 
         skipIntroButton?.addEventListener("click", hideIntro);
-        window.setTimeout(hideIntro, 2000);
+        window.setTimeout(hideIntro, 4000);
     } else {
         introReveal.remove();
     }

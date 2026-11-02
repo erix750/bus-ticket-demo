@@ -127,6 +127,23 @@ html[data-theme="dark"] .original-search-panel {
     }
 }
 
+@keyframes sloganWordMotion {
+    0% {
+        opacity: 0;
+        transform: translateX(-28px);
+    }
+    65% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    82% {
+        transform: translateX(6px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
 .brand-reveal-wordmark {
     display: inline-flex;
     flex-direction: column;
@@ -196,6 +213,7 @@ html[data-theme="dark"] .original-search-panel {
     text-transform: uppercase;
     opacity: 0.95;
     text-shadow: 0 0 18px rgba(245, 198, 62, 0.45);
+    animation: sloganWordMotion 4s cubic-bezier(0.18, 0.8, 0.22, 1) both;
 }
 
 .skip-intro {
@@ -2425,6 +2443,7 @@ main.welcome-main {
     font-size: clamp(2.15rem, 3vw, 4.25rem);
     line-height: 0.92;
     letter-spacing: -0.07em;
+    animation: sloganWordMotion 4s cubic-bezier(0.18, 0.8, 0.22, 1) both;
 }
 
 .hero-landing p {

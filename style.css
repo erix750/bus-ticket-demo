@@ -2525,6 +2525,23 @@ main.welcome-main {
     margin-bottom: 22px;
 }
 
+.distance-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.45fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.distance-field .field-hint {
+    margin-top: 7px;
+}
+
+.distance-field .field-hint a {
+    color: var(--forest);
+    font-weight: 700;
+    text-underline-offset: 2px;
+}
+
 .feature-row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2654,6 +2671,10 @@ main.welcome-main {
 
     .hero-landing {
         min-height: 580px;
+    }
+
+    .distance-input-row {
+        grid-template-columns: 1fr;
     }
 
     .original-search-panel {

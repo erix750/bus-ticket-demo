@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=passenger-search-fix-20261102-1">
+    <link rel="stylesheet" href="style.css?v=route-distance-calculator-20261102-1">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -423,12 +423,17 @@
                             <option value="kigali">City of Kigali (RWF 59.28 per km)</option>
                         </select>
                     </div>
-                    <div class="field">
+                    <div class="field field-wide distance-field">
                         <label for="routeDistance">One-way route distance (km)</label>
-                        <input type="number" id="routeDistance" name="routeDistance" min="0.1" max="1000" step="0.1" placeholder="e.g. 115" required>
+                        <div class="distance-input-row">
+                            <input type="number" id="routeDistance" name="routeDistance" min="0.1" max="1000" step="0.1" placeholder="Calculate or enter distance" required>
+                            <button class="button button-secondary" id="calculateRouteDistance" type="button">Calculate road distance</button>
+                        </div>
+                        <p class="field-hint" id="routeDistanceStatus" role="status" aria-live="polite">Enter the departure and destination cities to estimate the driving distance. You can edit the result.</p>
+                        <p class="field-hint">Estimated city-center driving distance via <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a> and <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a>. Check the actual bus route before publishing. Map data: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>.</p>
                     </div>
                     <div class="field field-wide">
-                        <p class="field-hint" id="calculatedFare" aria-live="polite">Enter the route distance to calculate the RWF fare.</p>
+                        <p class="field-hint" id="calculatedFare" aria-live="polite">Calculate or enter the route distance to calculate the RWF fare.</p>
                     </div>
                     <div class="field field-wide form-action">
                         <button class="button button-secondary" type="submit">Add bus schedule</button>
@@ -459,7 +464,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=passenger-search-fix-20261102-1"></script>
+    <script src="script.js?v=route-distance-calculator-20261102-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

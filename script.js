@@ -9,6 +9,10 @@ let buses = [];
 let bookings = [];
 let pendingBooking = null;
 let busRefreshTimer;
+const routeLocationCache = new Map();
+let routeDistanceController = null;
+let requestedDistanceRoute = "";
+let routeDistanceInputKey = "";
 
 const introReveal = document.getElementById("brandReveal");
 const skipIntroButton = document.getElementById("skipIntro");
@@ -439,7 +443,9 @@ function localDateString(date) {
 const today = localDateString(new Date());
 document.getElementById("date").min = today;
 document.getElementById("busDate").min = today;
-document.getElementById("routeDistance").addEventListener("input", updateCalculatedFare);
+const routeDistanceInput = document.getElementById("routeDistance");
+const routeDistanceStatus = document.getElementById("routeDistanceStatus");
+const calculateRouteDistanceButton = document.getElementById("calculateRouteDistance");
 document.getElementById("fareCategory").addEventListener("change", updateCalculatedFare);
 
 function normalizedText(value) {
@@ -468,15 +474,161 @@ function calculateFare(routeDistanceKm, fareCategory) {
 }
 
 function updateCalculatedFare() {
-    const distance = Number(document.getElementById("routeDistance").value);
+    const distance = Number(routeDistanceInput.value);
     const category = document.getElementById("fareCategory").value;
     const rate = ruraFarePerKm[category];
     const fare = calculateFare(distance, category);
     document.getElementById("calculatedFare").textContent = fare
         ? "Calculated fare: " + formatFare(fare) + " per passenger (" + distance +
             " km × RWF " + rate + "/km, rounded to the nearest RWF)."
-        : "Enter the route distance to calculate the RWF fare.";
+        : "Calculate or enter the route distance to calculate the RWF fare.";
 }
+
+function getRouteKey() {
+    return normalizedText(document.getElementById("busFrom").value) + "|" +
+        normalizedText(document.getElementById("busTo").value);
+}
+
+function invalidateRouteDistance() {
+    const routeKey = getRouteKey();
+    if (routeDistanceController && requestedDistanceRoute !== routeKey) {
+        cancelRouteDistanceLookup();
+        routeDistanceStatus.textContent = "The route changed. Calculate the new distance or enter it manually.";
+    }
+
+    if (routeDistanceInput.value && routeDistanceInputKey !== routeKey) {
+        routeDistanceInput.value = "";
+        routeDistanceInputKey = "";
+        updateCalculatedFare();
+        routeDistanceStatus.textContent = "The route changed. Calculate the new distance or enter it manually.";
+    }
+}
+
+function cancelRouteDistanceLookup() {
+    if (!routeDistanceController) return;
+    routeDistanceController.abort();
+    routeDistanceController = null;
+    requestedDistanceRoute = "";
+    calculateRouteDistanceButton.disabled = false;
+    calculateRouteDistanceButton.textContent = "Calculate road distance";
+}
+
+async function fetchDistanceData(url, signal) {
+    const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: signal
+    });
+    if (!response.ok) {
+        throw new Error("The distance service returned HTTP " + response.status + ".");
+    }
+    return response.json();
+}
+
+async function geocodeRwandanCity(city, signal) {
+    const key = normalizedText(city);
+    if (routeLocationCache.has(key)) return routeLocationCache.get(key);
+
+    const query = encodeURIComponent(city + ", Rwanda");
+    const url = "https://photon.komoot.io/api/?q=" + query + "&limit=5&lang=en";
+    const data = await fetchDistanceData(url, signal);
+    if (!data || !Array.isArray(data.features)) {
+        throw new Error("The city lookup service returned an unexpected response.");
+    }
+    const feature = data.features.find(function(item) {
+        return item.properties && item.properties.countrycode === "RW" &&
+            item.geometry && Array.isArray(item.geometry.coordinates) &&
+            item.geometry.coordinates.length >= 2 &&
+            item.geometry.coordinates.every(Number.isFinite);
+    });
+    if (!feature) {
+        throw new Error("Could not find \"" + city + "\" in Rwanda. Check the city name and try again.");
+    }
+
+    const coordinates = feature.geometry.coordinates.slice(0, 2);
+    routeLocationCache.set(key, coordinates);
+    return coordinates;
+}
+
+async function calculateRouteDistance() {
+    const from = document.getElementById("busFrom").value.trim();
+    const to = document.getElementById("busTo").value.trim();
+    if (!from || !to) {
+        routeDistanceStatus.textContent = "Enter both route cities before calculating the distance.";
+        return;
+    }
+    if (normalizedText(from) === normalizedText(to)) {
+        routeDistanceStatus.textContent = "Choose two different cities before calculating the distance.";
+        return;
+    }
+
+    if (routeDistanceController) routeDistanceController.abort();
+    const controller = new AbortController();
+    routeDistanceController = controller;
+    requestedDistanceRoute = getRouteKey();
+    const routeKey = requestedDistanceRoute;
+    let timedOut = false;
+    const timeoutId = window.setTimeout(function() {
+        timedOut = true;
+        controller.abort();
+    }, 20000);
+
+    calculateRouteDistanceButton.disabled = true;
+    calculateRouteDistanceButton.textContent = "Calculating...";
+    routeDistanceStatus.textContent = "Finding the cities and calculating the road distance...";
+
+    try {
+        const fromCoordinates = await geocodeRwandanCity(from, controller.signal);
+        const toCoordinates = await geocodeRwandanCity(to, controller.signal);
+        const coordinates = fromCoordinates.join(",") + ";" + toCoordinates.join(",");
+        const url = "https://router.project-osrm.org/route/v1/driving/" + coordinates +
+            "?overview=false&steps=false";
+        const data = await fetchDistanceData(url, controller.signal);
+        if (data.code !== "Ok" || !data.routes || !data.routes.length ||
+            !Number.isFinite(data.routes[0].distance) || data.routes[0].distance <= 0) {
+            throw new Error("No drivable route was found between those cities.");
+        }
+
+        const distanceKm = Math.round(data.routes[0].distance / 100) / 10;
+        if (distanceKm < 0.1 || distanceKm > 1000) {
+            throw new Error("The estimated distance must be between 0.1 and 1,000 km. Verify the route and enter it manually.");
+        }
+        if (controller.signal.aborted || getRouteKey() !== routeKey) return;
+
+        routeDistanceInput.value = distanceKm.toFixed(1);
+        routeDistanceInputKey = routeKey;
+        updateCalculatedFare();
+        routeDistanceStatus.textContent =
+            "Estimated road distance: " + distanceKm.toFixed(1) +
+            " km from city center to city center. Check the actual bus route before saving.";
+    } catch (error) {
+        if (!controller.signal.aborted || timedOut) {
+            routeDistanceStatus.textContent = timedOut
+                ? "The road-distance request timed out. Check your connection and try again."
+                : error.message || "Could not calculate the road distance. Enter it manually and try again.";
+            console.error("Could not calculate the bus route distance.", error);
+        }
+    } finally {
+        window.clearTimeout(timeoutId);
+        if (routeDistanceController === controller) {
+            routeDistanceController = null;
+            requestedDistanceRoute = "";
+            calculateRouteDistanceButton.disabled = false;
+            calculateRouteDistanceButton.textContent = "Calculate road distance";
+        }
+    }
+}
+
+routeDistanceInput.addEventListener("input", function() {
+    cancelRouteDistanceLookup();
+    routeDistanceInputKey = routeDistanceInput.value ? getRouteKey() : "";
+    routeDistanceStatus.textContent = routeDistanceInput.value
+        ? "Using the manually entered distance."
+        : "Enter the departure and destination cities to estimate the driving distance. You can edit the result.";
+    updateCalculatedFare();
+});
+document.getElementById("busFrom").addEventListener("input", invalidateRouteDistance);
+document.getElementById("busTo").addEventListener("input", invalidateRouteDistance);
+calculateRouteDistanceButton.addEventListener("click", calculateRouteDistance);
 
 function makeElement(tagName, className, text) {
     const element = document.createElement(tagName);
@@ -1019,6 +1171,11 @@ busForm.addEventListener("submit", async function(event) {
     }
 
     busForm.reset();
+    cancelRouteDistanceLookup();
+    routeDistanceInputKey = "";
+    routeDistanceStatus.textContent =
+        "Enter the departure and destination cities to estimate the driving distance. You can edit the result.";
+    updateCalculatedFare();
     busMessage.textContent = "Bus schedule added. The fare is calculated automatically using the RURA tariff.";
     updateCompanyOptions();
     if (document.getElementById("date").value) performSearch();

@@ -8,7 +8,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Bus companies can create accounts, publish schedules, view bookings, and upload a company logo.
 - Passengers choose MTN Mobile Money or Airtel Money as their intended payment method.
 - Seat reservations and cancellations update shared availability in Supabase.
-- Route fares are calculated in RWF from the operator-entered distance and the selected RURA area tariff.
+- Operators can calculate estimated road distances from route cities and review or edit the result before the RWF fare is calculated using the selected RURA area tariff.
 - Full buses are excluded from passenger search while their schedules and booking records remain available to operators.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
 - The website can be installed from a supported mobile browser on Android and iPhone.
@@ -26,7 +26,7 @@ Company sign-up is open; schedules can be published as soon as the account is re
 
 ### RURA fares and database updates
 
-Operators enter the one-way route distance and select the applicable fare area. The app calculates and stores the fare using the RURA public transport tariff document:
+Operators can enter the one-way route distance themselves or calculate an estimated city-center driving distance from the departure and destination cities. The distance lookup uses the Photon geocoder and OSRM public demo routing service, requires an internet connection, and can be unavailable; operators should check the estimate against the actual bus route and can edit it before saving. Map data is from [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Select the applicable fare area and the app calculates and stores the fare using the RURA public transport tariff document:
 
 - City of Kigali: RWF 59.28 per passenger per kilometre.
 - Intercity/provincial: RWF 41.58 per passenger per kilometre.
@@ -38,5 +38,6 @@ Reference: [RURA applicable pump prices and public transport tariffs](https://ww
 ## Important limitations
 
 - This is a prototype, not a production-ready ticketing or payment system.
+- The public Photon and OSRM demo services have no availability guarantee; use a suitable hosted or self-hosted routing service before relying on automatic distance estimates in production.
 - Selecting MTN Mobile Money or Airtel Money only records the passenger's intended method. No payment is initiated or verified; bookings remain unpaid.
 - Use a real payment-provider integration and complete operational, security, and partner checks before accepting real bookings.

@@ -29,7 +29,7 @@ function hideIntro() {
 if (introReveal) {
     document.body.classList.add("intro-active");
     skipIntroButton?.addEventListener("click", hideIntro);
-    const introDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 6000;
+    const introDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 12000;
     window.setTimeout(hideIntro, introDuration);
 }
 

@@ -10,7 +10,44 @@ let bookings = [];
 let pendingBooking = null;
 let busRefreshTimer;
 
+const introReveal = document.getElementById("brandReveal");
+const skipIntroButton = document.getElementById("skipIntro");
+const introSeenKey = "waylineIntroSeen";
+
+function hideIntro() {
+    if (!introReveal || introReveal.classList.contains("is-hidden")) return;
+    introReveal.classList.add("is-hidden");
+    document.body.classList.remove("intro-active");
+    window.setTimeout(function() {
+        introReveal.remove();
+    }, 420);
+}
+
+if (introReveal) {
+    let alreadySeen = false;
+    try {
+        alreadySeen = localStorage.getItem(introSeenKey) === "true";
+    } catch (error) {
+        console.warn("Could not read intro preference.", error);
+    }
+
+    if (!alreadySeen) {
+        document.body.classList.add("intro-active");
+        try {
+            localStorage.setItem(introSeenKey, "true");
+        } catch (error) {
+            console.warn("Could not save intro preference.", error);
+        }
+
+        skipIntroButton?.addEventListener("click", hideIntro);
+        window.setTimeout(hideIntro, 2000);
+    } else {
+        introReveal.remove();
+    }
+}
+
 const themeToggle = document.getElementById("themeToggle");
+const themeToggleIcon = document.getElementById("themeToggleIcon");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const commonCities = [
     "Gicumbi",
@@ -34,7 +71,7 @@ function setColorTheme(theme, persist) {
     const isDark = theme === "dark";
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
     themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+    themeToggleIcon.textContent = isDark ? "☀" : "☾";
     themeToggle.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
     themeToggle.title = isDark ? "Turn off dark mode" : "Turn on dark mode";
     themeColorMeta.content = isDark ? "#0d1620" : "#173f70";

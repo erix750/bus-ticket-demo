@@ -12,25 +12,38 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=expired-reset-link-20261029-1">
+    <link rel="stylesheet" href="style.css?v=wayline-logo-polish-20261102-1">
 </head>
 <body>
-    <div class="brand-reveal" aria-hidden="true">
-        <div class="brand-reveal-art">
-            <img src="assets/wayline-splash-reference.png" alt="">
+    <div class="brand-reveal" id="brandReveal" aria-live="polite">
+        <button class="skip-intro" id="skipIntro" type="button">Skip <span aria-hidden="true">▸</span></button>
+        <div class="brand-reveal-art" aria-hidden="true">
+            <div class="brand-reveal-wordmark">
+                <div class="logo-main" data-text="WAYLINE"><span>WAY</span><span class="gold">LINE</span></div>
+                <div class="logo-sub">RWANDA IS YOURS TO EXPLORE.</div>
+            </div>
         </div>
     </div>
     <header class="site-header">
         <div class="header-inner">
             <a class="brand" href="#top" aria-label="Bus Booking System home">
-                <span class="brand-mark" aria-hidden="true">B</span>
-                <span>Wayline<span class="brand-dot">.</span></span>
+                <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
+                <span>WAYLINE</span>
             </a>
-            <p>Intercity bus booking</p>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                <a class="nav-link is-active" href="#">Home</a>
+                <a class="nav-link" href="#">Routes</a>
+                <a class="nav-link" href="#">About Us</a>
+                <a class="nav-link" href="#contact">Contact</a>
+            </nav>
+
             <div class="header-actions">
-                <button class="header-button" id="themeToggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Turn on dark mode">Dark mode</button>
+                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
+                    <span id="themeToggleIcon" aria-hidden="true">☾</span>
+                </button>
                 <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                <button class="header-button" id="partnerLoginOpen" type="button">Company sign in</button>
+                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Sign In</button>
                 <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
             </div>
         </div>
@@ -130,16 +143,85 @@
         </div>
     </dialog>
 
-    <main id="top" hidden>
-        <section class="intro" aria-labelledby="page-title">
-            <p class="eyebrow">TRAVEL, MADE SIMPLE</p>
-            <div class="scrolling-text">
-                <div class="scrolling-text-track">
-                    <h1 id="page-title">Where are you headed next?</h1>
-                    <h1 aria-hidden="true">Where are you headed next?</h1>
+    <main id="top" class="welcome-main">
+        <section class="intro hero-landing" aria-labelledby="page-title">
+            <div class="hero-copy">
+                <div class="hero-title-wrap">
+                    <div class="hero-logo-line" aria-hidden="true"></div>
+                    <h1 id="page-title">
+                        <span class="title-main">WAYLINE</span>
+                        <span class="title-sub">RWANDA IS YOURS TO EXPLORE.</span>
+                    </h1>
+                </div>
+                <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
+                <button class="cta-button" type="button">BOOK YOUR JOURNEY <span aria-hidden="true">›</span></button>
+            </div>
+        </section>
+
+        <section class="panel search-panel landing-search-panel" aria-labelledby="search-title">
+            <div class="popular-routes" role="group" aria-label="Popular routes">
+                <span class="route-label">Popular Routes</span>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Rwamagana">Kigali → Rwamagana</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Kayonza">Kigali → Kayonza</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Ngoma">Kigali → Ngoma</button>
+                <button class="route-chip" type="button" data-from="Kigali" data-to="Rusumo">Kigali → Rusumo</button>
+            </div>
+        </section>
+
+        <section class="landing-features" aria-label="Wayline benefits">
+            <div class="feature-row">
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <div>
+                        <h3>Safe Travel</h3>
+                        <p>Your safety first</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">☻</div>
+                    <div>
+                        <h3>Comfortable Rides</h3>
+                        <p>Travel in comfort</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div>
+                        <h3>Easy Booking</h3>
+                        <p>Fast and simple</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">◔</div>
+                    <div>
+                        <h3>24/7 Support</h3>
+                        <p>We are always here</p>
+                    </div>
                 </div>
             </div>
-            <p>Find a scheduled bus, reserve your seats, and keep your trip details in one place.</p>
+
+            <div class="why-choose-block">
+                <h2>Why Choose WAYLINE?</h2>
+            </div>
+
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-card-icon bus-icon" aria-hidden="true">🚌</div>
+                    <h3>Reliable Transport</h3>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-card-icon trophy-icon" aria-hidden="true">🏆</div>
+                    <h3>Trusted by Many</h3>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-card-icon globe-icon" aria-hidden="true">🌍</div>
+                    <h3>Nationwide Coverage</h3>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-card-icon support-icon" aria-hidden="true">🤝</div>
+                    <h3>Supporting Rwanda</h3>
+                </article>
+            </div>
         </section>
 
         <section class="panel experience-panel" aria-labelledby="experience-title" hidden>
@@ -151,8 +233,7 @@
                 <div class="experience-switch" aria-label="Choose preview mode">
                     <button class="experience-toggle is-active" type="button" data-view-mode="web">Web</button>
                     <button class="experience-toggle" type="button" data-view-mode="app">App</button>
-           
-                 </div>
+                </div>
             </div>
 
             <div class="experience-preview" aria-live="polite">
@@ -216,7 +297,7 @@
             </div>
         </section>
 
-        <section class="panel search-panel" aria-labelledby="search-title">
+        <section class="panel search-panel original-search-panel" aria-labelledby="search-title" hidden>
             <div class="section-heading">
                 <div>
                     <p class="eyebrow">PLAN YOUR JOURNEY</p>
@@ -288,7 +369,7 @@
             <div id="searchResults" class="results-list" aria-live="polite"></div>
         </section>
 
-        <section class="panel bookings-panel" aria-labelledby="bookings-title">
+        <section class="panel bookings-panel" aria-labelledby="bookings-title" hidden>
             <div class="section-heading">
                 <div>
                     <p class="eyebrow">YOUR TRIPS</p>
@@ -371,17 +452,24 @@
                 <div id="busList" class="record-list"></div>
             </div>
         </details>
-        <p class="storage-note">Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
+        <p class="storage-note" hidden>Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
     </main>
 
     <footer class="site-footer">
+        <section class="footer-contact" id="contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">Get in touch</h2>
+            <div class="footer-contact-links">
+                <a href="tel:+250798230630">Phone: 0798230630</a>
+                <a href="mailto:muvunyieric25@gmail.com">Email: muvunyieric25@gmail.com</a>
+            </div>
+        </section>
         <p>Created by <strong>ME Empire</strong></p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=expired-reset-link-20261029-1"></script>
+    <script src="script.js?v=landing-refresh-20261102-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

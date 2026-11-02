@@ -16,7 +16,6 @@ let routeDistanceInputKey = "";
 
 const introReveal = document.getElementById("brandReveal");
 const skipIntroButton = document.getElementById("skipIntro");
-const introSeenKey = "waylineIntroSeen";
 
 function hideIntro() {
     if (!introReveal || introReveal.classList.contains("is-hidden")) return;
@@ -28,26 +27,10 @@ function hideIntro() {
 }
 
 if (introReveal) {
-    let alreadySeen = false;
-    try {
-        alreadySeen = localStorage.getItem(introSeenKey) === "true";
-    } catch (error) {
-        console.warn("Could not read intro preference.", error);
-    }
-
-    if (!alreadySeen) {
-        document.body.classList.add("intro-active");
-        try {
-            localStorage.setItem(introSeenKey, "true");
-        } catch (error) {
-            console.warn("Could not save intro preference.", error);
-        }
-
-        skipIntroButton?.addEventListener("click", hideIntro);
-        window.setTimeout(hideIntro, 4000);
-    } else {
-        introReveal.remove();
-    }
+    document.body.classList.add("intro-active");
+    skipIntroButton?.addEventListener("click", hideIntro);
+    const introDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 6000;
+    window.setTimeout(hideIntro, introDuration);
 }
 
 const themeToggle = document.getElementById("themeToggle");

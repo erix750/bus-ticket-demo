@@ -136,7 +136,7 @@ html[data-theme="dark"] .original-search-panel {
 .slogan-marquee-track {
     display: flex;
     width: max-content;
-    animation: sloganMarquee 4s linear infinite;
+    animation: sloganMarquee 12s linear infinite;
     will-change: transform;
 }
 
@@ -218,7 +218,7 @@ html[data-theme="dark"] .original-search-panel {
 }
 
 .brand-reveal-wordmark .logo-sub {
-    width: min(75vw, 1100px);
+    width: 100vw;
     overflow: hidden;
     color: #f5c63e;
     font-size: clamp(0.75rem, 1.8vw, 2.1rem);
@@ -1853,12 +1853,12 @@ summary:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
     .brand-reveal {
-        display: none;
+        transition-duration: 0.01ms;
     }
 
-    .slogan-marquee-track {
-        animation-duration: 4s !important;
-        animation-iteration-count: infinite !important;
+    .brand-reveal-art,
+    .brand-reveal-wordmark .logo-main .gold::before {
+        animation-duration: 0.01ms;
     }
 
     *,
@@ -2288,7 +2288,7 @@ html[data-theme="dark"] .partner-dialog .login-copy {
 }
 
 .brand-reveal-wordmark .logo-sub {
-    width: min(75vw, 1100px);
+    width: 100vw;
     overflow: hidden;
     color: #f5c63e;
     font-size: clamp(0.75rem, 1.8vw, 2.1rem);
@@ -2458,13 +2458,13 @@ main.welcome-main {
     position: relative;
     z-index: 2;
     display: flex;
-    width: min(100%, 660px);
-    max-width: 660px;
+    width: 100%;
+    max-width: none;
     min-width: 0;
     min-height: 100%;
     flex-direction: column;
     justify-content: center;
-    padding: 132px 0 68px 78px;
+    padding: 132px clamp(22px, 5.5vw, 78px) 68px;
 }
 
 .hero-logo-line {
@@ -2493,8 +2493,9 @@ main.welcome-main {
 
 .hero-landing h1 .title-sub {
     margin-top: 20px;
-    width: 100%;
+    width: min(100vw, 1410px);
     max-width: none;
+    margin-left: calc(-1 * clamp(22px, 5.5vw, 78px));
     overflow: hidden;
     color: rgba(255, 255, 255, 0.96);
     font-size: clamp(1.05rem, 3vw, 2.4rem);
@@ -2776,7 +2777,7 @@ main.welcome-main {
     }
 
     .hero-copy {
-        padding: 82px 22px 42px;
+        padding: 82px clamp(22px, 5.5vw, 78px) 42px;
     }
 
     .hero-logo-line {
@@ -3049,6 +3050,11 @@ html[data-theme="light"] .footer-contact-links a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .slogan-marquee-track.slogan-marquee-track {
+        animation-duration: 12s !important;
+        animation-iteration-count: infinite !important;
+    }
+
     button:not(:disabled),
     a[href],
     summary,

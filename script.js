@@ -221,6 +221,11 @@ document.getElementById("refreshAvailability").addEventListener("click", functio
     refreshBusAvailability(true);
 });
 
+document.getElementById("bookJourneyButton").addEventListener("click", function() {
+    document.getElementById("searchPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("from").focus({ preventScroll: true });
+});
+
 document.querySelectorAll(".route-chip").forEach(function(button) {
     button.addEventListener("click", function() {
         const from = button.dataset.from;
@@ -237,7 +242,7 @@ document.querySelectorAll(".route-chip").forEach(function(button) {
         document.getElementById("searchResults").replaceChildren();
         searchMessage.textContent = routeCompanies.length
             ? "Route selected. Choose your travel date and passenger details, then search."
-            : "Route selected. Choose a bus company and travel date, then search.";
+            : "Route selected. Choose your travel date and search all available companies.";
         document.getElementById("date").focus();
     });
 });
@@ -527,7 +532,7 @@ function updateCompanyOptions() {
             bus.company.trim() && bus.from && bus.to && bus.date >= today;
     }).map(function(bus) { return bus.company.trim(); })));
     companyFilter.replaceChildren(new Option(
-        companies.length ? "Choose a bus company" : "No buses available yet",
+        companies.length ? "All bus companies" : "No buses available yet",
         ""
     ));
 
@@ -644,12 +649,6 @@ function performSearch() {
     const requestedSeats = Number(document.getElementById("seatCount").value);
 
     searchResults.replaceChildren();
-    if (!company) {
-        searchMessage.textContent = companyFilter.options.length > 1
-            ? "Choose a bus company."
-            : "There are no bookable bus schedules yet. Please check again later.";
-        return;
-    }
     if (!from || !to) {
         searchMessage.textContent = "Enter both a departure city and destination.";
         return;
@@ -665,7 +664,7 @@ function performSearch() {
 
     const matches = buses.filter(function(bus) {
         return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-            bus.company === company && bus.from && bus.to && bus.date === date && bus.date >= today &&
+            (!company || bus.company === company) && bus.from && bus.to && bus.date === date && bus.date >= today &&
             normalizedText(bus.from) === normalizedText(from) &&
             normalizedText(bus.to) === normalizedText(to) &&
             bus.availableSeats >= requestedSeats;
@@ -940,11 +939,6 @@ async function removeSchedule(busId) {
 searchForm.addEventListener("submit", function(event) {
     event.preventDefault();
     searchMessage.textContent = "";
-    if (!document.getElementById("passengerName").value.trim()) {
-        searchMessage.textContent = "Enter the passenger name before searching.";
-        document.getElementById("passengerName").focus();
-        return;
-    }
     performSearch();
 });
 

@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-logo-polish-20261102-1">
+    <link rel="stylesheet" href="style.css?v=passenger-search-fix-20261102-1">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -154,17 +154,7 @@
                     </h1>
                 </div>
                 <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
-                <button class="cta-button" type="button">BOOK YOUR JOURNEY <span aria-hidden="true">›</span></button>
-            </div>
-        </section>
-
-        <section class="panel search-panel landing-search-panel" aria-labelledby="search-title">
-            <div class="popular-routes" role="group" aria-label="Popular routes">
-                <span class="route-label">Popular Routes</span>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Rwamagana">Kigali → Rwamagana</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Kayonza">Kigali → Kayonza</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Ngoma">Kigali → Ngoma</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Rusumo">Kigali → Rusumo</button>
+                <button class="cta-button" id="bookJourneyButton" type="button">BOOK YOUR JOURNEY <span aria-hidden="true">›</span></button>
             </div>
         </section>
 
@@ -297,7 +287,7 @@
             </div>
         </section>
 
-        <section class="panel search-panel original-search-panel" aria-labelledby="search-title" hidden>
+        <section class="panel search-panel original-search-panel" id="searchPanel" aria-labelledby="search-title">
             <div class="section-heading">
                 <div>
                     <p class="eyebrow">PLAN YOUR JOURNEY</p>
@@ -319,13 +309,13 @@
             </div>
             <form id="searchForm" class="form-grid">
                 <div class="field field-wide">
-                    <label for="passengerName">Passenger name</label>
-                    <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Enter your name" required>
+                    <label for="passengerName">Passenger name <span class="muted-label">(needed to book)</span></label>
+                    <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Enter your name when ready to book">
                 </div>
                 <div class="field">
                     <label for="companyFilter">Bus company</label>
-                    <select id="companyFilter" name="companyFilter" required>
-                        <option value="">Choose a company</option>
+                    <select id="companyFilter" name="companyFilter">
+                        <option value="">All bus companies</option>
                     </select>
                 </div>
                 <div class="field">
@@ -469,7 +459,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=landing-refresh-20261102-1"></script>
+    <script src="script.js?v=passenger-search-fix-20261102-1"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

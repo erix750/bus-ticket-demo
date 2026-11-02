@@ -11,6 +11,11 @@
     --white: #fff;
 }
 
+html[data-theme="dark"] .original-search-panel {
+    border-color: #35485a;
+    background: rgba(21, 33, 46, 0.97);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -2359,9 +2364,12 @@ main.welcome-main {
     width: min(100%, 1410px);
     margin: 0 auto;
     padding: 0 0 54px;
+    display: flex;
+    flex-direction: column;
 }
 
 .hero-landing {
+    order: 1;
     position: relative;
     min-height: 770px;
     margin: 0;
@@ -2495,9 +2503,26 @@ main.welcome-main {
 }
 
 .landing-features {
+    order: 3;
     width: min(100% - 90px, 1220px);
     margin: 0 auto;
     padding: 30px 0 0;
+}
+
+.original-search-panel {
+    order: 2;
+    position: relative;
+    z-index: 3;
+    width: min(100% - 44px, 1120px);
+    margin: -42px auto 28px;
+    padding: clamp(20px, 3vw, 34px);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 20px 48px rgba(13, 35, 57, 0.2);
+}
+
+.original-search-panel .popular-routes {
+    margin-bottom: 22px;
 }
 
 .feature-row {
@@ -2629,6 +2654,13 @@ main.welcome-main {
 
     .hero-landing {
         min-height: 580px;
+    }
+
+    .original-search-panel {
+        width: calc(100% - 22px);
+        margin-top: -26px;
+        padding: 18px 14px;
+        border-radius: 18px;
     }
 
     .hero-copy {

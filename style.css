@@ -2916,3 +2916,105 @@ html[data-theme="light"] .footer-contact-links a {
 html[data-theme="light"] .footer-contact-links a:hover {
     color: #173f70;
 }
+
+@media (hover: hover) and (pointer: fine) {
+    button:not(:disabled),
+    a[href],
+    summary {
+        transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease,
+            background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    button:not(:disabled):hover,
+    a[href]:hover,
+    summary:hover {
+        filter: brightness(1.08);
+    }
+
+    button:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 18px rgba(10, 25, 45, 0.18);
+    }
+
+    a[href]:hover {
+        text-decoration-thickness: 2px;
+        text-underline-offset: 4px;
+    }
+
+    .brand:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .feature-card,
+    .feature-item,
+    .result-card,
+    .record-card {
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .feature-card:hover,
+    .feature-item:hover,
+    .result-card:hover,
+    .record-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(245, 198, 62, 0.72);
+        box-shadow: 0 14px 30px rgba(10, 25, 45, 0.2);
+    }
+
+    .feature-card-image {
+        transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+
+    .feature-icon {
+        transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .feature-item:hover .feature-icon {
+        transform: scale(1.08);
+        box-shadow: 0 0 18px rgba(245, 198, 62, 0.28);
+    }
+
+    .feature-card:hover .feature-card-image {
+        transform: scale(1.035);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .field input:not([type="file"]),
+    .field select {
+        transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .field input:not([type="file"]):hover,
+    .field select:hover {
+        border-color: var(--forest);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    button:not(:disabled),
+    a[href],
+    summary,
+    .feature-card,
+    .feature-item,
+    .result-card,
+    .record-card,
+    .feature-card-image,
+    .feature-icon,
+    .field input:not([type="file"]),
+    .field select {
+        transition: none;
+    }
+
+    button:not(:disabled):hover,
+    a[href]:hover,
+    .brand:hover,
+    .feature-card:hover,
+    .feature-item:hover,
+    .result-card:hover,
+    .record-card:hover,
+    .feature-card:hover .feature-card-image,
+    .feature-item:hover .feature-icon {
+        transform: none;
+    }
+}

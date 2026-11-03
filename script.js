@@ -110,6 +110,8 @@ const busForm = document.getElementById("busForm");
 const searchMessage = document.getElementById("searchMessage");
 const searchResults = document.getElementById("searchResults");
 const bookingList = document.getElementById("bookingList");
+const bookingsPanel = document.querySelector(".bookings-panel");
+const viewBookingRecordButton = document.getElementById("viewBookingRecord");
 const busList = document.getElementById("busList");
 const companyFilter = document.getElementById("companyFilter");
 const managementPanel = document.getElementById("managementPanel");
@@ -211,6 +213,13 @@ document.getElementById("refreshAvailability").addEventListener("click", functio
 document.getElementById("bookJourneyButton").addEventListener("click", function() {
     document.getElementById("searchPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     document.getElementById("from").focus({ preventScroll: true });
+});
+
+viewBookingRecordButton.addEventListener("click", function() {
+    bookingsPanel.hidden = false;
+    bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    const printButton = bookingList.querySelector(".button-print");
+    if (printButton) printButton.focus({ preventScroll: true });
 });
 
 document.querySelectorAll(".route-chip").forEach(function(button) {
@@ -836,9 +845,12 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, paymentMethod) {
     const booking = await window.WaylineDatabase.createBooking(bus, passengerName, seatCount, paymentMethod);
     bookings.unshift(booking);
     await refreshAppData();
+    bookingsPanel.hidden = false;
+    viewBookingRecordButton.hidden = false;
     document.getElementById("bookingMessage").textContent =
         "Unpaid booking saved. Reference: " + booking.id.slice(0, 8).toUpperCase() + ". No payment was collected.";
     searchMessage.textContent = "Booking confirmed. Payment has not been collected.";
+    bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     performSearch();
     return true;
 }
@@ -928,6 +940,18 @@ function renderBookings() {
                 document.body.classList.remove("printing-ticket");
             });
             actions.appendChild(printButton);
+
+            if (!booking.companyView) {
+                const textButton = makeElement("a", "button button-print", "Text booking record");
+                const bookingReference = booking.id.slice(0, 8).toUpperCase();
+                const message = "Wayline booking " + bookingReference + ": " +
+                    booking.from + " to " + booking.to + ", " + formatDate(booking.date) +
+                    (booking.departureTime ? " at " + booking.departureTime : "") +
+                    ", " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
+                    ". UNPAID booking record, not a paid ticket.";
+                textButton.href = "sms:?body=" + encodeURIComponent(message);
+                actions.appendChild(textButton);
+            }
 
             if (booking.busId && !booking.companyView) {
                 const cancelButton = makeElement("button", "button button-danger", "Cancel ticket");

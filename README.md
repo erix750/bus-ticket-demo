@@ -5,6 +5,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 ## Features
 
 - Passengers can search published bus schedules and reserve seats.
+- Passengers can view and print their booking records or open a prefilled SMS draft in their phone's messaging app.
 - Bus companies can create accounts, publish schedules, view bookings, and upload a company logo.
 - Passengers choose MTN Mobile Money or Airtel Money as their intended payment method.
 - Seat reservations and cancellations update shared availability in Supabase.
@@ -40,4 +41,5 @@ Reference: [RURA applicable pump prices and public transport tariffs](https://ww
 - This is a prototype, not a production-ready ticketing or payment system.
 - The public Photon and OSRM demo services have no availability guarantee; use a suitable hosted or self-hosted routing service before relying on automatic distance estimates in production.
 - Selecting MTN Mobile Money or Airtel Money only records the passenger's intended method. No payment is initiated or verified; bookings remain unpaid.
+- The SMS action only opens a prefilled message in the passenger's messaging app; the passenger must choose a recipient and send it, and their mobile provider may charge. SMS is not sent automatically.
 - Use a real payment-provider integration and complete operational, security, and partner checks before accepting real bookings.

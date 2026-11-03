@@ -2432,8 +2432,9 @@ body.intro-active {
 
 #welcome-main,
 main.welcome-main {
-    width: min(100%, 1410px);
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 0 0 54px;
     display: flex;
     flex-direction: column;
@@ -2442,7 +2443,8 @@ main.welcome-main {
 .hero-landing {
     order: 1;
     position: relative;
-    min-height: 770px;
+    min-height: 100vh;
+    min-height: 100svh;
     margin: 0;
     padding: 0;
     border: 0;
@@ -2762,7 +2764,8 @@ main.welcome-main {
     }
 
     .hero-landing {
-        min-height: 580px;
+        min-height: 100vh;
+        min-height: 100svh;
     }
 
     .distance-input-row {

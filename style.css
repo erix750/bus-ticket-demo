@@ -2571,10 +2571,10 @@ main.welcome-main {
 }
 
 .hero-landing p {
-    max-width: 620px;
+    max-width: 500px;
     margin: 18px 0 0;
     color: rgba(255, 255, 255, 0.86);
-    font-size: clamp(1.2rem, 1.8vw, 2.1rem);
+    font-size: clamp(1rem, 1.4vw, 1.6rem);
     line-height: 1.35;
 }
 

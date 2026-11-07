@@ -29,7 +29,7 @@ function hideIntro() {
 if (introReveal) {
     document.body.classList.add("intro-active");
     skipIntroButton?.addEventListener("click", hideIntro);
-    const introDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 12000;
+    const introDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 3000;
     window.setTimeout(hideIntro, introDuration);
 }
 
@@ -58,7 +58,15 @@ function setColorTheme(theme, persist) {
     const isDark = theme === "dark";
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
     themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggleIcon.textContent = isDark ? "☀" : "☾";
+    themeToggleIcon.replaceChildren();
+    if (isDark) {
+        themeToggleIcon.textContent = "☾";
+    } else {
+        const sunIcon = document.createElement("img");
+        sunIcon.src = "assets/light-mode-sun.png";
+        sunIcon.alt = "";
+        themeToggleIcon.appendChild(sunIcon);
+    }
     themeToggle.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
     themeToggle.title = isDark ? "Turn off dark mode" : "Turn on dark mode";
     themeColorMeta.content = isDark ? "#0d1620" : "#173f70";
@@ -154,7 +162,7 @@ function setPartnerFormMode(signUp) {
         ? "Create a company account"
         : "Company sign in";
     document.getElementById("partnerFormIntro").textContent = signUp
-        ? "Register your bus company to publish schedules."
+        ? "Use an email inbox you can access. Confirm it before publishing schedules."
         : "Access your company schedules and bookings.";
     document.getElementById("partnerSubmitButton").textContent = signUp
         ? "Create account"
@@ -166,6 +174,20 @@ function setPartnerFormMode(signUp) {
     document.getElementById("partnerPassword").placeholder = "At least 6 characters";
     loginMessage.textContent = "";
 }
+
+const partnerEmailInput = document.getElementById("partnerEmail");
+partnerEmailInput.addEventListener("input", function() {
+    this.setCustomValidity("");
+});
+partnerEmailInput.addEventListener("invalid", function() {
+    if (!isPartnerSignUp) {
+        this.setCustomValidity("");
+        return;
+    }
+    this.setCustomValidity(this.validity.valueMissing
+        ? "Enter an email address you can access."
+        : "This email address is not available. Enter a valid address you can access.");
+});
 
 async function refreshAppData() {
     buses = (await window.WaylineDatabase.loadBuses()).map(normalizeBus);
@@ -336,7 +358,7 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
             }
             const result = await window.WaylineDatabase.signUp(email, password, companyName);
             if (!result.session) {
-                loginMessage.textContent = "Account created. Check your email to verify the address, then sign in.";
+                loginMessage.textContent = "Check your inbox and confirm your email before signing in. If you can't receive the link, this email isn't available—check the address and try again.";
                 return;
             }
             currentUser = result.user;
@@ -358,7 +380,15 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
         setPartnerPreview(true);
         managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-        loginMessage.textContent = error.message || "Could not complete company account sign-in.";
+        const signUpEmailUnavailable = isPartnerSignUp &&
+            /invalid email|email.*invalid|already registered|user already exists|email.*already|already.*email/i.test(error.message || "");
+        const invalidSignIn = !isPartnerSignUp &&
+            /invalid login credentials|email not confirmed/i.test(error.message || "");
+        loginMessage.textContent = signUpEmailUnavailable
+            ? "Email not available. Check the address or use an email account you can access."
+            : invalidSignIn
+                ? "Sign-in failed. Only registered company accounts can sign in. Check your email and password; if you just signed up, verify your email first."
+                : error.message || "Could not complete company account sign-in.";
     } finally {
         submitButton.disabled = false;
     }

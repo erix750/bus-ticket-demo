@@ -1,4 +1,4 @@
-const CACHE_NAME = "wayline-shell-v30";
+const CACHE_NAME = "wayline-shell-v39";
 const APP_SHELL = [
     "./",
     "./index.html",
@@ -16,7 +16,8 @@ const APP_SHELL = [
     "./manifest.webmanifest",
     "./icons/wayline-192.png",
     "./icons/wayline-512.png",
-    "./icons/wayline-maskable-512.png"
+    "./icons/wayline-maskable-512.png",
+    "./assets/light-mode-sun.png"
 ];
 
 self.addEventListener("install", function(event) {

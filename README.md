@@ -21,7 +21,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 2. Open the SQL Editor and run [`supabase/schema.sql`](./supabase/schema.sql).
 3. In `config.js`, configure the Supabase project URL, browser-safe publishable (anon) key, and public `siteUrl`. Never put a service-role key in client-side code.
 4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to the public `siteUrl` and add that exact URL to the Redirect URLs allowlist. Password reset links always return to this configured URL, including when a reset is requested from a local preview.
-5. Create a company account in the app. If email confirmation is enabled in Supabase Auth, confirm the email before signing in and publishing schedules.
+5. In Supabase Auth settings, require email confirmations. Create a company account in the app and confirm the email before signing in and publishing schedules. If the address is mistyped or the user cannot access that inbox, they cannot complete confirmation or activate the account.
 
 Company sign-up is open; schedules can be published as soon as the account is ready. Existing browser-only demo records are not automatically migrated to Supabase.
 

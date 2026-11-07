@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=full-screen-nav-20261103">
+    <link rel="stylesheet" href="style.css?v=verified-company-email-20261108">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -36,21 +36,6 @@
                 <span>WAYLINE</span>
             </a>
 
-            <nav class="main-nav" aria-label="Main navigation">
-                <a class="nav-link is-active" href="#top">Home</a>
-                <a class="nav-link" href="#searchPanel">Routes</a>
-                <a class="nav-link" href="#about">About Us</a>
-                <a class="nav-link" href="#contact">Contact</a>
-            </nav>
-
-            <div class="header-actions">
-                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
-                    <span id="themeToggleIcon" aria-hidden="true">☾</span>
-                </button>
-                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Sign In</button>
-                <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
-            </div>
         </div>
     </header>
 
@@ -87,7 +72,7 @@
                     <button class="button button-text" id="resendPasswordReset" type="button">Send another reset link</button>
                 </details>
                 <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
-                <p class="login-note">Company registration requires email verification. Payments are not processed yet. Password reset links return to this site.</p>
+                <p class="login-note">Use an email inbox you can access and confirm it before creating a company account. Payments are not processed yet.</p>
             </form>
             <form id="passwordRecoveryForm" class="login-form" hidden>
                 <p class="eyebrow">ACCOUNT RECOVERY</p>
@@ -155,13 +140,6 @@
                     <div class="hero-logo-line" aria-hidden="true"></div>
                     <h1 id="page-title">
                         <span class="title-main">WAYLINE</span>
-                        <span class="title-sub">
-                            <span class="slogan-accessible-text">RWANDA IS YOURS TO EXPLORE.</span>
-                            <span class="slogan-marquee-track" aria-hidden="true">
-                                <span class="slogan-marquee-copy">RWANDA IS YOURS TO EXPLORE.</span>
-                                <span class="slogan-marquee-copy">RWANDA IS YOURS TO EXPLORE.</span>
-                            </span>
-                        </span>
                     </h1>
                 </div>
                 <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
@@ -172,28 +150,24 @@
         <section class="landing-features" id="about" aria-labelledby="about-title">
             <div class="feature-row">
                 <div class="feature-item">
-                    <div class="feature-icon">✓</div>
                     <div>
                         <h3>Safe Travel</h3>
                         <p>Your safety first</p>
                     </div>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">☻</div>
                     <div>
                         <h3>Comfortable Rides</h3>
                         <p>Travel in comfort</p>
                     </div>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">⚡</div>
                     <div>
                         <h3>Easy Booking</h3>
                         <p>Fast and simple</p>
                     </div>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">◔</div>
                     <div>
                         <h3>24/7 Support</h3>
                         <p>We are always here</p>
@@ -464,6 +438,34 @@
     </main>
 
     <footer class="site-footer">
+        <div class="footer-site-actions">
+            <div class="header-actions">
+                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
+                    <span id="themeToggleIcon" aria-hidden="true"></span>
+                </button>
+                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
+                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Sign In</button>
+                <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
+            </div>
+        </div>
+        <nav class="footer-navigation" aria-label="Footer navigation">
+            <a class="footer-nav-link" href="#top">
+                <strong>Home</strong>
+                <span>Return to the top of Wayline.</span>
+            </a>
+            <a class="footer-nav-link" href="#searchPanel">
+                <strong>Routes</strong>
+                <span>Search buses and plan a trip.</span>
+            </a>
+            <a class="footer-nav-link" href="#about">
+                <strong>About Us</strong>
+                <span>See what makes traveling with us easy.</span>
+            </a>
+            <a class="footer-nav-link" href="#contact">
+                <strong>Contact</strong>
+                <span>Call or email us for help.</span>
+            </a>
+        </nav>
         <section class="footer-contact" id="contact" aria-labelledby="contact-title">
             <h2 id="contact-title">Get in touch</h2>
             <div class="footer-contact-links">
@@ -477,7 +479,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=post-booking-record-20261103"></script>
+    <script src="script.js?v=company-email-required-20261108"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

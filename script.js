@@ -118,11 +118,10 @@ const searchForm = document.getElementById("searchForm");
 const busForm = document.getElementById("busForm");
 const searchMessage = document.getElementById("searchMessage");
 const searchResults = document.getElementById("searchResults");
-const bookingList = document.getElementById("bookingList");
-const bookingsPanel = document.querySelector(".bookings-panel");
-const viewBookingRecordButton = document.getElementById("viewBookingRecord");
 const busList = document.getElementById("busList");
 const companyFilter = document.getElementById("companyFilter");
+const passengerNameInput = document.getElementById("passengerName");
+const passengerPhoneInput = document.getElementById("passengerPhone");
 const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
 const partnerLoginOpen = document.getElementById("partnerLoginOpen");
@@ -240,13 +239,6 @@ document.getElementById("refreshAvailability").addEventListener("click", functio
 document.getElementById("bookJourneyButton").addEventListener("click", function() {
     document.getElementById("searchPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     document.getElementById("from").focus({ preventScroll: true });
-});
-
-viewBookingRecordButton.addEventListener("click", function() {
-    bookingsPanel.hidden = false;
-    bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    const printButton = bookingList.querySelector(".button-print");
-    if (printButton) printButton.focus({ preventScroll: true });
 });
 
 document.querySelectorAll(".route-chip").forEach(function(button) {
@@ -791,20 +783,19 @@ function renderSearchResults(matchingBuses, requestedSeats) {
 }
 
 function openDemoCheckout(busId, seatCount, baseFare, totalFare) {
-    const passengerName = document.getElementById("passengerName").value.trim();
     const bus = buses.find(function(item) { return item.id === busId; });
 
-    if (!passengerName) {
-        searchMessage.textContent = "Enter the passenger name before continuing.";
-        document.getElementById("passengerName").focus();
-        return;
-    }
     if (!bus || !bus.isActive || bus.availableSeats < seatCount) {
         searchMessage.textContent = "Those places are no longer available. Search again for current availability.";
         performSearch();
         return;
     }
 
+    passengerNameInput.value = "";
+    passengerNameInput.setCustomValidity("");
+    passengerPhoneInput.value = "";
+    passengerPhoneInput.setCustomValidity("");
+    document.getElementById("paymentMethod").value = "";
     pendingBooking = {
         busId: busId,
         seatCount: seatCount,
@@ -812,7 +803,7 @@ function openDemoCheckout(busId, seatCount, baseFare, totalFare) {
         totalFare: totalFare
     };
     document.getElementById("checkoutRoute").textContent =
-        passengerName + " | " + bus.company + " | " + bus.from + " to " + bus.to +
+        bus.company + " | " + bus.from + " to " + bus.to +
         " | " + formatDate(bus.date) + " at " + bus.departureTime +
         " | " + seatCount + (seatCount === 1 ? " passenger" : " passengers");
     document.getElementById("checkoutFare").textContent = formatFare(baseFare);
@@ -861,13 +852,17 @@ function performSearch() {
     renderSearchResults(matches, requestedSeats);
 }
 
-async function bookTrip(busId, seatCount, baseFare, totalFare, paymentMethod) {
+async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, passengerPhone, paymentMethod) {
     const bus = buses.find(function(item) { return item.id === busId; });
-    const passengerName = document.getElementById("passengerName").value.trim();
 
     if (!passengerName) {
-        searchMessage.textContent = "Enter the passenger name before booking.";
         document.getElementById("passengerName").focus();
+        return false;
+    }
+    if (!/^\+?[0-9][0-9 ]{5,22}[0-9]$/.test(passengerPhone)) {
+        document.getElementById("passengerPhone").setCustomValidity("Enter a valid phone number.");
+        document.getElementById("passengerPhone").reportValidity();
+        document.getElementById("passengerPhone").focus();
         return false;
     }
     if (!bus || !bus.isActive || bus.availableSeats < seatCount) {
@@ -877,16 +872,17 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, paymentMethod) {
         return false;
     }
 
-    const booking = await window.WaylineDatabase.createBooking(bus, passengerName, seatCount, paymentMethod);
-    bookings.unshift(booking);
+    const booking = await window.WaylineDatabase.createBooking(
+        bus,
+        passengerName,
+        passengerPhone,
+        seatCount,
+        paymentMethod
+    );
     await refreshAppData();
-    bookingsPanel.hidden = false;
-    viewBookingRecordButton.hidden = false;
-    document.getElementById("bookingMessage").textContent =
-        "Unpaid booking saved. Reference: " + booking.id.slice(0, 8).toUpperCase() + ". No payment was collected.";
     searchMessage.textContent = "Booking confirmed. Payment has not been collected.";
     performSearch();
-    return true;
+    return booking;
 }
 
 document.getElementById("closeCheckout").addEventListener("click", function() {
@@ -901,11 +897,27 @@ document.getElementById("cancelCheckout").addEventListener("click", function() {
 
 document.getElementById("checkoutDialog").addEventListener("close", function() {
     pendingBooking = null;
+    passengerNameInput.value = "";
+    passengerPhoneInput.value = "";
+    document.getElementById("paymentMethod").value = "";
+});
+
+passengerNameInput.addEventListener("input", function() {
+    passengerNameInput.setCustomValidity("");
+});
+passengerPhoneInput.addEventListener("input", function() {
+    passengerPhoneInput.setCustomValidity("");
 });
 
 document.getElementById("confirmBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
+    passengerNameInput.setCustomValidity("");
+    passengerPhoneInput.setCustomValidity("");
+    if (!passengerNameInput.value.trim()) {
+        passengerNameInput.setCustomValidity("Enter the passenger's name.");
+    }
+    if (!passengerNameInput.reportValidity() || !passengerPhoneInput.reportValidity()) return;
     if (!paymentMethod.value) {
         paymentMethod.reportValidity();
         return;
@@ -913,16 +925,17 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
     const confirmButton = event.currentTarget;
     confirmButton.disabled = true;
     try {
-        const saved = await bookTrip(
+        const booking = await bookTrip(
             pendingBooking.busId,
             pendingBooking.seatCount,
             pendingBooking.baseFare,
             pendingBooking.totalFare,
+            passengerNameInput.value.trim(),
+            passengerPhoneInput.value.trim(),
             paymentMethod.value
         );
-        if (saved) {
+        if (booking) {
             document.getElementById("checkoutDialog").close();
-            const booking = bookings[0];
             document.getElementById("bookingConfirmationRoute").textContent =
                 booking.from + " to " + booking.to + " · " + formatDate(booking.date);
             document.getElementById("bookingConfirmationReference").textContent =
@@ -936,42 +949,25 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
     }
 });
 
-function closeBookingConfirmation(showRecord) {
+function closeBookingConfirmation() {
     document.getElementById("bookingConfirmationDialog").close();
-    if (showRecord) {
-        bookingsPanel.hidden = false;
-        bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
 }
 
 document.getElementById("closeBookingConfirmation").addEventListener("click", function() {
-    closeBookingConfirmation(false);
+    closeBookingConfirmation();
 });
 document.getElementById("closeBookingConfirmationDone").addEventListener("click", function() {
-    closeBookingConfirmation(false);
+    closeBookingConfirmation();
 });
-document.getElementById("openBookingRecord").addEventListener("click", function() {
-    closeBookingConfirmation(true);
-});
-
 function renderBookings() {
-    bookingList.replaceChildren();
     const companyBookingList = document.getElementById("companyBookingList");
     companyBookingList.replaceChildren();
-    const isCompanyView = Boolean(currentUser);
-    bookingsPanel.hidden = isCompanyView || bookings.length === 0;
-    viewBookingRecordButton.hidden = isCompanyView || bookings.length === 0;
     const activeCount = bookings.filter(function(booking) { return !booking.cancelled; }).length;
-    document.getElementById("bookingCount").textContent = String(activeCount);
     document.getElementById("companyBookingCount").textContent = String(activeCount);
-    document.getElementById("dashboardBookingCount").textContent = String(bookings.length);
+    document.getElementById("dashboardBookingCount").textContent = String(currentUser ? bookings.length : 0);
 
-    if (bookings.length === 0) {
-        if (isCompanyView) {
-            addEmptyMessage(companyBookingList, "No bookings have been made for your schedules yet.");
-        } else {
-            addEmptyMessage(bookingList, "Your bookings will appear here.");
-        }
+    if (!currentUser || bookings.length === 0) {
+        if (currentUser) addEmptyMessage(companyBookingList, "No bookings have been made for your schedules yet.");
         return;
     }
 
@@ -987,7 +983,8 @@ function renderBookings() {
         const details = makeElement(
             "p",
             "record-details",
-            booking.name + " | " + (booking.company || "Company not recorded") +
+            booking.name + (booking.phone ? " | " + booking.phone : "") +
+                " | " + (booking.company || "Company not recorded") +
                 (booking.busName ? " | " + booking.busName : "") +
                 "\n" + formatDate(booking.date) +
                 (booking.departureTime ? " at " + booking.departureTime : "") +
@@ -1012,29 +1009,9 @@ function renderBookings() {
             });
             actions.appendChild(printButton);
 
-            if (!booking.companyView) {
-                const textButton = makeElement("a", "button button-print", "Text booking record");
-                const bookingReference = booking.id.slice(0, 8).toUpperCase();
-                const message = "Wayline booking " + bookingReference + ": " +
-                    booking.from + " to " + booking.to + ", " + formatDate(booking.date) +
-                    (booking.departureTime ? " at " + booking.departureTime : "") +
-                    ", " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
-                    ". UNPAID booking record, not a paid ticket.";
-                textButton.href = "sms:?body=" + encodeURIComponent(message);
-                actions.appendChild(textButton);
-            }
-
-            if (booking.busId && !booking.companyView) {
-                const cancelButton = makeElement("button", "button button-danger", "Cancel ticket");
-                cancelButton.type = "button";
-                cancelButton.addEventListener("click", function() {
-                    cancelBooking(booking.id, cancelButton);
-                });
-                actions.appendChild(cancelButton);
-            }
             card.appendChild(actions);
         }
-        (isCompanyView ? companyBookingList : bookingList).appendChild(card);
+        companyBookingList.appendChild(card);
     });
 }
 
@@ -1159,35 +1136,6 @@ function renderBuses() {
         }
         busList.appendChild(card);
     });
-}
-
-async function cancelBooking(bookingId, cancelButton) {
-    const booking = bookings.find(function(item) { return item.id === bookingId; });
-    if (!booking || booking.cancelled) return;
-
-    cancelButton.disabled = true;
-    cancelButton.textContent = "Cancelling...";
-    try {
-        await window.WaylineDatabase.cancelBooking(bookingId);
-    } catch (error) {
-        document.getElementById("bookingMessage").textContent =
-            error.message || "Could not save the cancellation. Please try again.";
-        cancelButton.disabled = false;
-        cancelButton.textContent = "Cancel ticket";
-        return;
-    }
-
-    booking.cancelled = true;
-    renderBookings();
-    document.getElementById("bookingMessage").textContent = "Ticket cancelled. Reserved seats are available again.";
-    try {
-        await refreshAppData();
-    } catch (error) {
-        console.error("The ticket was cancelled, but the booking list could not refresh.", error);
-        document.getElementById("bookingMessage").textContent =
-            "Ticket cancelled, but the latest booking details could not load. Refresh the page to update them.";
-    }
-    await refreshBusAvailability(false);
 }
 
 async function setScheduleActive(busId, isActive) {

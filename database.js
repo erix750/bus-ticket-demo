@@ -12,21 +12,15 @@
     }
 
     const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    const bookingTokensKey = "wayline-booking-tokens";
+    try {
+        localStorage.removeItem("wayline-booking-tokens");
+    } catch (error) {
+        console.error("Could not clear saved passenger booking access tokens.", error);
+    }
 
     function throwIfError(result) {
         if (result.error) throw new Error(result.error.message);
         return result.data;
-    }
-
-    function readBookingTokens() {
-        const stored = localStorage.getItem(bookingTokensKey);
-        if (!stored) return [];
-        const tokens = JSON.parse(stored);
-        if (!Array.isArray(tokens)) throw new Error("Saved booking access data is invalid.");
-        return tokens.filter(function(item) {
-            return item && typeof item.id === "string" && typeof item.token === "string";
-        });
     }
 
     function mapBus(record) {
@@ -55,6 +49,7 @@
             id: record.id,
             busId: record.bus_id,
             name: record.passenger_name,
+            phone: record.passenger_phone || "",
             companyId: record.company_id,
             company: record.company_name || "",
             busName: record.bus_name,
@@ -102,12 +97,7 @@
             return throwIfError(result).map(function(record) { return mapBooking(record, true); });
         }
 
-        const tokens = readBookingTokens();
-        if (!tokens.length) return [];
-        const result = await supabase.rpc("get_my_bookings", {
-            p_cancel_tokens: tokens.map(function(item) { return item.token; })
-        });
-        return throwIfError(result).map(function(record) { return mapBooking(record, false); });
+        return [];
     }
 
     async function getCompanyProfile(userId) {
@@ -208,43 +198,19 @@
         if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to remove it.");
     }
 
-    async function createBooking(bus, passengerName, seatCount, paymentMethod) {
+    async function createBooking(bus, passengerName, passengerPhone, seatCount, paymentMethod) {
         const result = await supabase.rpc("book_bus", {
             p_bus_id: bus.id,
             p_passenger_name: passengerName,
+            p_passenger_phone: passengerPhone,
             p_seat_count: seatCount,
             p_payment_method: paymentMethod
         });
         const booking = throwIfError(result);
-        const tokens = readBookingTokens().filter(function(item) { return item.id !== booking.id; });
-        tokens.unshift({ id: booking.id, token: booking.cancel_token });
-        try {
-            localStorage.setItem(bookingTokensKey, JSON.stringify(tokens));
-        } catch {
-            const rollback = await supabase.rpc("cancel_my_booking", {
-                p_booking_id: booking.id,
-                p_cancel_token: booking.cancel_token
-            });
-            if (rollback.error || !rollback.data) {
-                throw new Error("The booking was saved but could not be stored in this browser. Contact the bus company with reference " +
-                    booking.id.slice(0, 8).toUpperCase() + ".");
-            }
-            throw new Error("This browser could not store booking details, so the seat reservation was cancelled. Check browser storage and try again.");
-        }
         return Object.assign(mapBooking(booking, false), {
             company: bus.company,
             logo: bus.logo
         });
-    }
-
-    async function cancelBooking(bookingId) {
-        const token = readBookingTokens().find(function(item) { return item.id === bookingId; });
-        if (!token) throw new Error("This booking can only be cancelled from the browser where it was made.");
-        const result = await supabase.rpc("cancel_my_booking", {
-            p_booking_id: bookingId,
-            p_cancel_token: token.token
-        });
-        if (!throwIfError(result)) throw new Error("This booking is already cancelled or can no longer be cancelled.");
     }
 
     async function signIn(email, password) {
@@ -291,7 +257,6 @@
         setScheduleActive: setScheduleActive,
         removeSchedule: removeSchedule,
         createBooking: createBooking,
-        cancelBooking: cancelBooking,
         signIn: signIn,
         sendPasswordRecovery: sendPasswordRecovery,
         updatePassword: updatePassword,

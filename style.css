@@ -1211,8 +1211,7 @@ main {
     font-size: 9px;
 }
 
-.search-panel,
-.bookings-panel {
+.search-panel {
     padding: 25px 28px 27px;
 }
 
@@ -2215,8 +2214,7 @@ summary:focus-visible {
         font-size: 37px;
     }
 
-    .search-panel,
-    .bookings-panel {
+    .search-panel {
         padding: 19px 16px;
     }
 
@@ -2985,6 +2983,82 @@ main.welcome-main {
     padding: 30px 0 0;
 }
 
+.passenger-flow {
+    order: 4;
+    width: min(100% - 90px, 1220px);
+    margin: 34px auto 0;
+    color: #f5f9ff;
+}
+
+.passenger-flow-heading {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.passenger-flow-heading .eyebrow {
+    margin: 0 0 8px;
+    color: #f2c078;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.passenger-flow-heading h2 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.7rem, 3vw, 2.5rem);
+}
+
+.passenger-flow-heading > p:last-child {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.passenger-flow-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.passenger-flow-steps li {
+    display: flex;
+    min-height: 132px;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px;
+    border: 1px solid rgba(153, 183, 213, 0.32);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(20, 45, 70, 0.94), rgba(11, 28, 46, 0.94));
+}
+
+.passenger-step-number {
+    display: grid;
+    flex: 0 0 34px;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f2c078;
+    color: #173f70;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.passenger-flow-steps h3 {
+    margin: 1px 0 6px;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.passenger-flow-steps p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
 .original-search-panel {
     order: 2;
     position: relative;
@@ -3217,8 +3291,13 @@ main.welcome-main {
     }
 
     .landing-search-panel,
-    .landing-features {
+    .landing-features,
+    .passenger-flow {
         width: calc(100% - 22px);
+    }
+
+    .passenger-flow-steps {
+        grid-template-columns: 1fr 1fr;
     }
 
     .landing-search-panel {
@@ -3263,12 +3342,52 @@ main.welcome-main {
     }
 
     .feature-row,
-    .feature-grid {
+    .feature-grid,
+    .passenger-flow-steps {
         grid-template-columns: 1fr;
     }
 
     .feature-item {
         justify-content: center;
+    }
+}
+
+@media (max-width: 600px) and (max-height: 720px) {
+    .checkout-content {
+        padding: 16px;
+    }
+
+    .checkout-content > .eyebrow {
+        margin-bottom: 6px;
+    }
+
+    .checkout-content h2 {
+        margin-bottom: 8px;
+        font-size: 1.3rem;
+    }
+
+    .checkout-route {
+        margin-bottom: 8px;
+    }
+
+    .checkout-summary {
+        gap: 6px;
+        padding: 10px;
+    }
+
+    .checkout-summary .checkout-total {
+        padding-top: 6px;
+    }
+
+    .checkout-content .field input,
+    .checkout-content .field select {
+        min-height: 42px;
+        padding: 9px 11px;
+    }
+
+    .checkout-notice {
+        margin: 8px 0 10px;
+        padding: 8px 10px;
     }
 }
 
@@ -3308,6 +3427,36 @@ html[data-theme="light"] .landing-features {
     border-radius: 24px;
     background: #f7f9fc;
     box-shadow: 0 18px 48px rgba(13, 35, 57, 0.14);
+}
+
+html[data-theme="light"] .passenger-flow-steps li {
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(13, 35, 57, 0.1);
+}
+
+html[data-theme="light"] .passenger-flow {
+    padding: 26px clamp(16px, 3vw, 36px);
+    border: 1px solid #e1e8f0;
+    border-radius: 24px;
+    background: rgba(248, 250, 253, 0.96);
+    box-shadow: 0 18px 48px rgba(13, 35, 57, 0.14);
+}
+
+html[data-theme="light"] .passenger-flow-heading h2 {
+    color: var(--ink);
+}
+
+html[data-theme="light"] .passenger-flow-heading > p:last-child {
+    color: var(--muted);
+}
+
+html[data-theme="light"] .passenger-flow-steps h3 {
+    color: var(--ink);
+}
+
+html[data-theme="light"] .passenger-flow-steps p {
+    color: var(--muted);
 }
 
 html[data-theme="light"] .feature-item {

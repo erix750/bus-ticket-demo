@@ -1,5 +1,9 @@
 create extension if not exists pgcrypto;
 
+drop function if exists public.get_my_bookings(uuid[]);
+drop function if exists public.cancel_my_booking(uuid, uuid);
+drop function if exists public.book_bus(uuid, text, integer, text);
+
 create table if not exists public.companies (
     id uuid primary key references auth.users (id) on delete cascade,
     name text not null check (char_length(trim(name)) between 2 and 80),
@@ -36,21 +40,42 @@ create table if not exists public.bookings (
     id uuid primary key default gen_random_uuid(),
     bus_id uuid not null references public.buses (id) on delete restrict,
     passenger_name text not null check (char_length(trim(passenger_name)) between 1 and 80),
+    passenger_phone text constraint bookings_passenger_phone_format_check
+        check (passenger_phone is null or passenger_phone ~ '^\+?[0-9]{7,20}$'),
     seat_count integer not null check (seat_count between 1 and 20),
     base_fare numeric(12, 2) not null check (base_fare >= 0),
     platform_fee numeric(12, 2) not null check (platform_fee >= 0),
     total_fare numeric(12, 2) not null check (total_fare = base_fare + platform_fee),
     payment_method text not null check (payment_method in ('MTN Mobile Money', 'Airtel Money')),
     payment_status text not null default 'demo-unpaid' check (payment_status = 'demo-unpaid'),
-    cancel_token uuid not null default gen_random_uuid(),
     cancelled boolean not null default false,
     created_at timestamptz not null default now()
 );
 
+alter table public.bookings
+    add column if not exists passenger_phone text;
+drop index if exists public.bookings_cancel_token_idx;
+alter table public.bookings
+    drop column if exists cancel_token;
+
+do $$
+begin
+    if not exists (
+        select 1
+          from pg_catalog.pg_constraint
+         where conname = 'bookings_passenger_phone_format_check'
+           and conrelid = 'public.bookings'::regclass
+    ) then
+        alter table public.bookings
+            add constraint bookings_passenger_phone_format_check
+            check (passenger_phone is null or passenger_phone ~ '^\+?[0-9]{7,20}$');
+    end if;
+end;
+$$;
+
 create index if not exists buses_search_idx
     on public.buses (travel_date, from_city, to_city, company_id);
 create index if not exists bookings_bus_id_idx on public.bookings (bus_id);
-create index if not exists bookings_cancel_token_idx on public.bookings (cancel_token);
 
 create or replace function public.set_rura_bus_fare()
 returns trigger
@@ -237,6 +262,7 @@ revoke execute on function public.create_company_profile() from public, anon, au
 create or replace function public.book_bus(
     p_bus_id uuid,
     p_passenger_name text,
+    p_passenger_phone text,
     p_seat_count integer,
     p_payment_method text
 )
@@ -249,11 +275,15 @@ declare
     selected_bus public.buses%rowtype;
     new_booking public.bookings%rowtype;
     clean_name text := trim(coalesce(p_passenger_name, ''));
+    clean_phone text := regexp_replace(trim(coalesce(p_passenger_phone, '')), '[^0-9+]', '', 'g');
     base_amount numeric(12, 2);
     fee_amount numeric(12, 2);
 begin
     if char_length(clean_name) not between 1 and 80 then
         raise exception 'Enter a passenger name of 1 to 80 characters.';
+    end if;
+    if clean_phone !~ '^\+?[0-9]{7,20}$' then
+        raise exception 'Enter a valid passenger phone number.';
     end if;
     if p_seat_count is null or p_seat_count not between 1 and 20 then
         raise exception 'Choose between 1 and 20 passengers.';
@@ -282,11 +312,11 @@ begin
      where id = selected_bus.id;
 
     insert into public.bookings (
-        bus_id, passenger_name, seat_count, base_fare, platform_fee,
+        bus_id, passenger_name, passenger_phone, seat_count, base_fare, platform_fee,
         total_fare, payment_method
     )
     values (
-        selected_bus.id, clean_name, p_seat_count, base_amount, fee_amount,
+        selected_bus.id, clean_name, clean_phone, p_seat_count, base_amount, fee_amount,
         base_amount + fee_amount, p_payment_method
     )
     returning * into new_booking;
@@ -295,6 +325,7 @@ begin
         'id', new_booking.id,
         'bus_id', new_booking.bus_id,
         'passenger_name', new_booking.passenger_name,
+        'passenger_phone', new_booking.passenger_phone,
         'company_id', selected_bus.company_id,
         'bus_name', selected_bus.name,
         'from_city', selected_bus.from_city,
@@ -307,75 +338,8 @@ begin
         'total_fare', new_booking.total_fare,
         'payment_method', new_booking.payment_method,
         'payment_status', new_booking.payment_status,
-        'cancelled', new_booking.cancelled,
-        'cancel_token', new_booking.cancel_token
+        'cancelled', new_booking.cancelled
     );
-end;
-$$;
-
-create or replace function public.get_my_bookings(p_cancel_tokens uuid[])
-returns setof jsonb
-language sql
-security definer
-set search_path = ''
-as $$
-    select jsonb_build_object(
-        'id', bookings.id,
-        'bus_id', bookings.bus_id,
-        'passenger_name', bookings.passenger_name,
-        'company_id', buses.company_id,
-        'company_name', companies.name,
-        'company_logo', companies.logo_data,
-        'bus_name', buses.name,
-        'from_city', buses.from_city,
-        'to_city', buses.to_city,
-        'travel_date', buses.travel_date,
-        'departure_time', buses.departure_time,
-        'seat_count', bookings.seat_count,
-        'base_fare', bookings.base_fare,
-        'platform_fee', bookings.platform_fee,
-        'total_fare', bookings.total_fare,
-        'payment_method', bookings.payment_method,
-        'payment_status', bookings.payment_status,
-        'cancelled', bookings.cancelled
-    )
-    from public.bookings
-    join public.buses on buses.id = bookings.bus_id
-    join public.companies on companies.id = buses.company_id
-    where bookings.cancel_token = any(coalesce(p_cancel_tokens, array[]::uuid[]))
-    order by bookings.created_at desc;
-$$;
-
-create or replace function public.cancel_my_booking(
-    p_booking_id uuid,
-    p_cancel_token uuid
-)
-returns boolean
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-    selected_booking public.bookings%rowtype;
-begin
-    select *
-      into selected_booking
-      from public.bookings
-     where id = p_booking_id
-       and cancel_token = p_cancel_token
-       and cancelled = false
-     for update;
-
-    if not found then
-        return false;
-    end if;
-
-    update public.bookings set cancelled = true where id = selected_booking.id;
-    update public.buses
-       set available_seats = least(total_seats, available_seats + selected_booking.seat_count)
-     where id = selected_booking.bus_id;
-
-    return true;
 end;
 $$;
 
@@ -389,6 +353,7 @@ as $$
         'id', bookings.id,
         'bus_id', bookings.bus_id,
         'passenger_name', bookings.passenger_name,
+        'passenger_phone', bookings.passenger_phone,
         'company_id', buses.company_id,
         'company_name', companies.name,
         'company_logo', companies.logo_data,
@@ -412,11 +377,7 @@ as $$
     order by bookings.created_at desc;
 $$;
 
-grant execute on function public.book_bus(uuid, text, integer, text) to anon, authenticated;
-grant execute on function public.get_my_bookings(uuid[]) to anon, authenticated;
-grant execute on function public.cancel_my_booking(uuid, uuid) to anon, authenticated;
+grant execute on function public.book_bus(uuid, text, text, integer, text) to anon, authenticated;
 grant execute on function public.get_company_bookings() to authenticated;
 revoke execute on function public.get_company_bookings() from public, anon;
-revoke execute on function public.book_bus(uuid, text, integer, text) from public;
-revoke execute on function public.get_my_bookings(uuid[]) from public;
-revoke execute on function public.cancel_my_booking(uuid, uuid) from public;
+revoke execute on function public.book_bus(uuid, text, text, integer, text) from public;

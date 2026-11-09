@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-passenger-steps-20261109">
+    <link rel="stylesheet" href="style.css?v=wayline-departure-lookup-20261109">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -143,6 +143,7 @@
             <p class="checkout-notice">This is an unpaid booking confirmation, not a paid ticket. Keep this reference for your records and contact the bus company or Wayline about payment.</p>
             <div class="checkout-actions">
                 <button class="button button-text" id="closeBookingConfirmationDone" type="button">Done</button>
+                <a class="button button-secondary" href="booking.html">Find a booking</a>
             </div>
         </div>
     </dialog>
@@ -512,6 +513,10 @@
                 <strong>Help & FAQ</strong>
                 <span>Booking, payments, cancellations and help.</span>
             </a>
+            <a class="footer-nav-link" href="booking.html">
+                <strong>Find Booking</strong>
+                <span>Look up a booking using SMS verification.</span>
+            </a>
         </nav>
         <section class="panel help-panel" id="help" aria-labelledby="help-title">
             <div class="section-heading">
@@ -535,7 +540,11 @@
                 </details>
                 <details class="faq-item">
                     <summary>Where can I find my booking reference?</summary>
-                    <p>Your reference is shown after your booking is saved. Keep it available when contacting the bus company or Wayline.</p>
+                    <p>Your booking reference is shown after your booking is saved. Keep it available to find your booking or when contacting the bus company or Wayline.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Can I view my booking from another device?</summary>
+                    <p>Yes. Enter the booking reference and the phone number used at checkout, then verify the one-time SMS code. No passenger password or account setup is needed.</p>
                 </details>
                 <details class="faq-item">
                     <summary>How can I contact Wayline?</summary>
@@ -555,8 +564,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=wayline-passenger-steps-20261109"></script>
-    <script src="script.js?v=wayline-passenger-steps-20261109"></script>
+    <script src="database.js?v=wayline-departure-lookup-20261109"></script>
+    <script src="script.js?v=wayline-departure-lookup-20261109"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

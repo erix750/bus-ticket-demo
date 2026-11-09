@@ -40,8 +40,7 @@ create table if not exists public.bookings (
     id uuid primary key default gen_random_uuid(),
     bus_id uuid not null references public.buses (id) on delete restrict,
     passenger_name text not null check (char_length(trim(passenger_name)) between 1 and 80),
-    passenger_phone text constraint bookings_passenger_phone_format_check
-        check (passenger_phone is null or passenger_phone ~ '^\+?[0-9]{7,20}$'),
+    passenger_phone text,
     seat_count integer not null check (seat_count between 1 and 20),
     base_fare numeric(12, 2) not null check (base_fare >= 0),
     platform_fee numeric(12, 2) not null check (platform_fee >= 0),
@@ -57,25 +56,24 @@ alter table public.bookings
 drop index if exists public.bookings_cancel_token_idx;
 alter table public.bookings
     drop column if exists cancel_token;
-
-do $$
-begin
-    if not exists (
-        select 1
-          from pg_catalog.pg_constraint
-         where conname = 'bookings_passenger_phone_format_check'
-           and conrelid = 'public.bookings'::regclass
-    ) then
-        alter table public.bookings
-            add constraint bookings_passenger_phone_format_check
-            check (passenger_phone is null or passenger_phone ~ '^\+?[0-9]{7,20}$');
-    end if;
-end;
-$$;
+update public.bookings
+   set passenger_phone = case
+       when passenger_phone ~ '^0[0-9]{9}$' then '+250' || substring(passenger_phone from 2)
+       when passenger_phone ~ '^250[0-9]{9}$' then '+' || passenger_phone
+       when passenger_phone ~ '^\+2507[0-9]{8}$' then passenger_phone
+       else null
+   end
+ where passenger_phone is not null;
+alter table public.bookings
+    drop constraint if exists bookings_passenger_phone_format_check;
+alter table public.bookings
+    add constraint bookings_passenger_phone_format_check
+    check (passenger_phone is null or passenger_phone ~ '^\+2507[0-9]{8}$');
 
 create index if not exists buses_search_idx
     on public.buses (travel_date, from_city, to_city, company_id);
 create index if not exists bookings_bus_id_idx on public.bookings (bus_id);
+create index if not exists bookings_passenger_phone_idx on public.bookings (passenger_phone);
 
 create or replace function public.set_rura_bus_fare()
 returns trigger
@@ -200,7 +198,14 @@ drop policy if exists "Public can view future bus schedules" on public.buses;
 create policy "Public can view future bus schedules"
     on public.buses for select
     to anon, authenticated
-    using (travel_date >= current_date and (is_active or company_id = (select auth.uid())));
+    using (
+        company_id = (select auth.uid())
+        or (
+            travel_date + departure_time > (now() at time zone 'Africa/Kigali')
+            and is_active
+            and available_seats > 0
+        )
+    );
 
 drop policy if exists "Companies can add their own schedules" on public.buses;
 create policy "Companies can add their own schedules"
@@ -241,14 +246,10 @@ security definer
 set search_path = ''
 as $$
 begin
-    insert into public.companies (id, name)
-    values (
-        new.id,
-        coalesce(
-            nullif(trim(new.raw_user_meta_data ->> 'company_name'), ''),
-            split_part(new.email, '@', 1)
-        )
-    );
+    if char_length(trim(coalesce(new.raw_user_meta_data ->> 'company_name', ''))) between 2 and 80 then
+        insert into public.companies (id, name)
+        values (new.id, trim(new.raw_user_meta_data ->> 'company_name'));
+    end if;
     return new;
 end;
 $$;
@@ -279,11 +280,16 @@ declare
     base_amount numeric(12, 2);
     fee_amount numeric(12, 2);
 begin
+    if clean_phone ~ '^0[0-9]{9}$' then
+        clean_phone := '+250' || substring(clean_phone from 2);
+    elsif clean_phone ~ '^250[0-9]{9}$' then
+        clean_phone := '+' || clean_phone;
+    end if;
     if char_length(clean_name) not between 1 and 80 then
         raise exception 'Enter a passenger name of 1 to 80 characters.';
     end if;
-    if clean_phone !~ '^\+?[0-9]{7,20}$' then
-        raise exception 'Enter a valid passenger phone number.';
+    if clean_phone !~ '^\+2507[0-9]{8}$' then
+        raise exception 'Enter a valid Rwanda mobile phone number.';
     end if;
     if p_seat_count is null or p_seat_count not between 1 and 20 then
         raise exception 'Choose between 1 and 20 passengers.';
@@ -296,12 +302,12 @@ begin
       into selected_bus
       from public.buses
      where id = p_bus_id
-       and travel_date >= current_date
+       and travel_date + departure_time > (now() at time zone 'Africa/Kigali')
         and is_active
       for update;
 
     if not found or selected_bus.available_seats < p_seat_count then
-        raise exception 'Those seats are no longer available. Search again.';
+        raise exception 'This trip has departed or no longer has enough seats. Search again.';
     end if;
 
     base_amount := selected_bus.fare * p_seat_count;
@@ -343,6 +349,51 @@ begin
 end;
 $$;
 
+create or replace function public.get_my_booking_by_reference(p_reference text)
+returns setof jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    clean_reference text := upper(trim(coalesce(p_reference, '')));
+    verified_phone text := auth.jwt() ->> 'phone';
+begin
+    if auth.uid() is null or verified_phone is null then
+        raise exception 'Verify your booking phone number to continue.';
+    end if;
+    if clean_reference !~ '^[0-9A-F]{8,32}$' then
+        raise exception 'Enter a valid booking reference.';
+    end if;
+
+    return query
+    select jsonb_build_object(
+        'id', bookings.id,
+        'passenger_name', bookings.passenger_name,
+        'bus_name', buses.name,
+        'company_name', companies.name,
+        'from_city', buses.from_city,
+        'to_city', buses.to_city,
+        'travel_date', buses.travel_date,
+        'departure_time', buses.departure_time,
+        'seat_count', bookings.seat_count,
+        'base_fare', bookings.base_fare,
+        'platform_fee', bookings.platform_fee,
+        'total_fare', bookings.total_fare,
+        'payment_method', bookings.payment_method,
+        'payment_status', bookings.payment_status,
+        'cancelled', bookings.cancelled
+    )
+      from public.bookings
+      join public.buses on buses.id = bookings.bus_id
+      join public.companies on companies.id = buses.company_id
+     where bookings.passenger_phone = verified_phone
+       and upper(left(replace(bookings.id::text, '-', ''), char_length(clean_reference))) = clean_reference
+     order by bookings.created_at desc
+     limit 10;
+end;
+$$;
+
 create or replace function public.get_company_bookings()
 returns setof jsonb
 language sql
@@ -378,6 +429,8 @@ as $$
 $$;
 
 grant execute on function public.book_bus(uuid, text, text, integer, text) to anon, authenticated;
+grant execute on function public.get_my_booking_by_reference(text) to authenticated;
 grant execute on function public.get_company_bookings() to authenticated;
 revoke execute on function public.get_company_bookings() from public, anon;
 revoke execute on function public.book_bus(uuid, text, text, integer, text) from public;
+revoke execute on function public.get_my_booking_by_reference(text) from public, anon;

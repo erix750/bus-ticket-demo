@@ -12,6 +12,14 @@
     }
 
     const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    const passengerAuth = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false,
+            storageKey: "wayline-passenger-lookup-auth"
+        }
+    });
     try {
         localStorage.removeItem("wayline-booking-tokens");
     } catch (error) {
@@ -72,7 +80,6 @@
         const result = await supabase
             .from("buses")
             .select("*, companies(name, logo_data)")
-            .gte("travel_date", new Date().toISOString().slice(0, 10))
             .order("travel_date")
             .order("departure_time");
         return throwIfError(result).map(mapBus);
@@ -92,7 +99,7 @@
     async function loadBookings() {
         const userResult = await supabase.auth.getSession();
         if (userResult.error) throw new Error(userResult.error.message);
-        if (userResult.data.session) {
+        if (userResult.data.session && userResult.data.session.user.email) {
             const result = await supabase.rpc("get_company_bookings");
             return throwIfError(result).map(function(record) { return mapBooking(record, true); });
         }
@@ -213,6 +220,35 @@
         });
     }
 
+    async function sendPassengerBookingOtp(phone) {
+        const result = await passengerAuth.auth.signInWithOtp({
+            phone: phone,
+            options: { shouldCreateUser: true }
+        });
+        throwIfError(result);
+    }
+
+    async function verifyPassengerBookingOtp(phone, token) {
+        const result = await passengerAuth.auth.verifyOtp({
+            phone: phone,
+            token: token,
+            type: "sms"
+        });
+        return throwIfError(result);
+    }
+
+    async function findPassengerBooking(reference) {
+        const result = await passengerAuth.rpc("get_my_booking_by_reference", {
+            p_reference: reference
+        });
+        return throwIfError(result).map(function(record) { return mapBooking(record, false); });
+    }
+
+    async function clearPassengerBookingSession() {
+        const result = await passengerAuth.auth.signOut({ scope: "local" });
+        throwIfError(result);
+    }
+
     async function signIn(email, password) {
         const result = await supabase.auth.signInWithPassword({ email: email, password: password });
         return throwIfError(result);
@@ -257,6 +293,10 @@
         setScheduleActive: setScheduleActive,
         removeSchedule: removeSchedule,
         createBooking: createBooking,
+        sendPassengerBookingOtp: sendPassengerBookingOtp,
+        verifyPassengerBookingOtp: verifyPassengerBookingOtp,
+        findPassengerBooking: findPassengerBooking,
+        clearPassengerBookingSession: clearPassengerBookingSession,
         signIn: signIn,
         sendPasswordRecovery: sendPasswordRecovery,
         updatePassword: updatePassword,

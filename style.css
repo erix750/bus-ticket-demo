@@ -11,6 +11,21 @@
     --white: #fff;
 }
 
+.booking-lookup-back {
+    margin: 18px 0 0;
+    text-align: center;
+}
+
+.booking-lookup-back a {
+    color: #fff;
+    font-weight: 700;
+    text-underline-offset: 3px;
+}
+
+.booking-lookup-footer {
+    width: min(100% - 40px, 920px);
+}
+
 html[data-theme="dark"] .original-search-panel {
     border-color: #35485a;
     background: rgba(21, 33, 46, 0.97);
@@ -2056,7 +2071,7 @@ summary:focus-visible {
 
 .footer-navigation {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 20px;
     text-align: left;
@@ -3075,6 +3090,68 @@ main.welcome-main {
     margin-bottom: 22px;
 }
 
+.booking-lookup-panel {
+    order: 5;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.booking-lookup-page {
+    display: block;
+    width: min(100% - 40px, 920px);
+    min-height: calc(100vh - 260px);
+    margin: 0 auto;
+    padding: 54px 0 34px;
+}
+
+.booking-lookup-page + .booking-lookup-footer {
+    margin-top: 0;
+}
+
+.booking-lookup-page .booking-lookup-panel .section-heading {
+    margin-bottom: 12px;
+}
+
+.site-header .header-button {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.booking-lookup-panel h1 {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(1.7rem, 3vw, 2.3rem);
+}
+
+.booking-lookup-panel > .field-hint {
+    margin: -4px 0 16px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.booking-lookup-panel > .field-hint,
+.booking-lookup-phone-hint {
+    max-width: 720px;
+}
+
+.booking-lookup-form {
+    margin-top: 12px;
+}
+
+.booking-lookup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.booking-lookup-results {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+
 .distance-input-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(190px, 0.45fr);
@@ -3255,8 +3332,12 @@ main.welcome-main {
         grid-template-columns: 1fr;
     }
 
-    .original-search-panel {
+    .original-search-panel,
+    .booking-lookup-panel {
         width: calc(100% - 22px);
+    }
+
+    .original-search-panel {
         margin-top: -26px;
         padding: 18px 14px;
         border-radius: 18px;

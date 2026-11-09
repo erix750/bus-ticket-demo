@@ -1,11 +1,13 @@
-const CACHE_NAME = "wayline-shell-v45";
+const CACHE_NAME = "wayline-shell-v46";
 const APP_SHELL = [
     "./",
     "./index.html",
+    "./booking.html",
     "./style.css",
     "./config.js",
     "./database.js",
     "./script.js",
+    "./booking-lookup.js",
     "./pwa.js",
     "./bus-background.png",
     "./assets/wayline-splash-reference.png",

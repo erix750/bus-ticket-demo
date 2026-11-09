@@ -250,7 +250,7 @@ document.querySelectorAll(".route-chip").forEach(function(button) {
 
         const routeCompanies = Array.from(new Set(buses.filter(function(bus) {
             return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-                bus.date >= today && normalizedText(bus.from) === normalizedText(from) &&
+                isTripUpcoming(bus) && normalizedText(bus.from) === normalizedText(from) &&
                 normalizedText(bus.to) === normalizedText(to);
         }).map(function(bus) { return bus.company; })));
         companyFilter.value = routeCompanies.length === 1 ? routeCompanies[0] : "";
@@ -452,14 +452,31 @@ async function initializeApp() {
     });
 }
 
-function localDateString(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return year + "-" + month + "-" + day;
+function getRwandaDateTime() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Africa/Kigali",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(new Date()).reduce(function(result, part) {
+        result[part.type] = part.value;
+        return result;
+    }, {});
+    return {
+        date: parts.year + "-" + parts.month + "-" + parts.day,
+        time: parts.hour + ":" + parts.minute
+    };
 }
 
-const today = localDateString(new Date());
+function isTripUpcoming(bus) {
+    const now = getRwandaDateTime();
+    return bus.date > now.date || (bus.date === now.date && bus.departureTime > now.time);
+}
+
+const today = getRwandaDateTime().date;
 document.getElementById("date").min = today;
 document.getElementById("busDate").min = today;
 const routeDistanceInput = document.getElementById("routeDistance");
@@ -469,6 +486,20 @@ document.getElementById("fareCategory").addEventListener("change", updateCalcula
 
 function normalizedText(value) {
     return value.trim().toLocaleLowerCase();
+}
+
+function normalizeRwandaPhoneNumber(value) {
+    let phone = value.trim().replace(/[\s()-]/g, "");
+    if (/^0[0-9]{9}$/.test(phone)) {
+        phone = "+250" + phone.slice(1);
+    } else if (/^250[0-9]{9}$/.test(phone)) {
+        phone = "+" + phone;
+    }
+    return /^\+2507[0-9]{8}$/.test(phone) ? phone : "";
+}
+
+function formatBookingReference(bookingId) {
+    return String(bookingId).replace(/-/g, "").slice(0, 12).toUpperCase();
 }
 
 function formatDate(date) {
@@ -700,7 +731,7 @@ function updateCompanyOptions() {
     const selectedCompany = companyFilter.value;
     const companies = Array.from(new Set(buses.filter(function(bus) {
         return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-            bus.company.trim() && bus.from && bus.to && bus.date >= today;
+            bus.company.trim() && bus.from && bus.to && isTripUpcoming(bus);
     }).map(function(bus) { return bus.company.trim(); })));
     companyFilter.replaceChildren(new Option(
         companies.length ? "All bus companies" : "No buses available yet",
@@ -834,7 +865,7 @@ function performSearch() {
 
     const matches = buses.filter(function(bus) {
         return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-            (!company || bus.company === company) && bus.from && bus.to && bus.date === date && bus.date >= today &&
+            (!company || bus.company === company) && bus.from && bus.to && bus.date === date && isTripUpcoming(bus) &&
             normalizedText(bus.from) === normalizedText(from) &&
             normalizedText(bus.to) === normalizedText(to) &&
             bus.availableSeats >= requestedSeats;
@@ -854,13 +885,14 @@ function performSearch() {
 
 async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, passengerPhone, paymentMethod) {
     const bus = buses.find(function(item) { return item.id === busId; });
+    const normalizedPhone = normalizeRwandaPhoneNumber(passengerPhone);
 
     if (!passengerName) {
         document.getElementById("passengerName").focus();
         return false;
     }
-    if (!/^\+?[0-9][0-9 ]{5,22}[0-9]$/.test(passengerPhone)) {
-        document.getElementById("passengerPhone").setCustomValidity("Enter a valid phone number.");
+    if (!normalizedPhone) {
+        passengerPhoneInput.setCustomValidity("Enter a valid Rwanda mobile number, such as 078 123 4567.");
         document.getElementById("passengerPhone").reportValidity();
         document.getElementById("passengerPhone").focus();
         return false;
@@ -875,7 +907,7 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, pa
     const booking = await window.WaylineDatabase.createBooking(
         bus,
         passengerName,
-        passengerPhone,
+        normalizedPhone,
         seatCount,
         paymentMethod
     );
@@ -939,7 +971,7 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
             document.getElementById("bookingConfirmationRoute").textContent =
                 booking.from + " to " + booking.to + " · " + formatDate(booking.date);
             document.getElementById("bookingConfirmationReference").textContent =
-                booking.id.slice(0, 8).toUpperCase();
+                formatBookingReference(booking.id);
             document.getElementById("bookingConfirmationDialog").showModal();
         }
     } catch (error) {
@@ -959,6 +991,7 @@ document.getElementById("closeBookingConfirmation").addEventListener("click", fu
 document.getElementById("closeBookingConfirmationDone").addEventListener("click", function() {
     closeBookingConfirmation();
 });
+
 function renderBookings() {
     const companyBookingList = document.getElementById("companyBookingList");
     companyBookingList.replaceChildren();
@@ -979,7 +1012,7 @@ function renderBookings() {
         const status = booking.cancelled ? "Cancelled" : "Unpaid";
         top.appendChild(makeElement("span", "status-badge" + (booking.cancelled ? " status-cancelled" : " status-demo"), status));
 
-        const reference = makeElement("p", "ticket-reference", "TICKET REF  " + booking.id.slice(0, 8).toUpperCase());
+        const reference = makeElement("p", "ticket-reference", "TICKET REF  " + formatBookingReference(booking.id));
         const details = makeElement(
             "p",
             "record-details",
@@ -1070,10 +1103,14 @@ function renderBuses() {
         manageableBuses.length + (manageableBuses.length === 1 ? " schedule" : " schedules");
     document.getElementById("dashboardScheduleCount").textContent = String(manageableBuses.length);
     document.getElementById("dashboardActiveCount").textContent = String(
-        manageableBuses.filter(function(bus) { return bus.isActive; }).length
+        manageableBuses.filter(function(bus) {
+            return bus.isActive && bus.availableSeats > 0 && isTripUpcoming(bus);
+        }).length
     );
     document.getElementById("dashboardSeatCount").textContent = String(
-        manageableBuses.filter(function(bus) { return bus.isActive; })
+        manageableBuses.filter(function(bus) {
+            return bus.isActive && isTripUpcoming(bus);
+        })
             .reduce(function(total, bus) { return total + bus.availableSeats; }, 0)
     );
 
@@ -1088,9 +1125,11 @@ function renderBuses() {
         top.appendChild(makeElement("h3", "", bus.name));
         const availabilityText = !bus.isActive
             ? "Hidden from passengers"
-            : bus.availableSeats === 0
-                ? "Full — unavailable to passengers"
-                : bus.availableSeats + " / " + bus.totalSeats + " seats";
+            : !isTripUpcoming(bus)
+                ? "Departed — removed from passenger search"
+                : bus.availableSeats === 0
+                    ? "Full — unavailable to passengers"
+                    : bus.availableSeats + " / " + bus.totalSeats + " seats";
         top.appendChild(makeElement("span", "availability", availabilityText));
 
         const company = makeElement("div", "company-brand record-company-brand");
@@ -1206,8 +1245,9 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "Choose two different cities for the bus route.";
         return;
     }
-    if (date < today) {
-        busMessage.textContent = "A bus schedule cannot be in the past.";
+    const rwandaNow = getRwandaDateTime();
+    if (date < rwandaNow.date || (date === rwandaNow.date && departureTime <= rwandaNow.time)) {
+        busMessage.textContent = "A bus departure must be in the future in Rwanda time.";
         return;
     }
     if (!Number.isInteger(totalSeats) || totalSeats < 1 || totalSeats > 100 ||

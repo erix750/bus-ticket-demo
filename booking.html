@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Securely look up your Wayline bus booking with your reference and verified phone number.">
+    <meta name="theme-color" content="#173f70">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Wayline">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/wayline-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/wayline-192.png">
+    <title>Find a Booking | Wayline</title>
+    <link rel="stylesheet" href="style.css?v=wayline-departure-lookup-20261109">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="index.html" aria-label="Wayline home">
+                <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
+                <span>WAYLINE</span>
+            </a>
+            <a class="header-button" href="index.html#searchPanel">Search buses</a>
+        </div>
+    </header>
+
+    <main class="booking-lookup-page">
+        <section class="panel booking-lookup-panel" aria-labelledby="bookingLookupTitle">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">BOOKING ACCESS</p>
+                    <h1 id="bookingLookupTitle">Find your booking</h1>
+                </div>
+            </div>
+            <p class="field-hint">Enter your booking reference and the phone number you used at checkout. We’ll send a one-time code to verify the phone before showing your booking.</p>
+            <form id="bookingLookupStartForm" class="form-grid booking-lookup-form">
+                <div class="field">
+                    <label for="bookingLookupReference">Booking reference</label>
+                    <input type="text" id="bookingLookupReference" name="bookingLookupReference" autocomplete="off" autocapitalize="characters" maxlength="36" placeholder="Enter your booking reference" required>
+                </div>
+                <div class="field">
+                    <label for="bookingLookupPhone">Phone number used at booking</label>
+                    <input type="tel" id="bookingLookupPhone" name="bookingLookupPhone" autocomplete="tel" inputmode="tel" maxlength="24" placeholder="078 123 4567" aria-describedby="bookingLookupPhoneHint" required>
+                    <small class="field-hint" id="bookingLookupPhoneHint">Rwanda mobile numbers only.</small>
+                </div>
+                <div class="field field-wide form-action">
+                    <button class="button button-primary" id="sendBookingOtp" type="submit">Send verification code</button>
+                </div>
+            </form>
+            <form id="bookingLookupVerifyForm" class="form-grid booking-lookup-form" hidden>
+                <div class="field field-wide">
+                    <label for="bookingLookupCode">SMS verification code</label>
+                    <input type="text" id="bookingLookupCode" name="bookingLookupCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="Enter the 6-digit code" required>
+                    <small class="field-hint" id="bookingOtpHint"></small>
+                </div>
+                <div class="field-wide form-action booking-lookup-actions">
+                    <button class="button button-primary" id="verifyBookingOtp" type="submit">Verify and view booking</button>
+                    <button class="button button-text" id="resendBookingOtp" type="button">Send a new code</button>
+                    <button class="button button-text" id="changeBookingPhone" type="button">Change details</button>
+                </div>
+            </form>
+            <p id="bookingLookupMessage" class="form-message" role="status" aria-live="polite"></p>
+            <div id="bookingLookupResult" class="booking-lookup-results" aria-live="polite" hidden></div>
+        </section>
+        <p class="booking-lookup-back"><a href="index.html">Return to Wayline</a></p>
+    </main>
+
+    <footer class="site-footer booking-lookup-footer">
+        <section class="footer-contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">Need help?</h2>
+            <div class="footer-contact-links">
+                <a href="tel:+250798230630">Phone: 0798230630</a>
+                <a href="mailto:muvunyieric25@gmail.com">Email: muvunyieric25@gmail.com</a>
+            </div>
+        </section>
+        <p>Created by <strong>ME Empire</strong></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
+    <script src="database.js?v=wayline-departure-lookup-20261109"></script>
+    <script src="booking-lookup.js?v=wayline-departure-lookup-20261109"></script>
+    <script src="pwa.js"></script>
+</body>
+</html>

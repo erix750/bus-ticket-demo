@@ -149,6 +149,42 @@
         return mapBus(throwIfError(insertResult));
     }
 
+    async function updateSchedule(busId, bus, logo) {
+        const userResult = await supabase.auth.getUser();
+        if (userResult.error) throw new Error(userResult.error.message);
+        const user = userResult.data.user;
+        if (!user) throw new Error("Sign in with a company account before updating schedules.");
+
+        const result = await supabase
+            .from("buses")
+            .update({
+                name: bus.name,
+                from_city: bus.from,
+                to_city: bus.to,
+                travel_date: bus.date,
+                departure_time: bus.departureTime,
+                total_seats: bus.totalSeats,
+                route_distance_km: bus.routeDistanceKm,
+                fare_category: bus.fareCategory
+            })
+            .eq("id", busId)
+            .eq("company_id", user.id)
+            .select("*, companies(name, logo_data)")
+            .single();
+        const updatedBus = throwIfError(result);
+
+        const profileUpdate = { name: bus.company };
+        if (logo) profileUpdate.logo_data = logo;
+        const profileResult = await supabase
+            .from("companies")
+            .update(profileUpdate)
+            .eq("id", user.id)
+            .select("id")
+            .single();
+        throwIfError(profileResult);
+        return mapBus(updatedBus);
+    }
+
     async function setScheduleActive(busId, isActive) {
         const result = await supabase
             .from("buses")
@@ -251,6 +287,7 @@
         loadBookings: loadBookings,
         getCompanyProfile: getCompanyProfile,
         createSchedule: createSchedule,
+        updateSchedule: updateSchedule,
         setScheduleActive: setScheduleActive,
         removeSchedule: removeSchedule,
         createBooking: createBooking,

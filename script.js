@@ -5,6 +5,7 @@ const ruraFarePerKm = {
 let database;
 let currentUser = null;
 let isPartnerSignUp = false;
+let editingBusId = null;
 let buses = [];
 let bookings = [];
 let pendingBooking = null;
@@ -150,7 +151,11 @@ function setPartnerPreview(active) {
     managementPanel.hidden = !active;
     partnerLoginOpen.hidden = active;
     document.getElementById("partnerLogout").hidden = !active;
-    managementPanel.open = active;
+    const companyName = active ? partnerCompanyName.value || currentUser.email : "";
+    document.getElementById("dashboardCompanyName").textContent = companyName;
+    document.getElementById("dashboardWelcome").textContent = active
+        ? "Welcome back, " + companyName
+        : "Welcome back";
     if (active && partnerLoginScreen.open) partnerLoginScreen.close();
 }
 
@@ -880,7 +885,6 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, paymentMethod) {
     document.getElementById("bookingMessage").textContent =
         "Unpaid booking saved. Reference: " + booking.id.slice(0, 8).toUpperCase() + ". No payment was collected.";
     searchMessage.textContent = "Booking confirmed. Payment has not been collected.";
-    bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     performSearch();
     return true;
 }
@@ -899,7 +903,7 @@ document.getElementById("checkoutDialog").addEventListener("close", function() {
     pendingBooking = null;
 });
 
-document.getElementById("confirmDemoBooking").addEventListener("click", async function(event) {
+document.getElementById("confirmBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
     if (!paymentMethod.value) {
@@ -916,7 +920,15 @@ document.getElementById("confirmDemoBooking").addEventListener("click", async fu
             pendingBooking.totalFare,
             paymentMethod.value
         );
-        if (saved) document.getElementById("checkoutDialog").close();
+        if (saved) {
+            document.getElementById("checkoutDialog").close();
+            const booking = bookings[0];
+            document.getElementById("bookingConfirmationRoute").textContent =
+                booking.from + " to " + booking.to + " · " + formatDate(booking.date);
+            document.getElementById("bookingConfirmationReference").textContent =
+                booking.id.slice(0, 8).toUpperCase();
+            document.getElementById("bookingConfirmationDialog").showModal();
+        }
     } catch (error) {
         document.getElementById("searchMessage").textContent = error.message || "Could not save the booking. Please try again.";
     } finally {
@@ -924,13 +936,42 @@ document.getElementById("confirmDemoBooking").addEventListener("click", async fu
     }
 });
 
+function closeBookingConfirmation(showRecord) {
+    document.getElementById("bookingConfirmationDialog").close();
+    if (showRecord) {
+        bookingsPanel.hidden = false;
+        bookingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
+document.getElementById("closeBookingConfirmation").addEventListener("click", function() {
+    closeBookingConfirmation(false);
+});
+document.getElementById("closeBookingConfirmationDone").addEventListener("click", function() {
+    closeBookingConfirmation(false);
+});
+document.getElementById("openBookingRecord").addEventListener("click", function() {
+    closeBookingConfirmation(true);
+});
+
 function renderBookings() {
     bookingList.replaceChildren();
+    const companyBookingList = document.getElementById("companyBookingList");
+    companyBookingList.replaceChildren();
+    const isCompanyView = Boolean(currentUser);
+    bookingsPanel.hidden = isCompanyView || bookings.length === 0;
+    viewBookingRecordButton.hidden = isCompanyView || bookings.length === 0;
     const activeCount = bookings.filter(function(booking) { return !booking.cancelled; }).length;
     document.getElementById("bookingCount").textContent = String(activeCount);
+    document.getElementById("companyBookingCount").textContent = String(activeCount);
+    document.getElementById("dashboardBookingCount").textContent = String(bookings.length);
 
     if (bookings.length === 0) {
-        addEmptyMessage(bookingList, "Your bookings will appear here.");
+        if (isCompanyView) {
+            addEmptyMessage(companyBookingList, "No bookings have been made for your schedules yet.");
+        } else {
+            addEmptyMessage(bookingList, "Your bookings will appear here.");
+        }
         return;
     }
 
@@ -993,9 +1034,55 @@ function renderBookings() {
             }
             card.appendChild(actions);
         }
-        bookingList.appendChild(card);
+        (isCompanyView ? companyBookingList : bookingList).appendChild(card);
     });
 }
+
+function resetScheduleEditor() {
+    editingBusId = null;
+    busForm.reset();
+    cancelRouteDistanceLookup();
+    routeDistanceInputKey = "";
+    routeDistanceStatus.textContent =
+        "Enter the departure and destination cities to estimate the driving distance. You can edit the result.";
+    busForm.querySelector('button[type="submit"]').textContent = "Add bus schedule";
+    document.getElementById("cancelBusEdit").hidden = true;
+    updateCalculatedFare();
+}
+
+function editSchedule(bus) {
+    if (!currentUser || bus.companyId !== currentUser.id) return;
+    editingBusId = bus.id;
+    document.getElementById("company").value = bus.company;
+    document.getElementById("busName").value = bus.name;
+    document.getElementById("busFrom").value = bus.from;
+    document.getElementById("busTo").value = bus.to;
+    document.getElementById("busDate").value = bus.date;
+    document.getElementById("departureTime").value = bus.departureTime;
+    document.getElementById("seatNumber").value = bus.totalSeats;
+    routeDistanceInput.value = bus.routeDistanceKm;
+    routeDistanceInputKey = getRouteKey();
+    document.getElementById("fareCategory").value = bus.fareCategory;
+    routeDistanceStatus.textContent = "Editing this schedule. Confirm the route distance before saving.";
+    busForm.querySelector('button[type="submit"]').textContent = "Save schedule";
+    document.getElementById("cancelBusEdit").hidden = false;
+    updateCalculatedFare();
+    busForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("busName").focus({ preventScroll: true });
+}
+
+document.getElementById("cancelBusEdit").addEventListener("click", function() {
+    resetScheduleEditor();
+    document.getElementById("busMessage").textContent = "Schedule edit cancelled.";
+});
+
+document.querySelectorAll(".dashboard-nav a").forEach(function(link) {
+    link.addEventListener("click", function() {
+        document.querySelectorAll(".dashboard-nav a").forEach(function(item) {
+            item.classList.toggle("is-active", item === link);
+        });
+    });
+});
 
 function renderBuses() {
     busList.replaceChildren();
@@ -1004,6 +1091,14 @@ function renderBuses() {
         : buses;
     document.getElementById("busCount").textContent =
         manageableBuses.length + (manageableBuses.length === 1 ? " schedule" : " schedules");
+    document.getElementById("dashboardScheduleCount").textContent = String(manageableBuses.length);
+    document.getElementById("dashboardActiveCount").textContent = String(
+        manageableBuses.filter(function(bus) { return bus.isActive; }).length
+    );
+    document.getElementById("dashboardSeatCount").textContent = String(
+        manageableBuses.filter(function(bus) { return bus.isActive; })
+            .reduce(function(total, bus) { return total + bus.availableSeats; }, 0)
+    );
 
     if (manageableBuses.length === 0) {
         addEmptyMessage(busList, "No schedules yet. Add a bus above to make it bookable.");
@@ -1040,6 +1135,11 @@ function renderBuses() {
             card.appendChild(signInMessage);
         } else {
             const actions = makeElement("div", "record-actions");
+            const editButton = makeElement("button", "button button-text", "Edit schedule");
+            editButton.type = "button";
+            editButton.addEventListener("click", function() {
+                editSchedule(bus);
+            });
             const visibilityButton = makeElement(
                 "button",
                 "button button-text",
@@ -1054,7 +1154,7 @@ function renderBuses() {
             removeButton.addEventListener("click", function() {
                 removeSchedule(bus.id);
             });
-            actions.append(visibilityButton, removeButton);
+            actions.append(editButton, visibilityButton, removeButton);
             card.appendChild(actions);
         }
         busList.appendChild(card);
@@ -1168,6 +1268,28 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "Enter 1 to 100 seats, a route distance from 0.1 to 1,000 km, and a RURA fare area.";
         return;
     }
+    const editingBus = editingBusId
+        ? buses.find(function(item) { return item.id === editingBusId; })
+        : null;
+    if (editingBus && totalSeats < editingBus.totalSeats - editingBus.availableSeats) {
+        busMessage.textContent = "Total seats cannot be lower than the " +
+            (editingBus.totalSeats - editingBus.availableSeats) + " seats already reserved.";
+        return;
+    }
+    const hasBookings = editingBus && bookings.some(function(booking) {
+        return booking.busId === editingBus.id;
+    });
+    if (hasBookings && (
+        name !== editingBus.name ||
+        from !== editingBus.from ||
+        to !== editingBus.to ||
+        date !== editingBus.date ||
+        departureTime !== editingBus.departureTime
+    )) {
+        busMessage.textContent =
+            "This schedule has booking records, so its bus name, route, date, and departure time cannot be changed. Hide it and add a new schedule instead.";
+        return;
+    }
     if (logoFile && !["image/png", "image/jpeg", "image/webp"].includes(logoFile.type)) {
         busMessage.textContent = "Choose a PNG, JPG, or WebP image for the company logo.";
         return;
@@ -1199,21 +1321,27 @@ busForm.addEventListener("submit", async function(event) {
         fareCategory: fareCategory
     };
     try {
-        const savedBus = await window.WaylineDatabase.createSchedule(bus, logo);
-        buses.unshift(savedBus);
+        if (editingBusId) {
+            await window.WaylineDatabase.updateSchedule(editingBusId, bus, logo);
+        } else {
+            const savedBus = await window.WaylineDatabase.createSchedule(bus, logo);
+            buses.unshift(savedBus);
+        }
+        partnerCompanyName.value = company;
+        document.getElementById("dashboardCompanyName").textContent = company;
+        document.getElementById("dashboardWelcome").textContent = "Welcome back, " + company;
         await refreshAppData();
     } catch (error) {
-        busMessage.textContent = error.message || "Could not save this schedule. Please try again.";
+        busMessage.textContent = error.message ||
+            (editingBusId ? "Could not update this schedule. Please try again." : "Could not save this schedule. Please try again.");
         return;
     }
 
-    busForm.reset();
-    cancelRouteDistanceLookup();
-    routeDistanceInputKey = "";
-    routeDistanceStatus.textContent =
-        "Enter the departure and destination cities to estimate the driving distance. You can edit the result.";
-    updateCalculatedFare();
-    busMessage.textContent = "Bus schedule added. The fare is calculated automatically using the RURA tariff.";
+    const wasEditing = Boolean(editingBusId);
+    resetScheduleEditor();
+    busMessage.textContent = wasEditing
+        ? "Schedule updated. The fare is recalculated using the selected RURA tariff."
+        : "Bus schedule added. The fare is calculated automatically using the RURA tariff.";
     updateCompanyOptions();
     if (document.getElementById("date").value) performSearch();
 });

@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=cta-splash-2s-20261108">
+    <link rel="stylesheet" href="style.css?v=wayline-functionality-20261109">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -114,7 +114,25 @@
             <p class="checkout-notice">Your booking will be saved as unpaid. Payment processing is not available yet.</p>
             <div class="checkout-actions">
                 <button class="button button-text" id="cancelCheckout" type="button">Go back</button>
-                <button class="button button-primary" id="confirmDemoBooking" type="button">Confirm booking</button>
+                <button class="button button-primary" id="confirmBooking" type="button">Confirm booking</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog class="checkout-dialog" id="bookingConfirmationDialog" aria-labelledby="bookingConfirmationTitle">
+        <div class="checkout-content">
+            <button class="dialog-close" id="closeBookingConfirmation" type="button" aria-label="Close booking confirmation">&times;</button>
+            <p class="eyebrow">BOOKING SAVED</p>
+            <h2 id="bookingConfirmationTitle">Your booking reference</h2>
+            <p id="bookingConfirmationRoute" class="checkout-route"></p>
+            <div class="booking-confirmation-reference">
+                <span>REFERENCE</span>
+                <strong id="bookingConfirmationReference"></strong>
+            </div>
+            <p class="checkout-notice">This booking is unpaid. Your selected payment method was recorded, but no payment was collected. Keep this reference for your records.</p>
+            <div class="checkout-actions">
+                <button class="button button-text" id="closeBookingConfirmationDone" type="button">Done</button>
+                <button class="button button-primary" id="openBookingRecord" type="button">View booking record</button>
             </div>
         </div>
     </dialog>
@@ -169,8 +187,8 @@
                 </div>
                 <div class="feature-item">
                     <div>
-                        <h3>24/7 Support</h3>
-                        <p>We are always here</p>
+                        <h3>Seat Availability</h3>
+                        <p>Check available seats before booking</p>
                     </div>
                 </div>
             </div>
@@ -186,89 +204,16 @@
                 </article>
                 <article class="feature-card">
                     <img class="feature-card-image feature-card-image-portrait" src="assets/wayline-feature-trusted.jpg" alt="Smiling travelers welcoming visitors" width="500" height="350" loading="lazy" decoding="async">
-                    <h3>Trusted by Many</h3>
+                    <h3>Fare Details Before Booking</h3>
                 </article>
                 <article class="feature-card">
                     <img class="feature-card-image" src="assets/wayline-feature-nationwide.jpg" alt="Earth at sunrise with Africa in view" width="900" height="506" loading="lazy" decoding="async">
-                    <h3>Nationwide Coverage</h3>
+                    <h3>Explore Rwanda Routes</h3>
                 </article>
                 <article class="feature-card">
                     <img class="feature-card-image" src="assets/wayline-feature-rwanda.jpg" alt="Kigali city and a mountain road in Rwanda" width="532" height="293" loading="lazy" decoding="async">
-                    <h3>Supporting Rwanda</h3>
+                    <h3>View Your Booking Record</h3>
                 </article>
-            </div>
-        </section>
-
-        <section class="panel experience-panel" aria-labelledby="experience-title" hidden>
-            <div class="section-heading">
-                <div>
-                    <p class="eyebrow">EXPERIENCE</p>
-                    <h2 id="experience-title">Web or app view</h2>
-                </div>
-                <div class="experience-switch" aria-label="Choose preview mode">
-                    <button class="experience-toggle is-active" type="button" data-view-mode="web">Web</button>
-                    <button class="experience-toggle" type="button" data-view-mode="app">App</button>
-                </div>
-            </div>
-
-            <div class="experience-preview" aria-live="polite">
-                <div class="preview-scene is-active" data-scene="web" aria-label="Web preview">
-                    <div class="web-window">
-                        <div class="web-chrome">
-                            <div class="window-dots" aria-hidden="true">
-                                <span></span><span></span><span></span>
-                            </div>
-                            <div class="address-bar">wayline.travel / journeys</div>
-                            <span class="window-profile" aria-hidden="true">W</span>
-                        </div>
-                        <div class="web-content">
-                            <div class="web-welcome">
-                                <span class="card-pill accent">Your next trip</span>
-                                <strong>Make the journey yours.</strong>
-                                <small>Simple booking from departure to arrival.</small>
-                            </div>
-                            <div class="web-search-row">
-                                <div><small>FROM</small><strong>Kigali</strong></div>
-                                <span class="route-arrow" aria-hidden="true">→</span>
-                                <div><small>TO</small><strong>Kampala</strong></div>
-                                <div><small>TRAVEL DATE</small><strong>Oct 12, 2026</strong></div>
-                                <span class="web-search-button" aria-hidden="true">Find a bus</span>
-                            </div>
-                            <div class="web-result-row">
-                                <span class="result-icon" aria-hidden="true">W</span>
-                                <div><strong>Wayline Express</strong><small>07:30 AM · 12 seats available</small></div>
-                                <strong class="result-price">RWF 18,500</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="preview-scene" data-scene="app" aria-label="App preview">
-                    <div class="phone-shell">
-                        <div class="phone-status">
-                            <span>9:41</span>
-                            <span aria-hidden="true">● ● ▰</span>
-                        </div>
-                        <div class="phone-header">
-                            <span class="phone-brand"><span class="phone-brand-mark">W</span> Wayline</span>
-                            <span class="phone-avatar" aria-hidden="true">A</span>
-                        </div>
-                        <div class="phone-card main-card">
-                            <small class="phone-card-label">YOUR UPCOMING TRIP</small>
-                            <strong>Kigali <span aria-hidden="true">→</span> Musanze</strong>
-                            <small>Today · 9:15 AM</small>
-                            <div class="phone-ticket">
-                                <span><small>PASSENGERS</small><strong>2 people</strong></span>
-                                <span><small>STATUS</small><strong class="ticket-status">Confirmed</strong></span>
-                            </div>
-                        </div>
-                        <div class="phone-nav">
-                            <span class="is-selected"><b aria-hidden="true">⌂</b>Home</span>
-                            <span><b aria-hidden="true">▤</b>Trips</span>
-                            <span><b aria-hidden="true">○</b>Profile</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -358,16 +303,75 @@
             <div id="bookingList" class="record-list"></div>
         </section>
 
-        <details class="panel management-panel" id="managementPanel" hidden>
-            <summary>
-                <span>
-                    <span class="eyebrow">FOR OPERATORS</span>
-                    <strong>Manage bus schedules</strong>
-                </span>
-                <span class="summary-icon" aria-hidden="true">+</span>
-            </summary>
-            <div class="management-content">
-                <p class="section-note">Add a bus departure to make it available in search.</p>
+        <section class="company-dashboard" id="managementPanel" hidden aria-label="Company dashboard">
+            <aside class="dashboard-sidebar">
+                <a class="dashboard-brand" href="#dashboardOverview">
+                    <img src="icons/wayline-192.png" alt="" aria-hidden="true">
+                    <span>WAYLINE <small>COMPANY</small></span>
+                </a>
+                <nav class="dashboard-nav" aria-label="Company dashboard">
+                    <a class="is-active" href="#dashboardOverview">Dashboard</a>
+                    <a href="#dashboardSchedules">Schedule management</a>
+                    <a href="#dashboardBookings">Bookings</a>
+                </nav>
+                <div class="dashboard-sidebar-account">
+                    <span class="eyebrow">SIGNED IN AS</span>
+                    <strong id="dashboardCompanyName"></strong>
+                </div>
+            </aside>
+            <div class="dashboard-main">
+                <header class="dashboard-topbar">
+                    <div>
+                        <p class="eyebrow">WAYLINE PARTNERS</p>
+                        <h2>Company dashboard</h2>
+                    </div>
+                    <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
+                </header>
+                <section class="dashboard-overview" id="dashboardOverview" aria-labelledby="dashboardWelcome">
+                    <div class="dashboard-welcome">
+                        <h3 id="dashboardWelcome">Welcome back</h3>
+                        <p>Manage your schedules and keep track of seat availability and bookings.</p>
+                    </div>
+                    <div class="dashboard-stat-grid">
+                        <article class="dashboard-stat-card">
+                            <span>Total schedules</span>
+                            <strong id="dashboardScheduleCount">0</strong>
+                            <small>Upcoming bus schedules</small>
+                        </article>
+                        <article class="dashboard-stat-card">
+                            <span>Active schedules</span>
+                            <strong id="dashboardActiveCount">0</strong>
+                            <small>Visible to passengers</small>
+                        </article>
+                        <article class="dashboard-stat-card">
+                            <span>Bookings</span>
+                            <strong id="dashboardBookingCount">0</strong>
+                            <small>Saved booking records</small>
+                        </article>
+                        <article class="dashboard-stat-card">
+                            <span>Seats available</span>
+                            <strong id="dashboardSeatCount">0</strong>
+                            <small>Across active schedules</small>
+                        </article>
+                    </div>
+                    <div class="dashboard-quick-actions">
+                        <h3>Quick actions</h3>
+                        <div>
+                            <a href="#busForm">Add a schedule</a>
+                            <a href="#dashboardSchedules">Manage schedules</a>
+                            <a href="#dashboardBookings">View bookings</a>
+                        </div>
+                    </div>
+                </section>
+                <section class="dashboard-panel" id="dashboardSchedules" aria-labelledby="dashboardSchedulesTitle">
+                    <div class="dashboard-section-heading">
+                        <div>
+                            <p class="eyebrow">SCHEDULES AND FARES</p>
+                            <h3 id="dashboardSchedulesTitle">Manage your bus schedules</h3>
+                        </div>
+                        <span id="busCount" class="muted-label">0 schedules</span>
+                    </div>
+                    <p class="section-note">Add or edit routes, departure times, and seat capacity. Fares are calculated from the route distance and selected RURA fare area. Seat changes preserve seats already reserved.</p>
                 <form id="busForm" class="form-grid">
                     <div class="field">
                         <label for="company">Bus company</label>
@@ -424,17 +428,30 @@
                     </div>
                     <div class="field field-wide form-action">
                         <button class="button button-secondary" type="submit">Add bus schedule</button>
+                        <button class="button button-text" id="cancelBusEdit" type="button" hidden>Cancel edit</button>
                     </div>
                 </form>
                 <p id="busMessage" class="form-message" role="status" aria-live="polite"></p>
                 <div class="inventory-heading">
-                    <h3>Current schedules</h3>
-                    <span id="busCount" class="muted-label">0 schedules</span>
+                    <h4>Current schedules</h4>
                 </div>
                 <div id="busList" class="record-list"></div>
+                </section>
+                <section class="dashboard-panel" id="dashboardBookings" aria-labelledby="dashboardBookingsTitle">
+                    <div class="dashboard-section-heading">
+                        <div>
+                            <p class="eyebrow">PASSENGER ACTIVITY</p>
+                            <h3 id="dashboardBookingsTitle">Bookings for your schedules</h3>
+                        </div>
+                        <span id="companyBookingCount" class="count-badge">0</span>
+                    </div>
+                    <p class="field-hint">Bookings show their unpaid or cancelled status. Wayline does not process payments yet.</p>
+                    <div id="companyBookingList" class="record-list"></div>
+                </section>
             </div>
-        </details>
+        </section>
         <p class="storage-note" hidden>Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
+
     </main>
 
     <footer class="site-footer">
@@ -444,8 +461,7 @@
                     <span id="themeToggleIcon" aria-hidden="true"></span>
                 </button>
                 <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Sign In</button>
-                <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
+                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
             </div>
         </div>
         <nav class="footer-navigation" aria-label="Footer navigation">
@@ -465,7 +481,45 @@
                 <strong>Contact</strong>
                 <span>Call or email us for help.</span>
             </a>
+            <a class="footer-nav-link" href="#help">
+                <strong>Help & FAQ</strong>
+                <span>Booking, payments, cancellations and help.</span>
+            </a>
         </nav>
+        <section class="panel help-panel" id="help" aria-labelledby="help-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">WAYLINE HELP</p>
+                    <h2 id="help-title">Help Center and FAQ</h2>
+                </div>
+            </div>
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary>How do I book a bus?</summary>
+                    <p>Choose your departure and destination, travel date, passenger name and seat count, then search available schedules. Select a bus, choose an intended payment method and confirm. Your booking reference and record will appear after it is saved.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Is my booking paid?</summary>
+                    <p>No. MTN Mobile Money and Airtel Money are currently recorded only as your intended payment method. Wayline does not collect or verify payment yet, so your booking record is marked unpaid and is not proof of payment.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>How do I cancel a booking?</summary>
+                    <p>Open your booking record in the same browser where you made the booking and select “Cancel ticket.” The reserved seats are released when the cancellation succeeds. If you cannot access the record, contact Wayline with your booking reference.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Where can I find my booking reference?</summary>
+                    <p>Your reference is shown when your booking is saved and on its booking record. Keep it available when contacting the bus company or Wayline.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Can I view bookings on another device?</summary>
+                    <p>Passenger booking records are available in the same browser where each booking was made. Wayline does not currently provide passenger accounts or cross-device booking history, so keep your booking reference separately.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>How can I contact Wayline?</summary>
+                    <p>Call <a href="tel:+250798230630">0798230630</a> or email <a href="mailto:muvunyieric25@gmail.com">muvunyieric25@gmail.com</a>. Include your booking reference if your question is about a reservation.</p>
+                </details>
+            </div>
+        </section>
         <section class="footer-contact" id="contact" aria-labelledby="contact-title">
             <h2 id="contact-title">Get in touch</h2>
             <div class="footer-contact-links">
@@ -478,8 +532,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="script.js?v=cta-splash-2s-20261108"></script>
+    <script src="database.js?v=wayline-functionality-20261109"></script>
+    <script src="script.js?v=wayline-functionality-20261109"></script>
     <script src="pwa.js"></script>
 </body>
 </html>

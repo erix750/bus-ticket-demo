@@ -87,6 +87,58 @@ create trigger set_rura_bus_fare_before_save
     for each row execute function public.set_rura_bus_fare();
 revoke execute on function public.set_rura_bus_fare() from public, anon, authenticated;
 
+create or replace function public.preserve_reserved_bus_seats()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    if new.total_seats < old.total_seats - old.available_seats then
+        raise exception 'Total seats cannot be lower than seats already reserved.';
+    end if;
+
+    new.available_seats := new.available_seats + (new.total_seats - old.total_seats);
+    return new;
+end;
+$$;
+
+drop trigger if exists preserve_reserved_bus_seats_before_update on public.buses;
+create trigger preserve_reserved_bus_seats_before_update
+    before update of total_seats
+    on public.buses
+    for each row execute function public.preserve_reserved_bus_seats();
+revoke execute on function public.preserve_reserved_bus_seats() from public, anon, authenticated;
+
+create or replace function public.protect_booked_bus_details()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+    if (new.name is distinct from old.name
+        or new.from_city is distinct from old.from_city
+        or new.to_city is distinct from old.to_city
+        or new.travel_date is distinct from old.travel_date
+        or new.departure_time is distinct from old.departure_time)
+       and exists (
+           select 1
+             from public.bookings
+            where bus_id = old.id
+       ) then
+        raise exception 'This schedule has booking records. Its bus name, route, date, and departure time cannot be changed; hide it and add a new schedule instead.';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists protect_booked_bus_details_before_update on public.buses;
+create trigger protect_booked_bus_details_before_update
+    before update of name, from_city, to_city, travel_date, departure_time
+    on public.buses
+    for each row execute function public.protect_booked_bus_details();
+revoke execute on function public.protect_booked_bus_details() from public, anon, authenticated;
+
 do $$
 begin
     if exists (select 1 from pg_catalog.pg_publication where pubname = 'supabase_realtime')
@@ -150,7 +202,7 @@ revoke insert, delete on public.buses from anon, authenticated;
 grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
     on public.buses to authenticated;
 revoke update (fare) on public.buses from anon, authenticated;
-grant update (name, from_city, to_city, travel_date, departure_time, total_seats)
+grant update (name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
     on public.buses to authenticated;
 grant update (is_active) on public.buses to authenticated;
 grant delete on public.buses to authenticated;

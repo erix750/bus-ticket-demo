@@ -48,11 +48,14 @@ create table if not exists public.bookings (
     payment_method text not null check (payment_method in ('MTN Mobile Money', 'Airtel Money')),
     payment_status text not null default 'demo-unpaid' check (payment_status = 'demo-unpaid'),
     cancelled boolean not null default false,
+    ussd_session_id text,
     created_at timestamptz not null default now()
 );
 
 alter table public.bookings
     add column if not exists passenger_phone text;
+alter table public.bookings
+    add column if not exists ussd_session_id text;
 drop index if exists public.bookings_cancel_token_idx;
 alter table public.bookings
     drop column if exists cancel_token;
@@ -74,6 +77,20 @@ create index if not exists buses_search_idx
     on public.buses (travel_date, from_city, to_city, company_id);
 create index if not exists bookings_bus_id_idx on public.bookings (bus_id);
 create index if not exists bookings_passenger_phone_idx on public.bookings (passenger_phone);
+create unique index if not exists bookings_ussd_session_id_idx
+    on public.bookings (ussd_session_id)
+    where ussd_session_id is not null;
+
+create table if not exists public.ussd_sessions (
+    session_id text primary key check (session_id ~ '^[A-Za-z0-9._:-]{1,128}$'),
+    phone text,
+    state jsonb not null,
+    input_cursor smallint not null default 0 check (input_cursor between 0 and 12),
+    expires_at timestamptz not null,
+    updated_at timestamptz not null default now()
+);
+create index if not exists ussd_sessions_expires_at_idx
+    on public.ussd_sessions (expires_at);
 
 create or replace function public.set_rura_bus_fare()
 returns trigger
@@ -180,6 +197,9 @@ $$;
 alter table public.companies enable row level security;
 alter table public.buses enable row level security;
 alter table public.bookings enable row level security;
+alter table public.ussd_sessions enable row level security;
+revoke all on public.ussd_sessions from public, anon, authenticated;
+grant all on public.ussd_sessions to service_role;
 
 drop policy if exists "Public can view company profiles" on public.companies;
 create policy "Public can view company profiles"
@@ -226,7 +246,7 @@ create policy "Companies can remove their own schedules"
     to authenticated
     using (company_id = (select auth.uid()));
 
-grant usage on schema public to anon, authenticated;
+grant usage on schema public to anon, authenticated, service_role;
 grant select on public.companies, public.buses to anon, authenticated;
 revoke insert, delete on public.buses from anon, authenticated;
 grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
@@ -428,7 +448,57 @@ as $$
     order by bookings.created_at desc;
 $$;
 
+create or replace function public.ussd_book_bus(
+    p_session_id text,
+    p_bus_id uuid,
+    p_passenger_name text,
+    p_passenger_phone text,
+    p_seat_count integer,
+    p_payment_method text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    clean_session_id text := pg_catalog.btrim(coalesce(p_session_id, ''));
+    existing_booking jsonb;
+    new_booking jsonb;
+begin
+    if clean_session_id !~ '^[A-Za-z0-9._:-]{1,128}$' then
+        raise exception 'Invalid USSD session identifier.';
+    end if;
+
+    perform pg_catalog.pg_advisory_xact_lock(0, pg_catalog.hashtext(clean_session_id));
+    select pg_catalog.jsonb_build_object(
+        'id', bookings.id,
+        'payment_status', bookings.payment_status
+    )
+      into existing_booking
+      from public.bookings
+     where bookings.ussd_session_id = clean_session_id;
+    if existing_booking is not null then
+        return existing_booking;
+    end if;
+
+    new_booking := public.book_bus(
+        p_bus_id,
+        p_passenger_name,
+        p_passenger_phone,
+        p_seat_count,
+        p_payment_method
+    );
+    update public.bookings
+       set ussd_session_id = clean_session_id
+     where id = (new_booking ->> 'id')::uuid;
+    return new_booking;
+end;
+$$;
+
 grant execute on function public.book_bus(uuid, text, text, integer, text) to anon, authenticated;
+revoke execute on function public.ussd_book_bus(text, uuid, text, text, integer, text) from public, anon, authenticated;
+grant execute on function public.ussd_book_bus(text, uuid, text, text, integer, text) to service_role;
 grant execute on function public.get_my_booking_by_reference(text) to authenticated;
 grant execute on function public.get_company_bookings() to authenticated;
 revoke execute on function public.get_company_bookings() from public, anon;

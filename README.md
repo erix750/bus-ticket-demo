@@ -14,6 +14,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
 - A Help Center explains booking, unpaid payment status, cancellations, and contact options.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
+- Passengers can book online now; USSD booking by dialing `*200#` is shown as coming soon until Africa's Talking provisions the code and the service is deployed.
 - Seat reservations update shared availability in Supabase. Passengers contact Wayline or the bus company to request cancellations.
 - Bus availability is refreshed through Supabase Realtime, with a 30-second fallback refresh.
 - Company records and schedules are protected by Supabase authentication and row-level ownership policies.
@@ -37,6 +38,26 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 Company sign-up is open; schedules can be published as soon as the account is ready. Existing browser-only demo records are not automatically migrated to Supabase.
 
 Passenger records are not listed publicly. The separate [`booking.html`](./booking.html) page requires a booking reference and SMS verification of the phone number used at booking before showing a record on another device. Passenger phone sign-in is passwordless and does not provide a separate passenger profile.
+
+## Africa's Talking USSD service
+
+The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; searches future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
+
+1. Apply the current [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates private USSD session storage and the service-role-only `ussd_book_bus` function.
+2. Deploy `ussd-service/` on a Node.js 20+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
+3. Copy `.env.example` to `.env`. Set the Supabase project URL, **service-role key**, and a URL-safe random callback token of at least 32 characters (for example, generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`). `USSD_SERVICE_CODE` defaults to `*200#` and must match the code assigned by Africa's Talking. Keep `.env` and all server credentials private; never add them to the website's `config.js`.
+4. Start the server with `npm start`; check `GET /health`. Run the test suite with `npm test`.
+5. After Africa's Talking provisions `*200#` for your account, configure that service code in its dashboard and point the USSD application's POST callback to `https://<your-host>/ussd?token=<USSD_CALLBACK_TOKEN>`. The service rejects callback requests for any other code. Use the sandbox before a live short code. Ensure host and proxy access logs redact the callback query token.
+
+The callback accepts Africa's Talking `application/x-www-form-urlencoded` fields (`sessionId`, `serviceCode`, `phoneNumber`, and `text`) and returns `CON` or `END` plain-text responses. Session state is stored in Supabase for ten minutes by default, so sessions can continue across service instances. Per-session rate limiting and a shared callback token are enabled. Configure a strong token, HTTPS, provider sandbox credentials, and production monitoring before launch. The service does not collect card details or claim payment success.
+
+### Run the local USSD prototype
+
+1. In a terminal, open `ussd-service/`, run `npm install`, then run `npm start`. The default local mode starts without Supabase credentials and listens only on your computer at `http://127.0.0.1:3000`.
+2. Open `http://127.0.0.1:3000/simulator`, enter a simulated Rwanda caller number, and choose **Dial *200#**. Continue with the keypad or type a passenger name when asked.
+3. The sample-data mode offers future Kigali routes, prices calculated with Wayline's RURA rates, simulated seat updates, and booking references. Sample reservations exist only in memory and disappear when the server restarts; they do not affect real schedules or collect payment.
+4. To test against real schedules and seat inventory while still using the local simulator, apply the schema above, configure `.env` with the Supabase URL and server-only service-role key, set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=true`, then start the server. It remains bound to localhost in simulator mode. Never expose the simulator or service-role key publicly.
+5. To run automated checks, use `npm test`. The sample routes use preloaded demonstration distances; connected mode reads each real schedule's stored map-estimated distance and fare from Supabase, like the website does.
 
 ### RURA fares and database updates
 

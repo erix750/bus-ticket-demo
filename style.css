@@ -3074,6 +3074,91 @@ main.welcome-main {
     line-height: 1.5;
 }
 
+.booking-methods {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.booking-method-card {
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    padding: 20px;
+    border: 1px solid rgba(153, 183, 213, 0.32);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(20, 45, 70, 0.94), rgba(11, 28, 46, 0.94));
+}
+
+.booking-method-card .eyebrow {
+    margin: 0;
+    color: #f2c078;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.booking-method-card h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.booking-method-card > p:not(.eyebrow) {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.booking-method-online .button {
+    width: fit-content;
+    margin-top: 4px;
+}
+
+.booking-method-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ussd-short-code {
+    padding: 6px 12px;
+    border: 1px solid rgba(242, 192, 120, 0.52);
+    border-radius: 999px;
+    color: #f5d63d;
+    font-size: 1.2rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+}
+
+.booking-method-card .booking-method-note {
+    padding-top: 9px;
+    border-top: 1px solid rgba(153, 183, 213, 0.24);
+    font-size: 0.8rem;
+}
+
+html[data-theme="light"] .booking-method-card {
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(13, 35, 57, 0.1);
+}
+
+html[data-theme="light"] .booking-method-card h3 {
+    color: var(--ink);
+}
+
+html[data-theme="light"] .booking-method-card > p:not(.eyebrow) {
+    color: var(--muted);
+}
+
+html[data-theme="light"] .booking-method-card .eyebrow {
+    color: var(--forest);
+}
+
 .original-search-panel {
     order: 2;
     position: relative;
@@ -3381,6 +3466,10 @@ main.welcome-main {
         grid-template-columns: 1fr 1fr;
     }
 
+    .booking-methods {
+        grid-template-columns: 1fr;
+    }
+
     .landing-search-panel {
         padding: 12px 10px;
     }
@@ -3424,6 +3513,7 @@ main.welcome-main {
 
     .feature-row,
     .feature-grid,
+    .booking-methods,
     .passenger-flow-steps {
         grid-template-columns: 1fr;
     }

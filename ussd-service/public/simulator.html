@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#122f4d">
+    <title>Wayline USSD Prototype</title>
+    <link rel="stylesheet" href="/simulator.css">
+</head>
+<body>
+    <main class="prototype">
+        <header class="page-header">
+            <a class="wordmark" href="/">WAYLINE <span>USSD</span></a>
+            <p class="prototype-tag">LOCAL PROTOTYPE</p>
+        </header>
+
+        <section class="intro">
+            <p class="eyebrow">BOOK FROM A BASIC PHONE</p>
+            <h1>Try the USSD booking flow</h1>
+            <p>Simulate dialing <strong id="shortCode">*200#</strong>. The menu and booking steps are the same ones intended for the Africa’s Talking callback.</p>
+        </section>
+
+        <div class="prototype-grid">
+            <section class="setup-card" aria-labelledby="setupTitle">
+                <p class="eyebrow">SIMULATED CALLER</p>
+                <h2 id="setupTitle">Start a USSD session</h2>
+                <p class="help-copy">Enter a Rwanda phone number. This stands in for the caller ID sent by the mobile network.</p>
+                <form id="startForm">
+                    <label for="callerPhone">Caller phone number</label>
+                    <input id="callerPhone" name="callerPhone" type="tel" inputmode="tel" value="0781234567" autocomplete="tel" required>
+                    <button class="primary-button" type="submit">Dial *200#</button>
+                </form>
+                <div id="status" class="status" role="status" aria-live="polite"></div>
+                <div class="data-source">
+                    <h3>Trip data</h3>
+                    <p id="dataSource">Checking local prototype data…</p>
+                    <p class="booking-count" id="bookingCount"></p>
+                    <ul id="tripInventory" class="trip-inventory"></ul>
+                </div>
+                <p class="disclaimer">This is a computer simulation. It does not dial a mobile network, reserve a real seat, or collect payment.</p>
+            </section>
+
+            <section class="phone-card" aria-label="Simulated phone USSD menu">
+                <div class="phone-frame">
+                    <div class="phone-topline"><span>WAYLINE</span><span id="phoneNumber">No caller</span></div>
+                    <div class="network-line"><span class="signal" aria-hidden="true">● ● ●</span><span id="phoneCode">*200#</span></div>
+                    <div class="ussd-screen">
+                        <p id="screenLabel">USSD menu</p>
+                        <pre id="ussdMessage">Enter a caller number, then dial the code to begin.</pre>
+                    </div>
+                    <form id="inputForm" class="ussd-input-form">
+                        <label for="ussdInput">Menu choice or passenger name</label>
+                        <div class="input-row">
+                            <input id="ussdInput" type="text" maxlength="80" autocomplete="off" disabled>
+                            <button id="sendInput" type="submit" disabled>Send</button>
+                        </div>
+                    </form>
+                    <div class="keypad" aria-label="Number keypad">
+                        <button type="button" data-key="1" disabled>1</button>
+                        <button type="button" data-key="2" disabled>2</button>
+                        <button type="button" data-key="3" disabled>3</button>
+                        <button type="button" data-key="4" disabled>4</button>
+                        <button type="button" data-key="5" disabled>5</button>
+                        <button type="button" data-key="6" disabled>6</button>
+                        <button type="button" data-key="7" disabled>7</button>
+                        <button type="button" data-key="8" disabled>8</button>
+                        <button type="button" data-key="9" disabled>9</button>
+                        <button type="button" data-key="0" disabled>0</button>
+                    </div>
+                    <button id="newSession" class="secondary-button" type="button" disabled>End and start a new session</button>
+                </div>
+            </section>
+        </div>
+        <footer><span>Wayline local USSD booking prototype</span><span>Bookings remain unpaid in this prototype.</span></footer>
+    </main>
+    <script src="/simulator.js"></script>
+</body>
+</html>

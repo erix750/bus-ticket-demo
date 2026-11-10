@@ -319,6 +319,12 @@ input:focus {
     min-width: 65px;
 }
 
+.input-hint {
+    color: #60758a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
 .keypad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

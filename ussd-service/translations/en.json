@@ -9,7 +9,7 @@
   "namePrompt": "Enter passenger full name:",
   "paymentPrompt": "Choose intended payment method:\n1. MTN Mobile Money\n2. Airtel Money",
   "confirmPrompt": "{route}\n{seats} seat(s), {total}\nMethod: {method}\n1. Confirm booking\n2. Cancel",
-  "booked": "Booking confirmed. Ref: {reference}. NOT PAID. Contact the bus company to pay.",
+  "booked": "Reservation saved. Ref: {reference}. NOT PAID. Contact the bus company to pay.",
   "cancelled": "Booking cancelled. No seats were reserved.",
   "invalidChoice": "Invalid choice.",
   "noTrips": "No available trips were found. Please try again later.",

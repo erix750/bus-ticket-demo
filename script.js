@@ -801,7 +801,7 @@ function renderSearchResults(matchingBuses, requestedSeats) {
         const bookButton = makeElement(
             "button",
             "button button-primary result-book-button",
-            "Review trip | " + formatFare(total)
+            "Select trip and add passenger details | " + formatFare(total)
         );
         bookButton.type = "button";
         bookButton.addEventListener("click", function() {
@@ -840,6 +840,7 @@ function openDemoCheckout(busId, seatCount, baseFare, totalFare) {
     document.getElementById("checkoutFare").textContent = formatFare(baseFare);
     document.getElementById("checkoutTotal").textContent = formatFare(totalFare);
     document.getElementById("checkoutDialog").showModal();
+    passengerNameInput.focus();
 }
 
 function performSearch() {
@@ -911,9 +912,15 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, pa
         seatCount,
         paymentMethod
     );
-    await refreshAppData();
-    searchMessage.textContent = "Booking confirmed. Payment has not been collected.";
-    performSearch();
+    try {
+        await refreshAppData();
+        searchMessage.textContent = "Reservation saved. Payment has not been collected.";
+        performSearch();
+    } catch (error) {
+        console.error("Reservation was saved, but availability could not be refreshed.", error);
+        booking.refreshWarning =
+            "Your reservation was saved, but seat availability could not refresh. Refresh the search before choosing another trip.";
+    }
     return booking;
 }
 
@@ -967,9 +974,29 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
             paymentMethod.value
         );
         if (booking) {
+            const bookingStatus = window.WaylineBookingStatus.describe(booking);
             document.getElementById("checkoutDialog").close();
             document.getElementById("bookingConfirmationRoute").textContent =
-                booking.from + " to " + booking.to + " · " + formatDate(booking.date);
+                booking.from + " to " + booking.to;
+            document.getElementById("bookingConfirmationTravel").textContent =
+                formatDate(booking.date) +
+                (booking.departureTime ? " at " + booking.departureTime : "");
+            document.getElementById("bookingConfirmationPassenger").textContent = booking.name;
+            document.getElementById("bookingConfirmationCompany").textContent =
+                booking.company || "Company not recorded";
+            document.getElementById("bookingConfirmationAmount").textContent =
+                formatFare(booking.totalFare);
+            const bookingStatusBadge = document.getElementById("bookingConfirmationBookingStatus");
+            bookingStatusBadge.className = "status-badge " + bookingStatus.className;
+            bookingStatusBadge.textContent = bookingStatus.bookingLabel;
+            document.getElementById("bookingConfirmationPaymentStatus").textContent =
+                bookingStatus.paymentLabel + " · " + (booking.paymentMethod || "No method selected");
+            document.getElementById("bookingConfirmationMessage").textContent =
+                bookingStatus.description;
+            document.getElementById("bookingConfirmationNextStep").textContent =
+                booking.refreshWarning
+                    ? bookingStatus.nextStep + " " + booking.refreshWarning
+                    : bookingStatus.nextStep;
             document.getElementById("bookingConfirmationReference").textContent =
                 formatBookingReference(booking.id);
             document.getElementById("bookingConfirmationDialog").showModal();
@@ -1009,8 +1036,12 @@ function renderBookings() {
         const top = makeElement("div", "record-topline");
         const route = makeElement("h3", "", booking.from + " to " + booking.to);
         top.appendChild(route);
-        const status = booking.cancelled ? "Cancelled" : "Unpaid";
-        top.appendChild(makeElement("span", "status-badge" + (booking.cancelled ? " status-cancelled" : " status-demo"), status));
+        const bookingStatus = window.WaylineBookingStatus.describe(booking);
+        top.appendChild(makeElement(
+            "span",
+            "status-badge " + bookingStatus.className,
+            bookingStatus.bookingLabel
+        ));
 
         const reference = makeElement("p", "ticket-reference", "TICKET REF  " + formatBookingReference(booking.id));
         const details = makeElement(
@@ -1025,7 +1056,9 @@ function renderBookings() {
                 "\nPayment method: " + (booking.paymentMethod || "Not selected") +
                 (booking.totalFare > 0 ? "\nFare " + formatFare(booking.baseFare) +
                     (booking.platformFee > 0 ? " | Service fee " + formatFare(booking.platformFee) : "") +
-                    " | Total " + formatFare(booking.totalFare) : "")
+                    " | Total " + formatFare(booking.totalFare) : "") +
+                "\nPayment: " + bookingStatus.paymentLabel +
+                "\n" + bookingStatus.description
         );
         card.append(top, reference, details);
 
@@ -1340,8 +1373,7 @@ if (recoveryError.get("error_code") === "otp_expired") {
     showPartnerLoginForm();
     setPartnerFormMode(false);
     loginMessage.textContent =
-        "This password reset link has expired or was already used. Enter your email below and request a new link.";
-    document.querySelector(".reset-link-help").open = true;
+        "This email link has expired or was already used. Request a fresh confirmation or password-reset email, then open the newest link once. Use Create a company account for email confirmation or Forgot your password for a reset.";
     partnerLoginScreen.showModal();
 }
 

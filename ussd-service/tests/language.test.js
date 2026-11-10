@@ -19,7 +19,7 @@ test("language prompts interpolate fare and booking reference safely", function(
     const service = createLanguageService();
     assert.equal(
         service.text("en", "booked", { reference: "ABC123" }),
-        "Booking confirmed. Ref: ABC123. NOT PAID. Contact the bus company to pay."
+        "Reservation saved. Ref: ABC123. NOT PAID. Contact the bus company to pay."
     );
     assert.match(service.languagePrompt(), /Kinyarwanda/);
 });

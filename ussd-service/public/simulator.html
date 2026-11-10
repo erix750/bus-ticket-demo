@@ -49,11 +49,12 @@
                         <pre id="ussdMessage">Enter a caller number, then dial the code to begin.</pre>
                     </div>
                     <form id="inputForm" class="ussd-input-form">
-                        <label for="ussdInput">Menu choice or passenger name</label>
+                        <label for="ussdInput">Menu choice or passenger full name</label>
                         <div class="input-row">
-                            <input id="ussdInput" type="text" maxlength="80" autocomplete="off" disabled>
+                            <input id="ussdInput" type="text" maxlength="80" autocomplete="off" placeholder="Type your name when prompted" aria-describedby="ussdInputHint" disabled>
                             <button id="sendInput" type="submit" disabled>Send</button>
                         </div>
+                        <small class="input-hint" id="ussdInputHint">When the menu asks for the passenger's name, type it here and press Send.</small>
                     </form>
                     <div class="keypad" aria-label="Number keypad">
                         <button type="button" data-key="1" disabled>1</button>

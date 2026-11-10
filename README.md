@@ -5,14 +5,14 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 ## Features
 
 - Passengers can search published bus schedules and reserve seats.
-- Each saved booking receives a reference and an unpaid confirmation.
+- Each saved booking receives a reference and a clear reservation/payment status. Wayline does not yet collect or verify payments, so new bookings remain saved and unpaid.
 - Passengers provide a name and phone number at checkout; contact details are available to the relevant bus company.
 - Passengers search and book without creating an account.
 - Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
 - Bus companies have a dashboard to add, edit, hide, and remove schedules, manage seat capacity, review bookings, and upload a company logo.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
-- A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options.
+- A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options; all page footers include legal links, a Made in Rwanda identity, and a current-year copyright.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
@@ -31,7 +31,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 1. Create a Supabase project.
 2. Open the SQL Editor and run [`supabase/schema.sql`](./supabase/schema.sql).
 3. In `config.js`, configure the Supabase project URL, browser-safe publishable (anon) key, and public `siteUrl`. Never put a service-role key in client-side code.
-4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to the public `siteUrl` and add that exact URL to the Redirect URLs allowlist. Password reset links always return to this configured URL, including when a reset is requested from a local preview.
+4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to `https://erix750.github.io/bus-ticket-demo/` (the project URL, not `https://erix750.github.io/`) and add that exact URL to the Redirect URLs allowlist. Company email-confirmation and password-reset links return to `siteUrl` in `config.js`. If the link expires or is already used, request a new email and open the newest link once.
 5. In Supabase Auth settings, require email confirmations. Create a company account in the app and confirm the email before signing in and publishing schedules. If the address is mistyped or the user cannot access that inbox, they cannot complete confirmation or activate the account.
 6. Re-run the current `supabase/schema.sql` when updating an existing project. It normalizes Rwanda phone numbers, adds the verified passenger booking lookup RPC, limits booking access to phone-verified passengers or the relevant company dashboard, automatically hides full/departed trips from public search, and includes the schedule-edit safeguards.
 7. In Supabase Auth, enable phone sign-in and configure Twilio as the SMS provider. Keep the Twilio Account SID, Auth Token, and Messaging Service SID only in Supabase's private Auth provider settings. Test code delivery to both MTN and Airtel numbers before launch; SMS delivery and sender requirements depend on the provider and destination network.

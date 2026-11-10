@@ -9,7 +9,7 @@
   "namePrompt": "Entrez le nom complet du passager :",
   "paymentPrompt": "Mode de paiement prévu :\n1. MTN Mobile Money\n2. Airtel Money",
   "confirmPrompt": "{route}\n{seats} place(s), {total}\nMode : {method}\n1. Confirmer\n2. Annuler",
-  "booked": "Réservation confirmée. Réf. : {reference}. NON PAYÉ. Contactez la compagnie pour payer.",
+  "booked": "Réservation enregistrée. Réf. : {reference}. NON PAYÉ. Contactez la compagnie pour payer.",
   "cancelled": "Réservation annulée. Aucune place retenue.",
   "invalidChoice": "Choix invalide.",
   "noTrips": "Aucun trajet disponible. Réessayez plus tard.",

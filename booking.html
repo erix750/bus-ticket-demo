@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
-    <title>Find a Booking | Wayline</title>
+    <title>Find My Booking | Wayline</title>
     <link rel="stylesheet" href="style.css?v=wayline-policies-20261110">
 </head>
 <body>
@@ -29,10 +29,10 @@
             <div class="section-heading">
                 <div>
                     <p class="eyebrow">BOOKING ACCESS</p>
-                    <h1 id="bookingLookupTitle">Find your booking</h1>
+                    <h1 id="bookingLookupTitle">Find My Booking</h1>
                 </div>
             </div>
-            <p class="field-hint">Enter your booking reference and the phone number you used at checkout. We’ll send a one-time code to verify the phone before showing your booking.</p>
+            <p class="field-hint">Enter your booking reference and the phone number you used at checkout. We’ll verify your phone with a one-time code before showing your reservation.</p>
             <form id="bookingLookupStartForm" class="form-grid booking-lookup-form">
                 <div class="field">
                     <label for="bookingLookupReference">Booking reference</label>
@@ -54,7 +54,7 @@
                     <small class="field-hint" id="bookingOtpHint"></small>
                 </div>
                 <div class="field-wide form-action booking-lookup-actions">
-                    <button class="button button-primary" id="verifyBookingOtp" type="submit">Verify and view booking</button>
+                    <button class="button button-primary" id="verifyBookingOtp" type="submit">Verify and find booking</button>
                     <button class="button button-text" id="resendBookingOtp" type="button">Send a new code</button>
                     <button class="button button-text" id="changeBookingPhone" type="button">Change details</button>
                 </div>
@@ -82,23 +82,24 @@
                     <h2>Support</h2>
                     <a class="footer-nav-link" href="index.html#help">Help Center</a>
                     <a class="footer-nav-link" href="index.html#help">FAQs</a>
-                    <a class="footer-nav-link" href="booking.html">Find Booking</a>
+                    <a class="footer-nav-link" href="booking.html">Find My Booking</a>
                     <a class="footer-nav-link" href="tel:+250798230630">0798230630</a>
                     <a class="footer-nav-link" href="mailto:muvunyieric25@gmail.com">Email Wayline</a>
                 </section>
                 <section class="footer-link-group">
                     <h2>Legal</h2>
                     <a class="footer-nav-link" href="privacy-policy.html">Privacy Policy</a>
-                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms and Conditions</a>
+                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms of Service</a>
                     <a class="footer-nav-link" href="cancellation-policy.html">Cancellation Policy</a>
                 </section>
                 <section class="footer-link-group">
                     <h2>Service</h2>
                     <p class="footer-service-area">Service area: Rwanda.</p>
+                    <p class="footer-made-in-rwanda"><span role="img" aria-label="Flag of Rwanda">🇷🇼</span> Made in Rwanda</p>
                 </section>
             </nav>
             <div class="footer-bottom">
-                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline</p>
+                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline. All rights reserved.</p>
                 <p>Created by <strong>ME Empire</strong></p>
             </div>
         </div>
@@ -107,6 +108,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=wayline-departure-lookup-20261109"></script>
+    <script src="booking-status.js?v=wayline-booking-status-20261110"></script>
     <script src="booking-lookup.js?v=wayline-departure-lookup-20261109"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>

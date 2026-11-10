@@ -269,10 +269,15 @@
     }
 
     async function signUp(email, password, companyName) {
+        const siteUrl = (config.siteUrl || "").trim();
+        if (!siteUrl) throw new Error("Set the published Wayline URL in config.js before creating a company account.");
         const result = await supabase.auth.signUp({
             email: email,
             password: password,
-            options: { data: { company_name: companyName } }
+            options: {
+                data: { company_name: companyName },
+                emailRedirectTo: siteUrl
+            }
         });
         return throwIfError(result);
     }

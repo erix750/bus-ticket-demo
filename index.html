@@ -98,14 +98,15 @@
             <button class="dialog-close" id="closeCheckout" type="button" aria-label="Close checkout">&times;</button>
             <p class="eyebrow">PASSENGER DETAILS</p>
             <h2 id="checkoutTitle">Complete your booking</h2>
+            <p class="checkout-passenger-help" id="checkoutPassengerHelp">Enter the passenger's full name and phone number below. No account is needed.</p>
             <p id="checkoutRoute" class="checkout-route"></p>
             <div class="checkout-summary">
                 <div><span>Bus fare</span><strong id="checkoutFare"></strong></div>
                 <div class="checkout-total"><span>Total</span><strong id="checkoutTotal"></strong></div>
             </div>
             <div class="field">
-                <label for="passengerName">Passenger name</label>
-                <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Enter passenger name" required>
+                <label for="passengerName">Passenger full name</label>
+                <input type="text" id="passengerName" name="passengerName" autocomplete="name" maxlength="80" placeholder="Enter the passenger's full name" aria-describedby="checkoutPassengerHelp" required>
             </div>
             <div class="field">
                 <label for="passengerPhone">Phone number</label>
@@ -133,17 +134,26 @@
     <dialog class="checkout-dialog" id="bookingConfirmationDialog" aria-labelledby="bookingConfirmationTitle">
         <div class="checkout-content">
             <button class="dialog-close" id="closeBookingConfirmation" type="button" aria-label="Close booking confirmation">&times;</button>
-            <p class="eyebrow">BOOKING SAVED</p>
-            <h2 id="bookingConfirmationTitle">Your booking reference</h2>
-            <p id="bookingConfirmationRoute" class="checkout-route"></p>
+            <p class="eyebrow">BOOKING CONFIRMATION</p>
+            <h2 id="bookingConfirmationTitle">Your reservation is saved</h2>
             <div class="booking-confirmation-reference">
                 <span>REFERENCE</span>
                 <strong id="bookingConfirmationReference"></strong>
             </div>
-            <p class="checkout-notice">This is an unpaid booking confirmation, not a paid ticket. Keep this reference for your records and contact the bus company or Wayline about payment.</p>
+            <dl class="booking-confirmation-details">
+                <div><dt>Passenger</dt><dd id="bookingConfirmationPassenger"></dd></div>
+                <div><dt>Journey</dt><dd id="bookingConfirmationRoute"></dd></div>
+                <div><dt>Travel date and departure time</dt><dd id="bookingConfirmationTravel"></dd></div>
+                <div><dt>Bus company</dt><dd id="bookingConfirmationCompany"></dd></div>
+                <div><dt>Total amount due</dt><dd id="bookingConfirmationAmount"></dd></div>
+                <div><dt>Booking status</dt><dd><span class="status-badge status-saved" id="bookingConfirmationBookingStatus"></span></dd></div>
+                <div><dt>Payment status</dt><dd id="bookingConfirmationPaymentStatus"></dd></div>
+            </dl>
+            <p class="checkout-notice" id="bookingConfirmationMessage" role="status" aria-live="polite"></p>
+            <p class="field-hint" id="bookingConfirmationNextStep"></p>
             <div class="checkout-actions">
                 <button class="button button-text" id="closeBookingConfirmationDone" type="button">Done</button>
-                <a class="button button-secondary" href="booking.html">Find a booking</a>
+                <a class="button button-secondary" href="booking.html">Find My Booking</a>
             </div>
         </div>
     </dialog>
@@ -347,6 +357,7 @@
                 <option value="Kirehe"></option>
             </datalist>
             <p id="searchMessage" class="form-message" role="status" aria-live="polite"></p>
+            <p class="field-hint" id="passengerDetailsHint">After you select a bus, enter the passenger's full name and phone number in the booking form.</p>
             <div id="searchResults" class="results-list" aria-live="polite"></div>
         </section>
 
@@ -551,7 +562,7 @@
                             <p class="footer-help-empty" id="footerHelpEmpty" hidden>No matching suggestion yet. Contact us at <a href="tel:+250798230630">0798230630</a> or <a href="mailto:muvunyieric25@gmail.com">email Wayline</a>.</p>
                         </div>
                     </details>
-                    <a class="footer-nav-link" href="booking.html">Find Booking</a>
+                    <a class="footer-nav-link" href="booking.html">Find My Booking</a>
                     <a class="footer-nav-link" href="tel:+250798230630">0798230630</a>
                     <a class="footer-nav-link" href="mailto:muvunyieric25@gmail.com">Email Wayline</a>
                     <button class="footer-nav-link footer-action-link sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
@@ -559,12 +570,13 @@
                 <section class="footer-link-group">
                     <h2>Legal</h2>
                     <a class="footer-nav-link" href="privacy-policy.html">Privacy Policy</a>
-                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms and Conditions</a>
+                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms of Service</a>
                     <a class="footer-nav-link" href="cancellation-policy.html">Cancellation Policy</a>
                 </section>
                 <section class="footer-link-group">
                     <h2>Service</h2>
                     <p class="footer-service-area">Service area: Rwanda.</p>
+                    <p class="footer-made-in-rwanda"><span role="img" aria-label="Flag of Rwanda">🇷🇼</span> Made in Rwanda</p>
                     <div class="footer-controls" role="group" aria-label="Website settings">
                         <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
                             <span id="themeToggleIcon" aria-hidden="true"></span>
@@ -574,7 +586,7 @@
                 </section>
             </nav>
             <div class="footer-bottom">
-                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline</p>
+                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline. All rights reserved.</p>
                 <p>Created by <strong>ME Empire</strong></p>
             </div>
         </div>
@@ -583,6 +595,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=wayline-departure-lookup-20261109"></script>
+    <script src="booking-status.js?v=wayline-booking-status-20261110"></script>
     <script src="script.js?v=wayline-departure-lookup-20261109"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>

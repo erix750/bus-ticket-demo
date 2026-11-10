@@ -464,6 +464,13 @@ input {
     font-size: 13px;
 }
 
+.checkout-passenger-help {
+    margin: -4px 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 .booking-confirmation-reference {
     display: grid;
     gap: 5px;
@@ -485,6 +492,54 @@ input {
     color: var(--forest);
     font-size: 24px;
     letter-spacing: 0.08em;
+}
+
+.booking-confirmation-details {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.booking-confirmation-details > div {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--line);
+}
+
+.booking-confirmation-details dt {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.booking-confirmation-details dd {
+    margin: 0;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.booking-confirmation-details dd .status-badge {
+    display: inline-flex;
+    white-space: normal;
+}
+
+.status-saved {
+    color: #76502f;
+    background: #f8edda;
+}
+
+.status-pending {
+    color: #775c12;
+    background: #fff3c4;
+}
+
+.status-confirmed {
+    color: #17613a;
+    background: #e2f5e9;
 }
 
 .checkout-summary {
@@ -2206,6 +2261,15 @@ summary:focus-visible {
     line-height: 1.5;
 }
 
+.footer-made-in-rwanda {
+    color: #c5c5c5;
+    font-size: 12px;
+}
+
+.footer-made-in-rwanda span {
+    margin-right: 4px;
+}
+
 .footer-controls {
     display: flex;
     flex-wrap: wrap;
@@ -2542,6 +2606,21 @@ html[data-theme="dark"] .status-cancelled {
 html[data-theme="dark"] .status-demo {
     color: #f1d6a7;
     background: #493b27;
+}
+
+html[data-theme="dark"] .status-saved {
+    color: #f1d6a7;
+    background: #493b27;
+}
+
+html[data-theme="dark"] .status-pending {
+    color: #f3df8c;
+    background: #4b421f;
+}
+
+html[data-theme="dark"] .status-confirmed {
+    color: #b6e4c5;
+    background: #203d2d;
 }
 
 html[data-theme="dark"] .checkout-summary {

@@ -135,7 +135,7 @@ test("USSD booking completes in English and repeated final callbacks do not dupl
     assert.match(await send("Jane Doe"), /^CON Choose intended payment method/);
     assert.match(await send("1"), /^CON Kigali to Huye/);
     const result = await send("1");
-    assert.match(result, /^END Booking confirmed\. Ref: 0123456789AB\. NOT PAID/);
+    assert.match(result, /^END Reservation saved\. Ref: 0123456789AB\. NOT PAID/);
     assert.equal(app.bookingCount(), 1);
     assert.equal(app.bookedTripId(), "bus-2");
     assert.equal(await invoke(app.controller, Object.assign({}, base, { text: text })), result);

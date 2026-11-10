@@ -9,7 +9,7 @@
   "namePrompt": "Andika amazina y'umugenzi:",
   "paymentPrompt": "Hitamo uburyo bwo kwishyura:\n1. MTN Mobile Money\n2. Airtel Money",
   "confirmPrompt": "{route}\nImyanya {seats}, {total}\nUburyo: {method}\n1. Emeza\n2. Hagarika",
-  "booked": "Byemejwe. Nomero: {reference}. NTIBYISHYUWE. Hamagara kompanyi wishyure.",
+  "booked": "Ibyo wasabye byabitswe. Nomero: {reference}. NTIBYISHYUWE. Hamagara kompanyi wishyure.",
   "cancelled": "Byahagaritswe. Nta mwanya wafashwe.",
   "invalidChoice": "Ihitamo si ryo.",
   "noTrips": "Nta modoka ibonetse. Ongera ugerageze nyuma.",

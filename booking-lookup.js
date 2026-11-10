@@ -38,16 +38,23 @@
         return String(bookingId).replace(/-/g, "").slice(0, 12).toUpperCase();
     }
 
+    function formatFare(amount) {
+        return "RWF " + new Intl.NumberFormat("en-RW", {
+            maximumFractionDigits: 0
+        }).format(Number(amount) || 0);
+    }
+
     function showBookings(bookings) {
         resultsContainer.replaceChildren();
         bookings.forEach(function(booking) {
             const card = makeElement("article", "record-card booking-card" + (booking.cancelled ? " is-cancelled" : ""));
             const top = makeElement("div", "record-topline");
             top.appendChild(makeElement("h2", "", booking.from + " to " + booking.to));
+            const bookingStatus = window.WaylineBookingStatus.describe(booking);
             top.appendChild(makeElement(
                 "span",
-                "status-badge" + (booking.cancelled ? " status-cancelled" : " status-demo"),
-                booking.cancelled ? "Cancelled" : "Unpaid"
+                "status-badge " + bookingStatus.className,
+                bookingStatus.bookingLabel
             ));
 
             const reference = makeElement(
@@ -58,12 +65,17 @@
             const details = makeElement(
                 "p",
                 "record-details",
-                (booking.company || "Company not recorded") +
+                "Passenger: " + (booking.name || "Name not recorded") +
+                    "\nCompany: " + (booking.company || "Company not recorded") +
                     (booking.busName ? " | " + booking.busName : "") +
                     "\n" + formatDate(booking.date) +
                     (booking.departureTime ? " at " + booking.departureTime : "") +
                     " | " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
-                    "\nPayment is not confirmed. Contact the bus company for payment details."
+                    "\nTotal amount due: " + formatFare(booking.totalFare) +
+                    "\nIntended payment method: " + (booking.paymentMethod || "Not selected") +
+                    "\nPayment status: " + bookingStatus.paymentLabel +
+                    "\n" + bookingStatus.description +
+                    "\nNext step: " + bookingStatus.nextStep
             );
             card.append(top, reference, details);
 

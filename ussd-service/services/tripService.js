@@ -1,3 +1,5 @@
+const routeUtils = require("../../route-utils");
+
 function createTripService(supabase) {
     function rwandaDateTime(now) {
         const parts = new Intl.DateTimeFormat("en-GB", {
@@ -22,15 +24,17 @@ function createTripService(supabase) {
         const company = Array.isArray(record.companies) ? record.companies[0] : record.companies;
         return {
             id: record.id,
-            from: record.from_city,
-            to: record.to_city,
+            from: routeUtils.canonicalCity(record.from_city),
+            to: routeUtils.canonicalCity(record.to_city),
             date: record.travel_date,
             departureTime: String(record.departure_time).slice(0, 5),
             name: record.name,
             company: company && company.name ? company.name : "",
             availableSeats: Number(record.available_seats),
             fare: Number(record.fare),
-            routeDistanceKm: Number(record.route_distance_km) || 0
+            routeDistanceKm: Number(record.route_distance_km) || 0,
+            estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
+            intermediateStops: record.intermediate_stops || ""
         };
     }
 
@@ -42,7 +46,7 @@ function createTripService(supabase) {
         const now = rwandaDateTime();
         const result = await supabase
             .from("buses")
-            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, companies(name)")
+            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, estimated_duration_minutes, intermediate_stops, companies(name)")
             .eq("is_active", true)
             .gt("available_seats", 0)
             .gte("travel_date", now.date)
@@ -58,8 +62,8 @@ function createTripService(supabase) {
 
     async function listForRoute(origin, destination, date, company) {
         return (await listUpcoming()).filter(function(trip) {
-            return trip.from.toLocaleLowerCase() === origin.toLocaleLowerCase() &&
-                trip.to.toLocaleLowerCase() === destination.toLocaleLowerCase() &&
+            return routeUtils.normalizeCity(trip.from) === routeUtils.normalizeCity(origin) &&
+                routeUtils.normalizeCity(trip.to) === routeUtils.normalizeCity(destination) &&
                 trip.date === date &&
                 (!company || trip.company.toLocaleLowerCase() === company.toLocaleLowerCase());
         });
@@ -69,7 +73,7 @@ function createTripService(supabase) {
         const now = rwandaDateTime();
         const result = await supabase
             .from("buses")
-            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, companies(name)")
+            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, estimated_duration_minutes, intermediate_stops, companies(name)")
             .eq("id", id)
             .eq("is_active", true)
             .gt("available_seats", 0)

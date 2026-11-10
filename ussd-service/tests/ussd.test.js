@@ -48,7 +48,9 @@ function createTestController() {
         company: "Wayline",
         fare: 5000,
         availableSeats: 10,
-        routeDistanceKm: 120
+        routeDistanceKm: 120,
+        estimatedDurationMinutes: 155,
+        intermediateStops: "Muhanga, Nyanza"
     };
     const otherCompanyTrip = Object.assign({}, trip, {
         id: "bus-2",

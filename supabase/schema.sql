@@ -23,6 +23,8 @@ create table if not exists public.buses (
     available_seats integer not null check (available_seats between 0 and total_seats),
     fare numeric(12, 2) not null check (fare >= 0),
     route_distance_km numeric(8, 2) check (route_distance_km between 0.1 and 1000),
+    estimated_duration_minutes integer check (estimated_duration_minutes between 1 and 1440),
+    intermediate_stops text not null default '' check (char_length(intermediate_stops) <= 300),
     fare_category text not null default 'intercity' check (fare_category in ('kigali', 'intercity')),
     is_active boolean not null default true,
     created_at timestamptz not null default now(),
@@ -31,6 +33,12 @@ create table if not exists public.buses (
 
 alter table public.buses
     add column if not exists route_distance_km numeric(8, 2);
+alter table public.buses
+    add column if not exists estimated_duration_minutes integer
+    check (estimated_duration_minutes between 1 and 1440);
+alter table public.buses
+    add column if not exists intermediate_stops text not null default ''
+    check (char_length(intermediate_stops) <= 300);
 alter table public.buses
     add column if not exists fare_category text not null default 'intercity';
 alter table public.buses
@@ -149,35 +157,8 @@ create trigger preserve_reserved_bus_seats_before_update
     for each row execute function public.preserve_reserved_bus_seats();
 revoke execute on function public.preserve_reserved_bus_seats() from public, anon, authenticated;
 
-create or replace function public.protect_booked_bus_details()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-    if (new.name is distinct from old.name
-        or new.from_city is distinct from old.from_city
-        or new.to_city is distinct from old.to_city
-        or new.travel_date is distinct from old.travel_date
-        or new.departure_time is distinct from old.departure_time)
-       and exists (
-           select 1
-             from public.bookings
-            where bus_id = old.id
-       ) then
-        raise exception 'This schedule has booking records. Its bus name, route, date, and departure time cannot be changed; hide it and add a new schedule instead.';
-    end if;
-    return new;
-end;
-$$;
-
 drop trigger if exists protect_booked_bus_details_before_update on public.buses;
-create trigger protect_booked_bus_details_before_update
-    before update of name, from_city, to_city, travel_date, departure_time
-    on public.buses
-    for each row execute function public.protect_booked_bus_details();
-revoke execute on function public.protect_booked_bus_details() from public, anon, authenticated;
+drop function if exists public.protect_booked_bus_details();
 
 do $$
 begin
@@ -249,10 +230,10 @@ create policy "Companies can remove their own schedules"
 grant usage on schema public to anon, authenticated, service_role;
 grant select on public.companies, public.buses to anon, authenticated;
 revoke insert, delete on public.buses from anon, authenticated;
-grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
+grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, estimated_duration_minutes, intermediate_stops, fare_category)
     on public.buses to authenticated;
 revoke update (fare) on public.buses from anon, authenticated;
-grant update (name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
+grant update (name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, estimated_duration_minutes, intermediate_stops, fare_category)
     on public.buses to authenticated;
 grant update (is_active) on public.buses to authenticated;
 grant delete on public.buses to authenticated;

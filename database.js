@@ -46,6 +46,8 @@
             availableSeats: record.available_seats,
             fare: Number(record.fare),
             routeDistanceKm: Number(record.route_distance_km) || 0,
+            estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
+            intermediateStops: record.intermediate_stops || "",
             fareCategory: record.fare_category || "intercity",
             isActive: record.is_active !== false,
             logo: company ? company.logo_data : ""
@@ -141,6 +143,8 @@
             departure_time: bus.departureTime,
             total_seats: bus.totalSeats,
             route_distance_km: bus.routeDistanceKm,
+            estimated_duration_minutes: bus.estimatedDurationMinutes || null,
+            intermediate_stops: bus.intermediateStops || "",
             fare_category: bus.fareCategory
         }).select("*, companies(name, logo_data)").single();
         return mapBus(throwIfError(insertResult));
@@ -162,6 +166,8 @@
                 departure_time: bus.departureTime,
                 total_seats: bus.totalSeats,
                 route_distance_km: bus.routeDistanceKm,
+                estimated_duration_minutes: bus.estimatedDurationMinutes || null,
+                intermediate_stops: bus.intermediateStops || "",
                 fare_category: bus.fareCategory
             })
             .eq("id", busId)

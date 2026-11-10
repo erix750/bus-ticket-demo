@@ -11,7 +11,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Find a Booking | Wayline</title>
-    <link rel="stylesheet" href="style.css?v=wayline-departure-lookup-20261109">
+    <link rel="stylesheet" href="style.css?v=wayline-policies-20261110">
 </head>
 <body>
     <header class="site-header">
@@ -66,14 +66,42 @@
     </main>
 
     <footer class="site-footer booking-lookup-footer">
-        <section class="footer-contact" aria-labelledby="contact-title">
-            <h2 id="contact-title">Need help?</h2>
-            <div class="footer-contact-links">
-                <a href="tel:+250798230630">Phone: 0798230630</a>
-                <a href="mailto:muvunyieric25@gmail.com">Email: muvunyieric25@gmail.com</a>
+        <div class="footer-inner">
+            <a class="footer-brand" href="index.html" aria-label="Wayline home">
+                <strong>WAYLINE</strong>
+                <span>Your journey, your way.</span>
+            </a>
+            <nav class="footer-navigation" aria-label="Footer navigation">
+                <section class="footer-link-group">
+                    <h2>Explore</h2>
+                    <a class="footer-nav-link" href="index.html#about">About</a>
+                    <a class="footer-nav-link" href="index.html#searchPanel">Find a Bus</a>
+                    <a class="footer-nav-link" href="index.html#searchPanel">Our Routes</a>
+                </section>
+                <section class="footer-link-group">
+                    <h2>Support</h2>
+                    <a class="footer-nav-link" href="index.html#help">Help Center</a>
+                    <a class="footer-nav-link" href="index.html#help">FAQs</a>
+                    <a class="footer-nav-link" href="booking.html">Find Booking</a>
+                    <a class="footer-nav-link" href="tel:+250798230630">0798230630</a>
+                    <a class="footer-nav-link" href="mailto:muvunyieric25@gmail.com">Email Wayline</a>
+                </section>
+                <section class="footer-link-group">
+                    <h2>Legal</h2>
+                    <a class="footer-nav-link" href="privacy-policy.html">Privacy Policy</a>
+                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms and Conditions</a>
+                    <a class="footer-nav-link" href="cancellation-policy.html">Cancellation Policy</a>
+                </section>
+                <section class="footer-link-group">
+                    <h2>Service</h2>
+                    <p class="footer-service-area">Service area: Rwanda.</p>
+                </section>
+            </nav>
+            <div class="footer-bottom">
+                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline</p>
+                <p>Created by <strong>ME Empire</strong></p>
             </div>
-        </section>
-        <p>Created by <strong>ME Empire</strong></p>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -81,5 +109,6 @@
     <script src="database.js?v=wayline-departure-lookup-20261109"></script>
     <script src="booking-lookup.js?v=wayline-departure-lookup-20261109"></script>
     <script src="pwa.js"></script>
+    <script src="footer.js"></script>
 </body>
 </html>

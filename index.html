@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-departure-lookup-20261109">
+    <link rel="stylesheet" href="style.css?v=wayline-policies-20261110">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -497,46 +497,6 @@
                 </section>
             </div>
         </section>
-        <p class="storage-note" hidden>Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
-
-    </main>
-
-    <footer class="site-footer">
-        <div class="footer-site-actions">
-            <div class="header-actions">
-                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
-                    <span id="themeToggleIcon" aria-hidden="true"></span>
-                </button>
-                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                <button class="header-button sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
-            </div>
-        </div>
-        <nav class="footer-navigation" aria-label="Footer navigation">
-            <a class="footer-nav-link" href="#top">
-                <strong>Home</strong>
-                <span>Return to the top of Wayline.</span>
-            </a>
-            <a class="footer-nav-link" href="#searchPanel">
-                <strong>Routes</strong>
-                <span>Search buses and plan a trip.</span>
-            </a>
-            <a class="footer-nav-link" href="#about">
-                <strong>About Us</strong>
-                <span>See what makes traveling with us easy.</span>
-            </a>
-            <a class="footer-nav-link" href="#contact">
-                <strong>Contact</strong>
-                <span>Call or email us for help.</span>
-            </a>
-            <a class="footer-nav-link" href="#help">
-                <strong>Help & FAQ</strong>
-                <span>Booking, payments, cancellations and help.</span>
-            </a>
-            <a class="footer-nav-link" href="booking.html">
-                <strong>Find Booking</strong>
-                <span>Look up a booking using SMS verification.</span>
-            </a>
-        </nav>
         <section class="panel help-panel" id="help" aria-labelledby="help-title">
             <div class="section-heading">
                 <div>
@@ -555,7 +515,7 @@
                 </details>
                 <details class="faq-item">
                     <summary>How do I cancel a booking?</summary>
-                    <p>Contact Wayline with your booking reference to request a cancellation. A reservation is not cancelled until the bus company confirms it.</p>
+                    <p>Contact Wayline with your booking reference to request a cancellation. A reservation is not cancelled until the bus company confirms it. See our <a href="cancellation-policy.html">Cancellation Policy</a> for details.</p>
                 </details>
                 <details class="faq-item">
                     <summary>Where can I find my booking reference?</summary>
@@ -571,14 +531,54 @@
                 </details>
             </div>
         </section>
-        <section class="footer-contact" id="contact" aria-labelledby="contact-title">
-            <h2 id="contact-title">Get in touch</h2>
-            <div class="footer-contact-links">
-                <a href="tel:+250798230630">Phone: 0798230630</a>
-                <a href="mailto:muvunyieric25@gmail.com">Email: muvunyieric25@gmail.com</a>
+        <p class="storage-note" hidden>Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <a class="footer-brand" href="#top" aria-label="Wayline home">
+                <strong>WAYLINE</strong>
+                <span>Your journey, your way.</span>
+            </a>
+            <nav class="footer-navigation" aria-label="Footer navigation">
+                <section class="footer-link-group">
+                    <h2>Explore</h2>
+                    <a class="footer-nav-link" href="#about">About</a>
+                    <a class="footer-nav-link" href="#searchPanel">Find a Bus</a>
+                    <a class="footer-nav-link" href="#searchPanel">Our Routes</a>
+                </section>
+                <section class="footer-link-group" id="contact">
+                    <h2>Support</h2>
+                    <a class="footer-nav-link" href="#help">Help Center</a>
+                    <a class="footer-nav-link" href="#help">FAQs</a>
+                    <a class="footer-nav-link" href="booking.html">Find Booking</a>
+                    <a class="footer-nav-link" href="tel:+250798230630">0798230630</a>
+                    <a class="footer-nav-link" href="mailto:muvunyieric25@gmail.com">Email Wayline</a>
+                    <button class="footer-nav-link footer-action-link sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
+                </section>
+                <section class="footer-link-group">
+                    <h2>Legal</h2>
+                    <a class="footer-nav-link" href="privacy-policy.html">Privacy Policy</a>
+                    <a class="footer-nav-link" href="terms-and-conditions.html">Terms and Conditions</a>
+                    <a class="footer-nav-link" href="cancellation-policy.html">Cancellation Policy</a>
+                </section>
+                <section class="footer-link-group">
+                    <h2>Service</h2>
+                    <p class="footer-service-area">Service area: Rwanda.</p>
+                    <div class="footer-controls" role="group" aria-label="Website settings">
+                        <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
+                            <span id="themeToggleIcon" aria-hidden="true"></span>
+                        </button>
+                        <button class="header-button" id="installApp" type="button" hidden>Install app</button>
+                    </div>
+                </section>
+            </nav>
+            <div class="footer-bottom">
+                <p>&copy; <time data-current-year datetime="2026">2026</time> Wayline</p>
+                <p>Created by <strong>ME Empire</strong></p>
             </div>
-        </section>
-        <p>Created by <strong>ME Empire</strong></p>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -586,5 +586,6 @@
     <script src="database.js?v=wayline-departure-lookup-20261109"></script>
     <script src="script.js?v=wayline-departure-lookup-20261109"></script>
     <script src="pwa.js"></script>
+    <script src="footer.js"></script>
 </body>
 </html>

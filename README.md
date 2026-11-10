@@ -13,6 +13,8 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
 - A Help Center explains booking, unpaid payment status, cancellations, and contact options.
+- Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
+- Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
 - Passengers can book online now; USSD booking by dialing `*200#` is shown as coming soon until Africa's Talking provisions the code and the service is deployed.
 - Seat reservations update shared availability in Supabase. Passengers contact Wayline or the bus company to request cancellations.

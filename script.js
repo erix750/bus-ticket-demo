@@ -232,25 +232,26 @@ document.getElementById("bookJourneyButton").addEventListener("click", function(
     document.getElementById("from").focus({ preventScroll: true });
 });
 
-document.querySelectorAll(".route-chip").forEach(function(button) {
-    button.addEventListener("click", function() {
-        const from = button.dataset.from;
-        const to = button.dataset.to;
-        document.getElementById("from").value = from;
-        document.getElementById("to").value = to;
+document.getElementById("popularRoutes").addEventListener("click", function(event) {
+    const button = event.target.closest(".route-chip");
+    if (!button) return;
+    const from = button.dataset.from;
+    const to = button.dataset.to;
+    document.getElementById("from").value = from;
+    document.getElementById("to").value = to;
 
-        const routeCompanies = Array.from(new Set(buses.filter(function(bus) {
-            return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-                isTripUpcoming(bus) && routeUtils.normalizeCity(bus.from) === routeUtils.normalizeCity(from) &&
-                routeUtils.normalizeCity(bus.to) === routeUtils.normalizeCity(to);
-        }).map(function(bus) { return bus.company; })));
-        companyFilter.value = routeCompanies.length === 1 ? routeCompanies[0] : "";
-        document.getElementById("searchResults").replaceChildren();
-        searchMessage.textContent = routeCompanies.length
-            ? "Route selected. Choose your travel date and passenger details, then search."
-            : "Route selected. Choose your travel date and search all available companies.";
-        document.getElementById("date").focus();
-    });
+    const routeCompanies = Array.from(new Set(buses.filter(function(bus) {
+        return bus.isActive && !bus.isCancelled && bus.availableSeats > 0 &&
+            bus.routeDistanceKm > 0 && isTripUpcoming(bus) &&
+            routeUtils.normalizeCity(bus.from) === routeUtils.normalizeCity(from) &&
+            routeUtils.normalizeCity(bus.to) === routeUtils.normalizeCity(to);
+    }).map(function(bus) { return bus.company; })));
+    companyFilter.value = routeCompanies.length === 1 ? routeCompanies[0] : "";
+    document.getElementById("searchResults").replaceChildren();
+    searchMessage.textContent = routeCompanies.length
+        ? "Route selected. Choose your travel date and passenger details, then search."
+        : "Route selected. Choose your travel date and search all available companies.";
+    document.getElementById("date").focus();
 });
 
 partnerLoginOpen.addEventListener("click", function() {
@@ -757,21 +758,38 @@ function updateCompanyOptions() {
 
 function updatePopularRoutes() {
     const routeGroup = document.getElementById("popularRoutes");
-    const routeButtons = Array.from(routeGroup.querySelectorAll(".route-chip"));
-    let visibleCount = 0;
-    routeButtons.forEach(function(button) {
-        const from = routeUtils.normalizeCity(button.dataset.from);
-        const to = routeUtils.normalizeCity(button.dataset.to);
-        const hasUpcomingService = buses.some(function(bus) {
-            return bus.isActive && bus.availableSeats > 0 && bus.routeDistanceKm > 0 &&
-                isTripUpcoming(bus) &&
-                routeUtils.normalizeCity(bus.from) === from &&
-                routeUtils.normalizeCity(bus.to) === to;
+    const routes = new Map();
+    buses.filter(function(bus) {
+        return bus.isActive && !bus.isCancelled && bus.availableSeats > 0 &&
+            bus.routeDistanceKm > 0 && isTripUpcoming(bus);
+    }).forEach(function(bus) {
+        const stops = routeUtils.parseStops(bus.intermediateStops);
+        const key = [
+            routeUtils.normalizeCity(bus.from),
+            routeUtils.normalizeCity(bus.to),
+            stops.map(routeUtils.normalizeCity).join("|")
+        ].join("::");
+        if (!routes.has(key)) routes.set(key, {
+            from: bus.from,
+            to: bus.to,
+            stops: stops
         });
-        button.hidden = !hasUpcomingService;
-        if (hasUpcomingService) visibleCount += 1;
     });
-    routeGroup.hidden = visibleCount === 0;
+
+    routeGroup.replaceChildren(makeElement("span", "", "Available routes"));
+    Array.from(routes.values()).forEach(function(route) {
+        const button = makeElement(
+            "button",
+            "route-chip",
+            routeUtils.formatRoute(route.from, route.to) +
+                (route.stops.length ? " · Via " + route.stops.join(" · ") : "")
+        );
+        button.type = "button";
+        button.dataset.from = route.from;
+        button.dataset.to = route.to;
+        routeGroup.appendChild(button);
+    });
+    routeGroup.hidden = routes.size === 0;
 }
 
 function updateCitySuggestions() {

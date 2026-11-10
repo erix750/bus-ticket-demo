@@ -324,13 +324,49 @@
                 </div>
             </div>
             <p class="availability-status" id="availabilityStatus" role="status" aria-live="polite"></p>
-            <div class="popular-routes" id="popularRoutes" role="group" aria-label="Popular routes" hidden>
-                <span>Popular routes</span>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Musanze">Kigali to Musanze</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Rubavu">Kigali to Rubavu</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Huye">Kigali to Huye</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Nyagatare">Kigali to Nyagatare</button>
-                <button class="route-chip" type="button" data-from="Kigali" data-to="Rusizi">Kigali to Rusizi</button>
+            <div class="popular-routes" id="popularRoutes" role="group" aria-label="Available routes" hidden>
+                <span>Available routes</span>
+            </div>
+            <details class="planned-route-list">
+                <summary>Planned routes across Rwanda</summary>
+                <p>These are planned corridors, not a promise of service. Search results show only trips currently published by bus companies.</p>
+                <div class="planned-route-groups">
+                    <section>
+                        <h3>Eastern Province</h3>
+                        <ul>
+                            <li>Kigali → Rwamagana → Kayonza → Nyagatare</li>
+                            <li>Kigali → Rwamagana → Kayonza → Gatsibo</li>
+                            <li>Kigali → Rwamagana → Kayonza → Ngoma</li>
+                            <li>Kigali → Rwamagana → Kayonza → Kirehe → Rusumo</li>
+                            <li>Kigali → Bugesera → Nyamata</li>
+                            <li>Kigali → Rulindo → Gicumbi → Nyagatare</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Southern Province</h3>
+                        <ul>
+                            <li>Kigali → Muhanga → Ruhango → Nyanza → Huye</li>
+                            <li>Kigali → Muhanga → Nyanza → Huye → Gisagara</li>
+                            <li>Kigali → Huye → Nyamagabe → Nyaruguru</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Northern Province</h3>
+                        <ul>
+                            <li>Kigali → Rulindo → Gakenke → Musanze</li>
+                            <li>Kigali → Rulindo → Gicumbi</li>
+                            <li>Kigali → Musanze → Burera</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Western Province</h3>
+                        <ul>
+                            <li>Kigali → Muhanga → Karongi</li>
+                            <li>Kigali → Karongi → Rutsiro → Rubavu</li>
+                            <li>Kigali → Muhanga → Karongi → Nyamasheke → Rusizi</li>
+                        </ul>
+                    </section>
+                </div>
             </div>
             <form id="searchForm" class="form-grid">
                 <div class="field">
@@ -377,9 +413,21 @@
                 <option value="Karongi"></option>
                 <option value="Nyanza"></option>
                 <option value="Gicumbi"></option>
+                <option value="Gakenke"></option>
+                <option value="Gatsibo"></option>
+                <option value="Gisagara"></option>
                 <option value="Nyamagabe"></option>
                 <option value="Ngoma"></option>
                 <option value="Kirehe"></option>
+                <option value="Rulindo"></option>
+                <option value="Ruhango"></option>
+                <option value="Rutsiro"></option>
+                <option value="Nyamasheke"></option>
+                <option value="Nyaruguru"></option>
+                <option value="Burera"></option>
+                <option value="Bugesera"></option>
+                <option value="Nyamata"></option>
+                <option value="Rusumo"></option>
             </datalist>
             <p id="searchMessage" class="form-message" role="status" aria-live="polite"></p>
             <p class="field-hint" id="passengerDetailsHint">After you select a bus, enter the passenger's full name and phone number in the booking form.</p>
@@ -625,14 +673,14 @@
                                 </details>
                                 <details class="faq-item">
                                     <summary>How can I contact Wayline?</summary>
-                                    <p>Official Wayline support contacts are not yet published. For booking questions or changes, contact the bus company listed on your reservation and include your booking reference.</p>
+                                    <p>Contact Wayline at <a href="mailto:muvunyieric25@gmail.com">muvunyieric25@gmail.com</a> or <a href="https://wa.me/250798230630">WhatsApp +250 798 230 630</a>. Support hours are not published. For changes to a trip, contact the bus company listed on your reservation and include your booking reference.</p>
                                 </details>
                             </div>
-                            <p class="footer-help-empty" id="footerHelpEmpty" hidden>No matching suggestion yet. Official Wayline support contacts are not yet published. For booking questions, contact the bus company listed on your reservation.</p>
+                            <p class="footer-help-empty" id="footerHelpEmpty" hidden>No matching suggestion yet. Contact Wayline at <a href="mailto:muvunyieric25@gmail.com">muvunyieric25@gmail.com</a> or <a href="https://wa.me/250798230630">WhatsApp +250 798 230 630</a>.</p>
                         </div>
                     </details>
                     <a class="footer-nav-link" href="booking.html">Find My Booking</a>
-                    <p class="footer-support-note">Official Wayline support contacts are not yet published. For booking questions, contact the bus company listed on your reservation.</p>
+                    <p class="footer-support-note">Email: <a href="mailto:muvunyieric25@gmail.com">muvunyieric25@gmail.com</a><br>WhatsApp: <a href="https://wa.me/250798230630">+250 798 230 630</a><br>Rwanda Time (CAT, UTC+2). Support hours are not published.</p>
                     <button class="footer-nav-link footer-action-link sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
                 </section>
                 <section class="footer-link-group">
@@ -664,8 +712,8 @@
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
-    <script src="route-utils.js?v=wayline-routes-20261110"></script>
-    <script src="script.js?v=wayline-arrival-cancellation-20261110"></script>
+    <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
+    <script src="script.js?v=wayline-live-route-suggestions-20261110"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

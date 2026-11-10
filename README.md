@@ -22,7 +22,8 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
 - Passengers can book online now; USSD booking by dialing `*200#` is shown as coming soon until Africa's Talking provisions the code and the service is deployed.
-- Seat reservations update shared availability in Supabase. Passengers request cancellations from the relevant bus company. Official Wayline support contacts are not yet published.
+- Seat reservations update shared availability in Supabase. Passengers request cancellations from the relevant bus company. Wayline support: muvunyieric25@gmail.com and WhatsApp +250 798 230 630; support hours are not published.
+- Planned Eastern, Southern, Northern, and Western Province corridors are listed separately from live route suggestions. Search suggestions are generated only from active, upcoming schedules with seats available.
 - Bus availability is refreshed through Supabase Realtime, with a 30-second fallback refresh.
 - Company records and schedules are protected by Supabase authentication and row-level ownership policies. Schedule edits keep reservations attached, and seat-capacity edits cannot reduce capacity below the number already reserved.
 - Operators can calculate estimated road distances from route cities and review or edit the result before the RWF fare is calculated using the selected RURA area tariff.

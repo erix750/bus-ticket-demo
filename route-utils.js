@@ -8,6 +8,9 @@
 })(typeof globalThis === "object" ? globalThis : this, function() {
     const knownCities = [
         "Gicumbi",
+        "Gakenke",
+        "Gatsibo",
+        "Gisagara",
         "Huye",
         "Kayonza",
         "Karongi",
@@ -15,12 +18,21 @@
         "Kirehe",
         "Muhanga",
         "Musanze",
+        "Nyamata",
+        "Nyamasheke",
         "Ngoma",
         "Nyagatare",
         "Nyamagabe",
+        "Nyaruguru",
         "Nyanza",
         "Rubavu",
+        "Ruhango",
+        "Rulindo",
+        "Rusumo",
+        "Rutsiro",
         "Rusizi",
+        "Burera",
+        "Bugesera",
         "Rwamagana"
     ];
 

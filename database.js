@@ -50,6 +50,7 @@
             intermediateStops: record.intermediate_stops || "",
             fareCategory: record.fare_category || "intercity",
             isActive: record.is_active !== false,
+            isCancelled: record.is_cancelled === true,
             logo: company ? company.logo_data : ""
         };
     }
@@ -67,6 +68,8 @@
             to: record.to_city,
             date: record.travel_date,
             departureTime: String(record.departure_time).slice(0, 5),
+            estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
+            intermediateStops: record.intermediate_stops || "",
             seats: record.seat_count,
             baseFare: Number(record.base_fare),
             platformFee: Number(record.platform_fee),
@@ -193,9 +196,15 @@
             .from("buses")
             .update({ is_active: isActive })
             .eq("id", busId)
+            .eq("is_cancelled", false)
             .select("id")
             .maybeSingle();
         if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to update it.");
+    }
+
+    async function cancelSchedule(busId) {
+        const result = await supabase.rpc("cancel_bus_trip", { p_bus_id: busId });
+        throwIfError(result);
     }
 
     async function removeSchedule(busId) {
@@ -302,6 +311,7 @@
         createSchedule: createSchedule,
         updateSchedule: updateSchedule,
         setScheduleActive: setScheduleActive,
+        cancelSchedule: cancelSchedule,
         removeSchedule: removeSchedule,
         createBooking: createBooking,
         sendPassengerBookingOtp: sendPassengerBookingOtp,

@@ -4,8 +4,8 @@
             return {
                 bookingLabel: "Cancelled",
                 paymentLabel: "Not applicable",
-                description: "This reservation was cancelled.",
-                nextStep: "Contact Wayline or the bus company if you have a cancellation or refund question.",
+                description: "This reservation was cancelled and is no longer valid for travel.",
+                nextStep: "Contact the bus company for cancellation details or refund information.",
                 className: "status-cancelled"
             };
         }

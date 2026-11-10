@@ -97,7 +97,8 @@ function normalizeBus(bus) {
         estimatedDurationMinutes: Number(bus.estimatedDurationMinutes) || 0,
         intermediateStops: bus.intermediateStops || "",
         fareCategory: bus.fareCategory || "intercity",
-        isActive: bus.isActive !== false
+        isActive: bus.isActive !== false,
+        isCancelled: bus.isCancelled === true
     };
 }
 
@@ -817,14 +818,20 @@ function renderSearchResults(matchingBuses, requestedSeats) {
         const stopsDetails = stops.length
             ? makeElement("p", "result-stops", "Via " + stops.join(" · "))
             : null;
+        const estimatedArrival = getEstimatedArrival(bus);
+        const journeyTiming = bus.estimatedDurationMinutes
+            ? " | About " + formatDuration(bus.estimatedDurationMinutes) +
+                " | Estimated arrival " + (estimatedArrival
+                    ? (estimatedArrival.date === bus.date
+                        ? estimatedArrival.time
+                        : formatDate(estimatedArrival.date) + " at " + estimatedArrival.time)
+                    : "not available")
+            : " | Arrival and duration not provided by operator";
         const details = makeElement(
             "p",
             "result-details",
             "Departs " + formatDate(bus.date) + " at " + bus.departureTime +
-                " | " + bus.routeDistanceKm + " km" +
-                (bus.estimatedDurationMinutes
-                    ? " | About " + formatDuration(bus.estimatedDurationMinutes)
-                    : "")
+                journeyTiming + " | " + bus.routeDistanceKm + " km"
         );
         const fareDetails = makeElement("p", "result-details", formatFare(bus.fare) + " per passenger");
         const baseFare = bus.fare * requestedSeats;
@@ -946,8 +953,29 @@ function formatDuration(minutes) {
         (remainingMinutes ? " " + remainingMinutes + " min" : "");
 }
 
+function getEstimatedArrival(bus) {
+    const dateParts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bus.date || "");
+    const timeParts = /^(\d{2}):(\d{2})$/.exec(bus.departureTime || "");
+    const duration = Number(bus.estimatedDurationMinutes);
+    if (!dateParts || !timeParts || !Number.isInteger(duration) || duration < 1) return null;
+
+    const arrival = new Date(Date.UTC(
+        Number(dateParts[1]),
+        Number(dateParts[2]) - 1,
+        Number(dateParts[3]),
+        Number(timeParts[1]),
+        Number(timeParts[2]) + duration
+    ));
+    if (Number.isNaN(arrival.getTime())) return null;
+    return {
+        date: arrival.toISOString().slice(0, 10),
+        time: arrival.toISOString().slice(11, 16)
+    };
+}
+
 function populateBookingReview(bus) {
     const stops = routeUtils.parseStops(bus.intermediateStops);
+    const estimatedArrival = getEstimatedArrival(bus);
     document.getElementById("reviewPassenger").textContent = passengerNameInput.value.trim();
     document.getElementById("reviewPhone").textContent =
         normalizeRwandaPhoneNumber(passengerPhoneInput.value);
@@ -961,7 +989,13 @@ function populateBookingReview(bus) {
         formatDate(bus.date) + " at " + bus.departureTime;
     document.getElementById("reviewDistance").textContent =
         bus.routeDistanceKm + " km" + (bus.estimatedDurationMinutes
-            ? " · About " + formatDuration(bus.estimatedDurationMinutes)
+            ? " · About " + formatDuration(bus.estimatedDurationMinutes) +
+                (estimatedArrival
+                    ? " · Estimated arrival " +
+                        (estimatedArrival.date === bus.date
+                            ? estimatedArrival.time
+                            : formatDate(estimatedArrival.date) + " at " + estimatedArrival.time)
+                    : "")
             : " · Duration not provided");
     document.getElementById("reviewSeats").textContent =
         pendingBooking.seatCount + (pendingBooking.seatCount === 1 ? " passenger" : " passengers") +
@@ -1193,22 +1227,27 @@ function downloadPassengerManifest(bus) {
 
     const manifestBookings = bookings.filter(function(booking) {
         return booking.companyView && booking.companyId === currentUser.id &&
-            booking.busId === bus.id && !booking.cancelled;
+            booking.busId === bus.id;
     });
     if (!manifestBookings.length) {
         document.getElementById("busMessage").textContent =
-            "There are no active passenger reservations for this schedule yet.";
+            "There are no passenger bookings for this schedule yet.";
         return;
     }
 
     const rows = [
-        ["Booking reference", "Passenger name", "Phone number", "Seats", "Payment status"]
+        ["Bus", "Route", "Travel date", "Departure time", "Booking reference", "Passenger name", "Phone number", "Seats", "Booking status", "Payment status"]
     ].concat(manifestBookings.map(function(booking) {
         return [
+            booking.busName,
+            routeUtils.formatRoute(booking.from, booking.to),
+            booking.date,
+            booking.departureTime,
             formatBookingReference(booking.id),
             booking.name,
             booking.phone,
             booking.seats,
+            booking.cancelled ? "Cancelled" : "Reserved",
             window.WaylineBookingStatus.describe(booking).paymentLabel
         ];
     }));
@@ -1370,6 +1409,7 @@ function editSchedule(bus) {
 }
 
 function scheduleStatus(bus) {
+    if (bus.isCancelled) return "cancelled";
     if (!bus.isActive) return "hidden";
     if (!isTripUpcoming(bus)) return "completed";
     if (bus.availableSeats === 0) return "full";
@@ -1437,8 +1477,10 @@ function renderBuses() {
         const top = makeElement("div", "record-topline");
         top.appendChild(makeElement("h3", "", bus.name));
         const category = scheduleStatus(bus);
-        const availabilityText = !bus.isActive
-            ? "Hidden from passengers"
+        const availabilityText = bus.isCancelled
+            ? "Trip cancelled · reservations cancelled"
+            : !bus.isActive
+                ? "Hidden from passengers"
             : category === "completed"
                 ? "Completed trip"
                 : bus.availableSeats === 0
@@ -1451,6 +1493,7 @@ function renderBuses() {
         if (logo) company.appendChild(logo);
         company.appendChild(makeElement("p", "record-company", bus.company || "Company not set"));
         const stops = routeUtils.parseStops(bus.intermediateStops);
+        const estimatedArrival = getEstimatedArrival(bus);
         const scheduleText = bus.from && bus.to && bus.date && bus.departureTime
             ? bus.routeDistanceKm > 0
                 ? routeUtils.formatRoute(bus.from, bus.to) +
@@ -1458,7 +1501,13 @@ function renderBuses() {
                     "\n" + formatDate(bus.date) + " at " + bus.departureTime +
                     " | " + bus.routeDistanceKm + " km" +
                     (bus.estimatedDurationMinutes
-                        ? " | About " + formatDuration(bus.estimatedDurationMinutes)
+                        ? " | About " + formatDuration(bus.estimatedDurationMinutes) +
+                            (estimatedArrival
+                                ? " | Est. arrival " +
+                                    (estimatedArrival.date === bus.date
+                                        ? estimatedArrival.time
+                                        : formatDate(estimatedArrival.date) + " at " + estimatedArrival.time)
+                                : "")
                         : "") +
                     " | " + formatFare(bus.fare) + " per passenger"
                 : routeUtils.formatRoute(bus.from, bus.to) + "\n" + formatDate(bus.date) +
@@ -1474,17 +1523,24 @@ function renderBuses() {
             const actions = makeElement("div", "record-actions");
             const editButton = makeElement("button", "button button-text", "Edit schedule");
             editButton.type = "button";
+            editButton.disabled = bus.isCancelled;
             editButton.addEventListener("click", function() {
                 editSchedule(bus);
             });
-            const visibilityButton = makeElement(
-                "button",
-                "button button-text",
-                bus.isActive ? "Hide schedule" : "Show schedule"
-            );
+            const visibilityButton = makeElement("button", "button button-text",
+                bus.isCancelled ? "Trip cancelled" : bus.isActive ? "Hide schedule" : "Show schedule");
             visibilityButton.type = "button";
-            visibilityButton.addEventListener("click", function() {
-                setScheduleActive(bus.id, !bus.isActive);
+            visibilityButton.disabled = bus.isCancelled;
+            if (!bus.isCancelled) {
+                visibilityButton.addEventListener("click", function() {
+                    setScheduleActive(bus.id, !bus.isActive);
+                });
+            }
+            const cancelButton = makeElement("button", "button button-danger", "Cancel trip");
+            cancelButton.type = "button";
+            cancelButton.disabled = bus.isCancelled || !isTripUpcoming(bus);
+            cancelButton.addEventListener("click", function() {
+                cancelSchedule(bus.id);
             });
             const removeButton = makeElement("button", "button button-danger", "Remove schedule");
             removeButton.type = "button";
@@ -1501,7 +1557,7 @@ function renderBuses() {
                         error.message || "Could not download the passenger manifest.";
                 }
             });
-            actions.append(editButton, visibilityButton, removeButton, manifestButton);
+            actions.append(editButton, visibilityButton, cancelButton, removeButton, manifestButton);
             card.appendChild(actions);
         }
         busList.appendChild(card);
@@ -1515,7 +1571,7 @@ document.getElementById("bookingStatusFilter").addEventListener("change", render
 
 async function setScheduleActive(busId, isActive) {
     const bus = buses.find(function(item) { return item.id === busId; });
-    if (!currentUser || !bus || bus.companyId !== currentUser.id) return;
+    if (!currentUser || !bus || bus.companyId !== currentUser.id || bus.isCancelled) return;
 
     try {
         await window.WaylineDatabase.setScheduleActive(busId, isActive);
@@ -1530,6 +1586,25 @@ async function setScheduleActive(busId, isActive) {
         ? "Schedule is visible to passengers again."
         : "Schedule hidden from passengers. Its records and bookings are kept.";
     if (document.getElementById("date").value) performSearch();
+}
+
+async function cancelSchedule(busId) {
+    const bus = buses.find(function(item) { return item.id === busId; });
+    if (!currentUser || !bus || bus.companyId !== currentUser.id || bus.isCancelled) return;
+    if (!window.confirm(
+        "Cancel " + bus.name + " on " + formatDate(bus.date) + "? All existing reservations will be cancelled and seats released. Passengers will not be notified automatically; contact them directly about the cancelled trip or refunds. This cannot be undone."
+    )) return;
+
+    try {
+        await window.WaylineDatabase.cancelSchedule(busId);
+        await refreshAppData();
+        document.getElementById("busMessage").textContent =
+            "Trip cancelled. Existing reservations were cancelled and seats released. Contact affected passengers directly.";
+        if (document.getElementById("date").value) performSearch();
+    } catch (error) {
+        document.getElementById("busMessage").textContent =
+            error.message || "Could not cancel this trip. Please try again.";
+    }
 }
 
 async function removeSchedule(busId) {

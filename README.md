@@ -9,13 +9,14 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Passengers provide a name and phone number at checkout; contact details are available to the relevant bus company.
 - Passengers search and book without creating an account.
 - Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
-- Bus companies have a dashboard to add, edit, hide, and remove schedules, manage seat capacity, review bookings, and upload a company logo. Edits preserve existing reservations and their original booking details; companies should contact affected passengers directly when changing trip details.
+- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload a company logo. Edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
 - Operators can list intermediate stops and estimated journey duration; online and USSD route labels share the same city-name formatting.
 - Operators must confirm they checked estimated city-center road distance against the actual bus route before saving a fare.
 - Company dashboards can filter schedules and bookings, group bookings by upcoming/completed/cancelled trip status, and download passenger manifests for their own schedules.
 - Passengers review company, bus, route, stops, date, departure, estimated duration, seats and total before saving, and can copy the booking reference.
+- Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
 - A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options; all page footers include legal links, a Made in Rwanda identity, and a current-year copyright.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
@@ -72,7 +73,7 @@ Operators can enter the one-way route distance themselves or calculate an estima
 - City of Kigali: RWF 59.28 per passenger per kilometre.
 - Intercity/provincial: RWF 41.58 per passenger per kilometre.
 
-The fare is rounded to the nearest RWF. Existing schedules without a recorded distance remain in the database but are not listed for passengers until a new schedule with a distance is added. Companies can edit schedule details while retaining existing reservations. Those reservations keep the original itinerary details, so companies should contact affected passengers directly after a change. Seat capacity cannot be reduced below the number of seats already reserved.
+The fare is rounded to the nearest RWF. Existing schedules without a recorded distance remain in the database but are not listed for passengers until a new schedule with a distance is added. Companies can edit schedule details while retaining each reservation's original itinerary details. Seat capacity cannot be reduced below the number of seats already reserved. Cancelling a trip cancels all of its active reservations and releases their seats; passenger notifications and any refunds must be handled directly by the company.
 
 Reference: [RURA applicable pump prices and public transport tariffs](https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf).
 

@@ -135,7 +135,7 @@
                     <div><dt>Route</dt><dd id="reviewRoute"></dd></div>
                     <div><dt>Intermediate stops</dt><dd id="reviewStops"></dd></div>
                     <div><dt>Departure</dt><dd id="reviewDeparture"></dd></div>
-                    <div><dt>Journey distance and estimated duration</dt><dd id="reviewDistance"></dd></div>
+                    <div><dt>Journey distance, duration and estimated arrival</dt><dd id="reviewDistance"></dd></div>
                     <div><dt>Passengers and seats left</dt><dd id="reviewSeats"></dd></div>
                     <div><dt>Total amount due</dt><dd id="reviewTotal"></dd></div>
                     <div><dt>Intended payment method</dt><dd id="reviewPaymentMethod"></dd></div>
@@ -248,11 +248,11 @@
                     <h3>Fare Details Before Booking</h3>
                 </article>
                 <article class="feature-card">
-                    <img class="feature-card-image" src="assets/wayline-feature-nationwide.jpg" alt="Earth at sunrise with Africa in view" width="900" height="506" loading="lazy" decoding="async">
+                    <img class="feature-card-image" src="assets/wayline-feature-rwanda-routes.png" alt="Rwanda travel collage featuring gorillas, Kigali, Lake Kivu, and the Kigali Convention Centre" width="1152" height="768" loading="lazy" decoding="async">
                     <h3>Explore Rwanda Routes</h3>
                 </article>
                 <article class="feature-card">
-                    <img class="feature-card-image" src="assets/wayline-feature-rwanda.jpg" alt="Kigali city and a mountain road in Rwanda" width="532" height="293" loading="lazy" decoding="async">
+                    <img class="feature-card-image" src="assets/wayline-feature-booking-reference.png" alt="Wayline booking confirmation showing a booking reference and journey details" width="1152" height="768" loading="lazy" decoding="async">
                     <h3>Booking Reference</h3>
                 </article>
             </div>
@@ -454,7 +454,7 @@
                         </div>
                         <span id="busCount" class="muted-label">0 schedules</span>
                     </div>
-                    <p class="section-note">Add or edit routes, departure times, and seat capacity. Fares are calculated from the route distance and selected RURA fare area. Seat changes preserve seats already reserved. Existing reservations remain attached when trip details change; contact affected passengers directly using the manifest.</p>
+                    <p class="section-note">Add or edit routes, departure times, and seat capacity. Fares are calculated from the route distance and selected RURA fare area. Seat changes preserve reserved seats. Trip cancellation cancels all existing reservations and releases their seats; contact passengers directly about the cancelled service or refunds.</p>
                 <form id="busForm" class="form-grid">
                     <div class="field">
                         <label for="company">Bus company</label>
@@ -541,6 +541,7 @@
                             <option value="all">All schedules</option>
                             <option value="upcoming">Upcoming</option>
                             <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
                             <option value="hidden">Hidden from passengers</option>
                             <option value="full">Full</option>
                         </select>
@@ -612,7 +613,7 @@
                                 </details>
                                 <details class="faq-item">
                                     <summary>How do I cancel a booking?</summary>
-                                    <p>Contact the bus company listed on your booking with its reference to request a cancellation. A reservation is not cancelled until the company confirms it. See our <a href="cancellation-policy.html">Cancellation Policy</a> for details.</p>
+                                    <p>Contact the bus company listed on your booking with its reference to request a cancellation. The company may also cancel a trip and its reservations. See our <a href="cancellation-policy.html">Cancellation Policy</a> for details.</p>
                                 </details>
                                 <details class="faq-item">
                                     <summary>Where can I find my booking reference?</summary>
@@ -661,10 +662,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=wayline-route-details-20261110"></script>
-    <script src="booking-status.js?v=wayline-booking-status-20261110"></script>
+    <script src="database.js?v=wayline-trip-cancellation-20261110"></script>
+    <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="route-utils.js?v=wayline-routes-20261110"></script>
-    <script src="script.js?v=wayline-search-name-20261110"></script>
+    <script src="script.js?v=wayline-arrival-cancellation-20261110"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

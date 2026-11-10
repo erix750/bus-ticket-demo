@@ -18,6 +18,39 @@
         return /^\+2507[0-9]{8}$/.test(phone) ? phone : "";
     }
 
+    function formatJourneyTiming(booking) {
+        const duration = Number(booking.estimatedDurationMinutes);
+        if (!Number.isInteger(duration) || duration < 1 || !booking.date || !booking.departureTime) {
+            return "\nArrival and duration not provided by operator";
+        }
+        const dateParts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(booking.date);
+        const timeParts = /^(\d{2}):(\d{2})$/.exec(booking.departureTime);
+        if (!dateParts || !timeParts) return "\nArrival and duration not provided by operator";
+
+        const arrival = new Date(Date.UTC(
+            Number(dateParts[1]),
+            Number(dateParts[2]) - 1,
+            Number(dateParts[3]),
+            Number(timeParts[1]),
+            Number(timeParts[2]) + duration
+        ));
+        return "\nAbout " + formatDuration(duration) + " | Estimated arrival " +
+            (arrival.toISOString().slice(0, 10) === booking.date
+                ? arrival.toISOString().slice(11, 16)
+                : formatDate(arrival.toISOString().slice(0, 10)) + " at " +
+                    arrival.toISOString().slice(11, 16));
+    }
+
+    function formatDuration(minutes) {
+        const duration = Number(minutes);
+        if (!Number.isInteger(duration) || duration < 1) return "Duration not provided";
+        const hours = Math.floor(duration / 60);
+        const remainingMinutes = duration % 60;
+        if (!hours) return remainingMinutes + " min";
+        return hours + " hr" + (hours === 1 ? "" : "s") +
+            (remainingMinutes ? " " + remainingMinutes + " min" : "");
+    }
+
     function makeElement(tagName, className, text) {
         const element = document.createElement(tagName);
         if (className) element.className = className;
@@ -72,8 +105,12 @@
                 "Passenger: " + (booking.name || "Name not recorded") +
                     "\nCompany: " + (booking.company || "Company not recorded") +
                     (booking.busName ? " | " + booking.busName : "") +
-                    "\n" + formatDate(booking.date) +
+                    "\nDeparture: " + formatDate(booking.date) +
                     (booking.departureTime ? " at " + booking.departureTime : "") +
+                    formatJourneyTiming(booking) +
+                    (window.WaylineRouteUtils.parseStops(booking.intermediateStops).length
+                        ? "\nVia " + window.WaylineRouteUtils.parseStops(booking.intermediateStops).join(" · ")
+                        : "") +
                     " | " + booking.seats + (booking.seats === 1 ? " passenger" : " passengers") +
                     "\nTotal amount due: " + formatFare(booking.totalFare) +
                     "\nIntended payment method: " + (booking.paymentMethod || "Not selected") +

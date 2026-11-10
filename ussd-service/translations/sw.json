@@ -3,6 +3,7 @@
   "originPrompt": "Chagua mji wa kuanzia:",
   "destinationPrompt": "Chagua unakoenda:",
   "datePrompt": "Tarehe ya safari:\n1. Leo\n2. Kesho",
+  "companyPrompt": "Chagua kampuni ya basi:",
   "tripPrompt": "Chagua basi:",
   "seatsPrompt": "Idadi ya viti:",
   "namePrompt": "Weka jina kamili la abiria:",

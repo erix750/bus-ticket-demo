@@ -45,15 +45,24 @@ function createTestController() {
         date: "2026-11-09",
         departureTime: "14:00",
         name: "Wayline Coach",
+        company: "Wayline",
         fare: 5000,
         availableSeats: 10,
         routeDistanceKm: 120
     };
+    const otherCompanyTrip = Object.assign({}, trip, {
+        id: "bus-2",
+        name: "Kigali Express Coach",
+        company: "Kigali Express"
+    });
+    const trips = [trip, otherCompanyTrip];
     let bookingCount = 0;
+    let bookedTripId = "";
     const controller = createUssdController({
         bookingService: {
-            create: async function() {
+            create: async function(input) {
                 bookingCount += 1;
+                bookedTripId = input.trip.id;
                 return { id: "0123456789ab-cdef-0123-4567-89abcdef01" };
             }
         },
@@ -66,18 +75,24 @@ function createTestController() {
         seatService: createSeatService(),
         sessionService: createMemorySessions(),
         tripService: {
-            listUpcoming: async function() { return [trip]; },
-            listForRoute: async function(from, to, date) {
-                return from === trip.from && to === trip.to && date === trip.date ? [trip] : [];
+            listUpcoming: async function() { return trips; },
+            listForRoute: async function(from, to, date, company) {
+                return trips.filter(function(item) {
+                    return from === item.from && to === item.to && date === item.date &&
+                        (!company || company === item.company);
+                });
             },
-            getAvailableById: async function(id) { return id === trip.id ? trip : null; },
+            getAvailableById: async function(id) {
+                return trips.find(function(item) { return id === item.id; }) || null;
+            },
             travelDates: function() { return { today: trip.date, tomorrow: "2026-11-10" }; }
         }
     });
 
     return {
         controller: controller,
-        bookingCount: function() { return bookingCount; }
+        bookingCount: function() { return bookingCount; },
+        bookedTripId: function() { return bookedTripId; }
     };
 }
 
@@ -108,7 +123,13 @@ test("USSD booking completes in English and repeated final callbacks do not dupl
     assert.match(await send("1"), /^CON Choose departure city/);
     assert.match(await send("1"), /^CON Choose destination/);
     assert.match(await send("1"), /^CON Travel date/);
-    assert.match(await send("1"), /^CON Choose bus/);
+    const companies = await send("1");
+    assert.match(companies, /^CON Choose bus company:/);
+    assert.match(companies, /1\. Kigali Express/);
+    assert.match(companies, /2\. Wayline/);
+    const tripChoices = await send("1");
+    assert.match(tripChoices, /^CON Choose bus:/);
+    assert.match(tripChoices, /Kigali E/);
     assert.match(await send("1"), /^CON Number of seats/);
     assert.match(await send("1"), /^CON Enter passenger full name/);
     assert.match(await send("Jane Doe"), /^CON Choose intended payment method/);
@@ -116,6 +137,7 @@ test("USSD booking completes in English and repeated final callbacks do not dupl
     const result = await send("1");
     assert.match(result, /^END Booking confirmed\. Ref: 0123456789AB\. NOT PAID/);
     assert.equal(app.bookingCount(), 1);
+    assert.equal(app.bookedTripId(), "bus-2");
     assert.equal(await invoke(app.controller, Object.assign({}, base, { text: text })), result);
     assert.equal(app.bookingCount(), 1);
 });

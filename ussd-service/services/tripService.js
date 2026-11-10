@@ -56,11 +56,12 @@ function createTripService(supabase) {
         });
     }
 
-    async function listForRoute(origin, destination, date) {
+    async function listForRoute(origin, destination, date, company) {
         return (await listUpcoming()).filter(function(trip) {
             return trip.from.toLocaleLowerCase() === origin.toLocaleLowerCase() &&
                 trip.to.toLocaleLowerCase() === destination.toLocaleLowerCase() &&
-                trip.date === date;
+                trip.date === date &&
+                (!company || trip.company.toLocaleLowerCase() === company.toLocaleLowerCase());
         });
     }
 

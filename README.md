@@ -12,7 +12,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Bus companies have a dashboard to add, edit, hide, and remove schedules, manage seat capacity, review bookings, and upload a company logo.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
-- A Help Center explains booking, unpaid payment status, cancellations, and contact options.
+- A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
@@ -43,7 +43,7 @@ Passenger records are not listed publicly. The separate [`booking.html`](./booki
 
 ## Africa's Talking USSD service
 
-The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; searches future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
+The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; lets passengers choose their departure, destination, travel date, and bus company; searches matching future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
 
 1. Apply the current [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates private USSD session storage and the service-role-only `ussd_book_bus` function.
 2. Deploy `ussd-service/` on a Node.js 20+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.

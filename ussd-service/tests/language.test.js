@@ -10,6 +10,7 @@ test("all supported language choices resolve and have complete menu translations
     assert.equal(service.fromChoice("5"), "");
     for (const language of service.codes) {
         assert.notEqual(service.text(language, "mainMenu"), "mainMenu");
+        assert.notEqual(service.text(language, "companyPrompt"), "companyPrompt");
         assert.notEqual(service.text(language, "booked", { reference: "ABCD" }), "booked");
     }
 });

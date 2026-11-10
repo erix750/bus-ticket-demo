@@ -3,6 +3,7 @@
   "originPrompt": "Choisissez la ville de départ :",
   "destinationPrompt": "Choisissez la destination :",
   "datePrompt": "Date du voyage :\n1. Aujourd'hui\n2. Demain",
+  "companyPrompt": "Choisissez la compagnie de bus :",
   "tripPrompt": "Choisissez le bus :",
   "seatsPrompt": "Nombre de places :",
   "namePrompt": "Entrez le nom complet du passager :",

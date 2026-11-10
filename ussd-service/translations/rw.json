@@ -3,6 +3,7 @@
   "originPrompt": "Hitamo umujyi uhagurukirwamo:",
   "destinationPrompt": "Hitamo aho ujya:",
   "datePrompt": "Itariki y'urugendo:\n1. Uyu munsi\n2. Ejo",
+  "companyPrompt": "Hitamo kompanyi y'imodoka:",
   "tripPrompt": "Hitamo imodoka:",
   "seatsPrompt": "Umubare w'imyanya:",
   "namePrompt": "Andika amazina y'umugenzi:",

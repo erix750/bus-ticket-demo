@@ -1,0 +1,35 @@
+name: USSD service
+
+on:
+  push:
+    paths:
+      - "ussd-service/**"
+      - "**/*.js"
+      - ".github/workflows/ussd-service.yml"
+  pull_request:
+    paths:
+      - "ussd-service/**"
+      - "**/*.js"
+      - ".github/workflows/ussd-service.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ussd-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ussd-service/package-lock.json
+      - run: npm ci
+      - name: Check JavaScript syntax
+        run: |
+          for file in ../*.js ./*.js ./config/*.js ./controllers/*.js ./middleware/*.js ./routes/*.js ./services/*.js ./public/*.js; do
+            node --check "$file"
+          done
+      - run: npm test

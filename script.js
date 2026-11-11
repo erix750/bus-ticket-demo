@@ -147,6 +147,15 @@ function setPartnerPreview(active) {
     if (active && partnerLoginScreen.open) partnerLoginScreen.close();
 }
 
+function setCompanyProfilePicture(logo) {
+    const image = document.getElementById("companyProfilePicture");
+    const placeholder = document.getElementById("companyProfilePicturePlaceholder");
+    image.hidden = !logo;
+    placeholder.hidden = Boolean(logo);
+    if (logo) image.src = logo;
+    else image.removeAttribute("src");
+}
+
 function setPartnerFormMode(signUp) {
     isPartnerSignUp = signUp;
     companyNameField.hidden = !signUp;
@@ -365,6 +374,7 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
+        setCompanyProfilePicture(profile.logo_data);
         await refreshAppData();
         setPartnerPreview(true);
         managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -383,6 +393,52 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
     }
 });
 
+document.getElementById("companyProfileForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const input = document.getElementById("companyProfilePictureFile");
+    const file = input.files[0];
+    const message = document.getElementById("companyProfileMessage");
+    const submitButton = document.getElementById("saveCompanyProfilePicture");
+    message.textContent = "";
+
+    if (!currentUser) {
+        message.textContent = "Sign in with your company account before updating your profile picture.";
+        return;
+    }
+    if (!file) {
+        message.textContent = "Choose a picture to upload.";
+        input.focus();
+        return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+        message.textContent = "Choose a PNG, JPG, or WebP image.";
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        message.textContent = "The company picture must be 10 MB or smaller.";
+        return;
+    }
+
+    submitButton.disabled = true;
+    try {
+        const logo = await resizeCompanyLogo(file);
+        await window.WaylineDatabase.updateCompanyProfilePicture(logo);
+        setCompanyProfilePicture(logo);
+        input.value = "";
+        message.textContent = "Profile picture saved.";
+        try {
+            await refreshAppData();
+        } catch (error) {
+            console.error("Profile picture was saved, but bus listings could not refresh.", error);
+            message.textContent = "Profile picture saved, but bus listings could not refresh. Reload the page to see it everywhere.";
+        }
+    } catch (error) {
+        message.textContent = error.message || "Could not save the profile picture. Please try again.";
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
 document.getElementById("togglePartnerMode").addEventListener("click", function() {
     setPartnerFormMode(!isPartnerSignUp);
 });
@@ -393,6 +449,7 @@ document.getElementById("partnerLogout").addEventListener("click", async functio
     try {
         if (currentUser) await window.WaylineDatabase.signOut();
         currentUser = null;
+        setCompanyProfilePicture("");
         await refreshAppData();
         setPartnerPreview(false);
     } catch (error) {
@@ -414,8 +471,10 @@ async function initializeApp() {
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
+        setCompanyProfilePicture(profile.logo_data);
         setPartnerPreview(true);
     } else {
+        setCompanyProfilePicture("");
         setPartnerPreview(false);
     }
     await refreshAppData();
@@ -715,7 +774,7 @@ function resizeCompanyLogo(file) {
             const image = new Image();
             image.onerror = function() { reject(new Error("The selected file is not a valid image.")); };
             image.onload = function() {
-                const maxDimension = 256;
+                const maxDimension = 512;
                 const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
                 const canvas = document.createElement("canvas");
                 canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -1723,8 +1782,8 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "Choose a PNG, JPG, or WebP image for the company logo.";
         return;
     }
-    if (logoFile && logoFile.size > 2 * 1024 * 1024) {
-        busMessage.textContent = "The company image must be 2 MB or smaller.";
+    if (logoFile && logoFile.size > 10 * 1024 * 1024) {
+        busMessage.textContent = "The company image must be 10 MB or smaller.";
         return;
     }
 
@@ -1759,6 +1818,7 @@ busForm.addEventListener("submit", async function(event) {
             buses.unshift(savedBus);
         }
         partnerCompanyName.value = company;
+        if (logo) setCompanyProfilePicture(logo);
         document.getElementById("dashboardCompanyName").textContent = company;
         document.getElementById("dashboardWelcome").textContent = "Welcome back, " + company;
         await refreshAppData();

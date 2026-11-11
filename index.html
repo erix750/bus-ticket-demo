@@ -494,6 +494,30 @@
                         </div>
                     </div>
                 </section>
+                <section class="dashboard-panel company-profile-panel" aria-labelledby="companyProfileTitle">
+                    <div class="dashboard-section-heading">
+                        <div>
+                            <p class="eyebrow">COMPANY PROFILE</p>
+                            <h3 id="companyProfileTitle">Edit profile picture</h3>
+                        </div>
+                    </div>
+                    <p class="section-note">Choose the picture passengers will see with your company name and bus trips.</p>
+                    <form id="companyProfileForm" class="company-profile-form">
+                        <div class="company-profile-preview">
+                            <img id="companyProfilePicture" alt="Current company profile picture" hidden>
+                            <span id="companyProfilePicturePlaceholder">No picture yet</span>
+                        </div>
+                        <div class="field company-profile-upload">
+                            <label for="companyProfilePictureFile">Choose a company picture</label>
+                            <input type="file" id="companyProfilePictureFile" name="companyProfilePictureFile" accept="image/png,image/jpeg,image/webp">
+                            <p class="field-hint">PNG, JPG, or WebP, up to 10 MB. The image is resized for display.</p>
+                        </div>
+                        <div class="company-profile-actions">
+                            <button class="button button-primary" id="saveCompanyProfilePicture" type="submit">Save profile picture</button>
+                            <p id="companyProfileMessage" class="form-message" role="status" aria-live="polite"></p>
+                        </div>
+                    </form>
+                </section>
                 <section class="dashboard-panel" id="dashboardSchedules" aria-labelledby="dashboardSchedulesTitle">
                     <div class="dashboard-section-heading">
                         <div>
@@ -511,7 +535,7 @@
                     <div class="field field-wide">
                         <label for="companyLogo">Company logo or picture (optional)</label>
                         <input type="file" id="companyLogo" name="companyLogo" accept="image/png,image/jpeg,image/webp">
-                        <p class="field-hint">PNG, JPG, or WebP. Images are resized for display.</p>
+                        <p class="field-hint">PNG, JPG, or WebP, up to 10 MB. Images are resized for display.</p>
                     </div>
                     <div class="field">
                         <label for="busName">Bus name or number</label>

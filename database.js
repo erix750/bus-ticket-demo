@@ -121,6 +121,21 @@
         return throwIfError(result);
     }
 
+    async function updateCompanyProfilePicture(logo) {
+        const userResult = await supabase.auth.getUser();
+        if (userResult.error) throw new Error(userResult.error.message);
+        const user = userResult.data.user;
+        if (!user) throw new Error("Sign in with a company account before updating your profile picture.");
+
+        const result = await supabase
+            .from("companies")
+            .update({ logo_data: logo })
+            .eq("id", user.id)
+            .select("id")
+            .single();
+        throwIfError(result);
+    }
+
     async function createSchedule(bus, logo) {
         const userResult = await supabase.auth.getUser();
         if (userResult.error) throw new Error(userResult.error.message);
@@ -308,6 +323,7 @@
         subscribeToBusChanges: subscribeToBusChanges,
         loadBookings: loadBookings,
         getCompanyProfile: getCompanyProfile,
+        updateCompanyProfilePicture: updateCompanyProfilePicture,
         createSchedule: createSchedule,
         updateSchedule: updateSchedule,
         setScheduleActive: setScheduleActive,

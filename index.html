@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-footer-navigation-20261115">
+    <link rel="stylesheet" href="style.css?v=wayline-company-verification-20261116">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -455,6 +455,77 @@
         </section>
 
         <section class="page-view company-page" id="companyPage" data-page-view="company" aria-label="Bus company portal" hidden>
+        <section class="company-application-panel" id="companyApplicationPanel" hidden aria-labelledby="companyApplicationTitle">
+            <header class="application-portal-header">
+                <div>
+                    <p class="eyebrow">WAYLINE PARTNERS</p>
+                    <h2 id="companyApplicationTitle">Company verification</h2>
+                </div>
+                <button class="header-button" id="applicationLogout" type="button">Sign out</button>
+            </header>
+            <div class="application-status-card">
+                <p class="eyebrow">APPLICATION STATUS</p>
+                <h3 id="companyApplicationStatus">Not submitted</h3>
+                <p id="companyApplicationMessage" role="status" aria-live="polite"></p>
+                <p id="companyApplicationReviewNotes" class="application-review-notes" hidden></p>
+            </div>
+            <form id="companyApplicationForm" class="application-form" enctype="multipart/form-data">
+                <div>
+                    <p class="eyebrow">COMPANY APPLICATION</p>
+                    <h3>Register your transport company</h3>
+                    <p class="section-note">Applications are reviewed by Wayline before company schedules or bookings can be managed. Your documents are stored privately and are visible only to your company and authorized reviewers.</p>
+                </div>
+                <div class="application-fields">
+                    <div class="field">
+                        <label for="applicationCompanyName">Official company name</label>
+                        <input id="applicationCompanyName" name="companyName" type="text" autocomplete="organization" minlength="2" maxlength="80" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationRepresentativeName">Representative's full name</label>
+                        <input id="applicationRepresentativeName" name="representativeName" type="text" autocomplete="name" minlength="2" maxlength="100" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationOfficialEmail">Official company email</label>
+                        <input id="applicationOfficialEmail" name="officialEmail" type="email" autocomplete="email" maxlength="254" readonly required>
+                        <small class="field-hint">Use the confirmed company sign-in email. To change it, update your verified Supabase account email first.</small>
+                    </div>
+                    <div class="field">
+                        <label for="applicationContactPhone">Contact telephone number</label>
+                        <input id="applicationContactPhone" name="contactPhone" type="tel" autocomplete="tel" minlength="7" maxlength="24" required>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationCompanyAddress">Company address</label>
+                        <textarea id="applicationCompanyAddress" name="companyAddress" autocomplete="street-address" minlength="3" maxlength="240" rows="2" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="applicationCompanyLocation">City / location</label>
+                        <input id="applicationCompanyLocation" name="companyLocation" type="text" autocomplete="address-level2" minlength="2" maxlength="120" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationBusinessRegistration">Business registration information</label>
+                        <input id="applicationBusinessRegistration" name="businessRegistration" type="text" maxlength="160" required>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationBusinessDocument">Business registration document</label>
+                        <input id="applicationBusinessDocument" name="businessDocument" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+                        <small class="field-hint">PDF, JPG, PNG, or WebP; maximum 10 MB. Do not upload unrelated personal documents.</small>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationTransportLicense">Transport operating licence / authorization</label>
+                        <input id="applicationTransportLicense" name="transportLicense" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+                        <label class="application-license-not-applicable" for="applicationLicenseNotApplicable">
+                            <input id="applicationLicenseNotApplicable" name="licenseNotApplicable" type="checkbox">
+                            <span>A separate transport licence is not applicable to my company.</span>
+                        </label>
+                    </div>
+                    <div class="field field-wide application-submit-row">
+                        <button class="button button-primary" id="submitCompanyApplication" type="submit">Submit for verification</button>
+                        <p id="companyApplicationFormMessage" class="form-message" role="status" aria-live="polite"></p>
+                    </div>
+                </div>
+            </form>
+            <p class="field-hint">Need help? <a href="mailto:muvunyieric25@gmail.com">Contact Wayline support</a>.</p>
+        </section>
         <section class="company-dashboard" id="managementPanel" hidden aria-label="Company dashboard">
             <aside class="dashboard-sidebar">
                 <a class="dashboard-brand" href="#dashboardOverview">
@@ -514,6 +585,30 @@
                             <a href="#dashboardBookings">View bookings</a>
                         </div>
                     </div>
+                </section>
+                <section class="dashboard-panel company-profile-panel" aria-labelledby="companyProfileTitle">
+                    <div class="dashboard-section-heading">
+                        <div>
+                            <p class="eyebrow">COMPANY PROFILE</p>
+                            <h3 id="companyProfileTitle">Edit profile picture</h3>
+                        </div>
+                    </div>
+                    <p class="section-note">Choose the picture passengers will see with your company name and bus trips.</p>
+                    <form id="companyProfileForm" class="company-profile-form">
+                        <div class="company-profile-preview">
+                            <img id="companyProfilePicture" alt="Current company profile picture" hidden>
+                            <span id="companyProfilePicturePlaceholder">No picture yet</span>
+                        </div>
+                        <div class="field company-profile-upload">
+                            <label for="companyProfilePictureFile">Choose a company picture</label>
+                            <input type="file" id="companyProfilePictureFile" name="companyProfilePictureFile" accept="image/png,image/jpeg,image/webp">
+                            <p class="field-hint">PNG, JPG, or WebP, up to 10 MB. The image is resized for display.</p>
+                        </div>
+                        <div class="company-profile-actions">
+                            <button class="button button-primary" id="saveCompanyProfilePicture" type="submit">Save profile picture</button>
+                            <p id="companyProfileMessage" class="form-message" role="status" aria-live="polite"></p>
+                        </div>
+                    </form>
                 </section>
                 <section class="dashboard-panel" id="dashboardSchedules" aria-labelledby="dashboardSchedulesTitle">
                     <div class="dashboard-section-heading">
@@ -661,7 +756,7 @@
         </nav>
     </footer>
 
-    <footer class="site-footer" id="siteFooter" hidden>
+    <footer class="site-footer" id="siteFooter">
         <div class="footer-inner">
             <a class="footer-brand" href="#home" data-page-link="home" aria-label="Wayline home">
                 <strong>WAYLINE</strong>
@@ -741,10 +836,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=wayline-trip-cancellation-20261110"></script>
+    <script src="database.js?v=wayline-company-verification-20261116"></script>
     <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=wayline-footer-navigation-20261115"></script>
+    <script src="script.js?v=wayline-company-verification-20261116"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

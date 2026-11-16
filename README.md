@@ -9,7 +9,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Passengers provide a name and phone number at checkout; contact details are available to the relevant bus company.
 - Passengers search and book without creating an account.
 - Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
-- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload a company logo. Edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
+- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload or independently update a company profile picture (PNG, JPG, or WebP up to 10 MB). Images are resized for display. Schedule edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
 - Operators can list intermediate stops and estimated journey duration; online and USSD route labels share the same city-name formatting.
@@ -18,6 +18,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Passengers review company, bus, route, stops, date, departure, estimated duration, seats and total before saving, and can copy the booking reference.
 - Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
 - A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options; all page footers include legal links, a Made in Rwanda identity, and a current-year copyright.
+- The landing page and booking lookup footer provide English, Kinyarwanda, and French for shared navigation and the main booking interface. Legal policy documents remain in English.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
@@ -30,21 +31,36 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Full buses and trips whose departure time has passed are automatically excluded from public search while company schedules and booking records are retained.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
 - The website can be installed from a supported mobile browser on Android and iPhone.
-- Persistent footer navigation switches between Home, passenger booking, About, and Contact views without requiring visitors to scroll between sections. The header keeps the Wayline logo, and the Home hero has one booking button.
-- Passengers can search and book without an account; company sign-in and registration remain in the separate Company Sign In portal available from the footer navigation.
+- Persistent footer navigation switches between Home, passenger booking, About, and Contact views. The header keeps the Wayline logo and the Home hero has one booking button.
+- Passengers search and book without an account; company sign-in and registration remain in the separate Company Sign In portal in the footer.
+- New company accounts must submit company details and private supporting documents, then wait for administrator verification. Only approved companies can manage schedules or view their bookings.
+- The protected [`admin.html`](./admin.html) portal lets provisioned Wayline administrators review applications, approve or reject companies, request changes, suspend or reactivate access, and inspect recent company activity.
+- Company application documents use a private Supabase Storage bucket. RLS and database-side approval checks restrict applications, schedules, company profiles, bookings, activity records, and document access.
 
 ## Supabase setup
 
 1. Create a Supabase project.
 2. Open the SQL Editor and run [`supabase/schema.sql`](./supabase/schema.sql).
-3. In `config.js`, configure the Supabase project URL, browser-safe publishable (anon) key, and public `siteUrl`. Never put a service-role key in client-side code.
-4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to `https://erix750.github.io/bus-ticket-demo/` (the project URL, not `https://erix750.github.io/`) and add that exact URL to the Redirect URLs allowlist. Company email-confirmation and password-reset links return to `siteUrl` in `config.js`. If the link expires or is already used, request a new email and open the newest link once.
-5. In Supabase Auth settings, require email confirmations. Create a company account in the app and confirm the email before signing in and publishing schedules. If the address is mistyped or the user cannot access that inbox, they cannot complete confirmation or activate the account.
-6. Re-run the current `supabase/schema.sql` when updating an existing project. It adds route stop and estimated duration fields, normalizes Rwanda phone numbers, adds the verified passenger booking lookup RPC, limits booking access to phone-verified passengers or the relevant company dashboard, automatically hides full/departed trips from public search, and includes the schedule-edit safeguards.
-7. In Supabase Auth, enable phone sign-in and configure Twilio as the SMS provider. Keep the Twilio Account SID, Auth Token, and Messaging Service SID only in Supabase's private Auth provider settings. Test code delivery to both MTN and Airtel numbers before launch; SMS delivery and sender requirements depend on the provider and destination network.
-8. Configure Supabase Auth rate limits and CAPTCHA protection for SMS OTP requests before public use. No SMS or payment credentials belong in this repository or browser code.
+3. Then run [`supabase/migrations/20261116000000_company_approval.sql`](./supabase/migrations/20261116000000_company_approval.sql). This migration treats company profiles already present as approved for continuity; new company accounts start pending. It creates the application workflow, private document bucket, admin controls, activity log, and approval-aware RLS/backend checks. Do not reapply the base schema after this migration without reapplying the approval migration.
+4. In `config.js`, configure the Supabase project URL, browser-safe publishable (anon) key, and public `siteUrl`. Never put a service-role key in client-side code.
+5. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to `https://erix750.github.io/bus-ticket-demo/` (the project URL, not `https://erix750.github.io/`) and add that exact URL to the Redirect URLs allowlist. Company email-confirmation and password-reset links return to `siteUrl` in `config.js`. If the link expires or is already used, request a new email and open the newest link once.
+6. Require email confirmation in Supabase Auth. A company representative creates a company login, confirms its email, signs in, completes the company application, and uploads its business registration and applicable transport licence. The application remains pending or under review until a Wayline administrator approves it. Rejected applicants can correct information and resubmit; suspended companies cannot manage schedules.
+7. Provision administrators only through a controlled Supabase project-owner process. Create and confirm the administrator's Auth account through the Supabase Dashboard (not a public registration page), then insert that account into `wayline_admins` from the SQL Editor:
 
-Company sign-up is open; schedules can be published as soon as the account is ready. Existing browser-only demo records are not automatically migrated to Supabase.
+   ```sql
+   INSERT INTO public.wayline_admins (user_id)
+   SELECT id
+   FROM auth.users
+   WHERE lower(email) = lower('admin@example.com')
+     AND email_confirmed_at IS NOT NULL;
+   ```
+
+   Replace the example address with the intended administrator account. Verify that exactly one row was inserted. The account can then sign in at `admin.html`; dashboard data and actions are checked again by Supabase policies and RPCs.
+8. Re-run the current `supabase/schema.sql` only before the approval migration when updating an existing project. It adds route stop and estimated duration fields, normalizes Rwanda phone numbers, adds the verified passenger booking lookup RPC, limits booking access to phone-verified passengers or the relevant company dashboard, automatically hides full/departed trips from public search, and includes the schedule-edit safeguards.
+9. In Supabase Auth, enable phone sign-in and configure Twilio as the SMS provider. Keep the Twilio Account SID, Auth Token, and Messaging Service SID only in Supabase's private Auth provider settings. Test code delivery to both MTN and Airtel numbers before launch; SMS delivery and sender requirements depend on the provider and destination network.
+10. Configure Supabase Auth rate limits and CAPTCHA protection for SMS OTP requests before public use, and enable multi-factor authentication for administrator accounts. Review Supabase Auth logs for authentication events. No SMS, payment, or service-role credentials belong in this repository or browser code.
+
+Company login creation is open, but company-management access is not granted until an administrator approves the application. Existing company profiles in the database are grandfathered as approved by the migration; review those records before applying it if they have not already been legitimately verified. Existing browser-only demo records are not automatically migrated to Supabase.
 
 Passenger records are not listed publicly. The separate [`booking.html`](./booking.html) page requires a booking reference and SMS verification of the phone number used at booking before showing a record on another device. Passenger phone sign-in is passwordless and does not provide a separate passenger profile.
 
@@ -52,8 +68,8 @@ Passenger records are not listed publicly. The separate [`booking.html`](./booki
 
 The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; lets passengers choose their departure, destination, travel date, and bus company; searches matching future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
 
-1. Apply the current [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates private USSD session storage and the service-role-only `ussd_book_bus` function.
-2. Deploy `ussd-service/` on a Node.js 20+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
+1. Apply [`supabase/schema.sql`](./supabase/schema.sql) and then [`supabase/migrations/20261116000000_company_approval.sql`](./supabase/migrations/20261116000000_company_approval.sql) in the Supabase SQL Editor. The base schema creates private USSD session storage and the service-role-only `ussd_book_bus` function; the approval migration prevents reservations on schedules owned by unapproved or suspended companies.
+2. Deploy `ussd-service/` on a Node.js 22+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
 3. Copy `.env.example` to `.env`. Set the Supabase project URL, **service-role key**, and a URL-safe random callback token of at least 32 characters (for example, generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`). `USSD_SERVICE_CODE` defaults to `*200#` and must match the code assigned by Africa's Talking. Keep `.env` and all server credentials private; never add them to the website's `config.js`.
 4. Start the server with `npm start`; check `GET /health`. Run the test suite with `npm test`.
 5. After Africa's Talking provisions `*200#` for your account, configure that service code in its dashboard and point the USSD application's POST callback to `https://<your-host>/ussd?token=<USSD_CALLBACK_TOKEN>`. The service rejects callback requests for any other code. Use the sandbox before a live short code. Ensure host and proxy access logs redact the callback query token.
@@ -87,3 +103,4 @@ Reference: [RURA applicable pump prices and public transport tariffs](https://ww
 - Cross-device booking retrieval requires phone Auth and an SMS provider to be configured in Supabase; it is unavailable until OTP delivery is set up and tested.
 - Keep payment-provider secret keys off the public website; live payment processing requires a secure server-side integration.
 - Use a real payment-provider integration and complete operational, security, and partner checks before accepting real bookings.
+- Apply and verify the company-approval migration, configure email verification and Auth protections, and provision at least one trusted administrator before accepting company applications. Supabase Auth logs provide authentication-event monitoring; the application activity log records company applications, status reviews, profile changes, and schedule changes.

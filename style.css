@@ -1967,6 +1967,46 @@ summary:focus-visible {
     margin: 0 0 16px;
 }
 
+.company-profile-form {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+}
+
+.company-profile-preview {
+    display: grid;
+    width: 76px;
+    height: 76px;
+    overflow: hidden;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--muted);
+    background: #f5f8fc;
+    font-size: 10px;
+    text-align: center;
+}
+
+.company-profile-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.company-profile-upload input {
+    min-height: 0;
+    padding: 8px;
+}
+
+.company-profile-actions {
+    grid-column: 2;
+}
+
+.company-profile-actions .form-message {
+    margin: 8px 0 0;
+}
+
 .dashboard-panel .inventory-heading {
     margin-top: 20px;
 }
@@ -2460,7 +2500,290 @@ summary:focus-visible {
     .brand-reveal {
         transition-duration: 0.01ms;
     }
+}
 
+.company-application-panel,
+    .admin-login-card,
+    .admin-dashboard {
+        width: min(1120px, calc(100% - 36px));
+        margin: 32px auto;
+        padding: clamp(20px, 4vw, 42px);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: var(--white);
+        box-shadow: 0 18px 48px rgba(24, 45, 70, 0.1);
+    }
+
+    .company-application-panel {
+        max-width: 860px;
+    }
+
+    .application-portal-header,
+    .admin-dashboard-header,
+    .admin-section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .application-portal-header h2,
+    .admin-dashboard-header h1,
+    .admin-login-card h1 {
+        margin: 0;
+        color: var(--forest);
+    }
+
+    .application-status-card {
+        margin: 26px 0;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--forest);
+        border-radius: 12px;
+        background: var(--paper);
+    }
+
+    .application-status-card h3 {
+        margin: 4px 0 8px;
+        text-transform: capitalize;
+    }
+
+    .application-status-card p:last-child {
+        margin-bottom: 0;
+    }
+
+    .application-review-notes,
+    .admin-review-note {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(214, 111, 77, 0.1);
+    }
+
+    .application-form {
+        display: grid;
+        gap: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+    }
+
+    .application-form h3 {
+        margin: 4px 0;
+    }
+
+    .application-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .application-fields .field textarea,
+    .admin-review-input {
+        display: block;
+        width: 100%;
+        min-height: 80px;
+        padding: 12px 14px;
+        border: 1px solid #d2deeb;
+        border-radius: 12px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        resize: vertical;
+    }
+
+    .application-license-not-applicable {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px !important;
+        font-weight: 400 !important;
+    }
+
+    .application-license-not-applicable input {
+        width: 18px;
+        min-height: 18px;
+        accent-color: var(--forest);
+    }
+
+    .application-submit-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .application-submit-row .form-message {
+        flex: 1 1 240px;
+        margin: 0;
+    }
+
+    .admin-page {
+        min-height: 100vh;
+        background: var(--paper);
+    }
+
+    .admin-login-card {
+        max-width: 480px;
+        margin-top: 8vh;
+    }
+
+    .admin-login-card > p:not(.eyebrow) {
+        color: var(--muted);
+        line-height: 1.6;
+    }
+
+    .admin-login-card .login-form {
+        display: grid;
+        grid-column: auto;
+        grid-row: auto;
+        margin-top: 22px;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+    }
+
+    .admin-dashboard {
+        max-width: 1200px;
+    }
+
+    .admin-dashboard-header {
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .admin-dashboard-header p:not(.eyebrow) {
+        color: var(--muted);
+    }
+
+    .admin-section-heading {
+        align-items: center;
+        margin: 28px 0 16px;
+    }
+
+    .admin-section-heading h2 {
+        margin: 0;
+    }
+
+    .admin-application-list,
+    .admin-activity-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .admin-application-card,
+    .admin-activity-row {
+        min-width: 0;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--white);
+    }
+
+    .admin-application-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .admin-application-heading h3 {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-application-details {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 18px;
+        margin: 18px 0;
+    }
+
+    .admin-application-details div {
+        min-width: 0;
+    }
+
+    .admin-application-details dt {
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .admin-application-details dd {
+        margin: 3px 0 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-document-actions,
+    .admin-review-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 16px 0;
+    }
+
+    .admin-review-input {
+        margin-top: 12px;
+    }
+
+    .admin-activity-section {
+        margin-top: 42px;
+    }
+
+    .admin-activity-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 4px 16px;
+    }
+
+    .admin-activity-row p,
+    .admin-activity-row code {
+        grid-column: 1 / -1;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-activity-row time {
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    html[data-theme="dark"] .company-application-panel,
+    html[data-theme="dark"] .admin-login-card,
+    html[data-theme="dark"] .admin-dashboard,
+    html[data-theme="dark"] .admin-application-card,
+    html[data-theme="dark"] .admin-activity-row {
+        border-color: var(--line);
+        background: var(--white);
+    }
+
+    html[data-theme="dark"] .application-fields .field textarea,
+    html[data-theme="dark"] .admin-review-input {
+        border-color: #465b70;
+        color: var(--ink);
+        background: #142130;
+        color-scheme: dark;
+    }
+
+    @media (max-width: 640px) {
+        .company-application-panel,
+        .admin-login-card,
+        .admin-dashboard {
+            width: calc(100% - 24px);
+            margin: 18px auto;
+            padding: 18px;
+            border-radius: 16px;
+        }
+
+        .application-portal-header,
+        .admin-dashboard-header {
+            align-items: flex-start;
+        }
+
+        .application-fields,
+        .admin-application-details {
+            grid-template-columns: 1fr;
+        }
+    }
+
+@media (prefers-reduced-motion: reduce) {
     .brand-reveal-art,
     .brand-reveal-wordmark .logo-main .gold::before {
         animation-duration: 0.01ms;
@@ -4399,6 +4722,70 @@ html[data-theme="dark"] .faq-item a {
 .footer-company-action:hover {
     background: #ffe568;
     transform: translateY(-1px);
+}
+
+.site-footer:not(.is-contact) {
+    position: fixed;
+    right: 12px;
+    bottom: 78px;
+    z-index: 39;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.site-footer:not(.is-contact) .footer-inner {
+    display: block;
+    width: auto;
+    margin: 0;
+}
+
+.site-footer:not(.is-contact) .footer-brand,
+.site-footer:not(.is-contact) .footer-bottom,
+.site-footer:not(.is-contact) .footer-navigation > .footer-link-group:not(:last-child) {
+    display: none !important;
+}
+
+.site-footer:not(.is-contact) .footer-navigation {
+    display: block;
+}
+
+.site-footer:not(.is-contact) .footer-link-group:last-child {
+    width: auto;
+}
+
+.site-footer:not(.is-contact) .footer-link-group:last-child > :not(.footer-controls) {
+    display: none !important;
+}
+
+.site-footer:not(.is-contact) .footer-controls {
+    display: flex;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(7, 19, 35, 0.97);
+    box-shadow: 0 8px 26px rgba(7, 19, 35, 0.18);
+}
+
+.footer-language-control {
+    display: grid;
+    gap: 4px;
+    color: #aaa;
+    font-size: 11px;
+}
+
+.footer-language-control select {
+    min-height: 34px;
+    padding: 5px 28px 5px 9px;
+    border: 1px solid #363636;
+    border-radius: 6px;
+    color: #eee;
+    background: #111;
+    font: inherit;
 }
 
 main.welcome-main {

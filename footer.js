@@ -6,6 +6,11 @@ document.querySelectorAll("[data-current-year]").forEach(function(element) {
 
 const siteTranslations = {
     "Your journey, your way.": { rw: "Urugendo rwawe, uko ubishaka.", fr: "Votre voyage, à votre façon." },
+    "Home": { rw: "Ahabanza", fr: "Accueil" },
+    "Book a Ticket": { rw: "Andika itike", fr: "Réserver un billet" },
+    "About Us": { rw: "Ibyerekeye", fr: "À propos" },
+    "Contact Us": { rw: "Twandikire", fr: "Contactez-nous" },
+    "Company Dashboard": { rw: "Imbonerahamwe ya kompanyi", fr: "Tableau de bord entreprise" },
     "Explore": { rw: "Menya Wayline", fr: "Découvrir" },
     "About": { rw: "Ibyerekeye", fr: "À propos" },
     "Find a Bus": { rw: "Shaka bisi", fr: "Trouver un bus" },

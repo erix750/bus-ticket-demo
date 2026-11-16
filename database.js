@@ -115,9 +115,9 @@
     async function getCompanyProfile(userId) {
         const result = await supabase
             .from("companies")
-            .select("id, name, logo_data")
+            .select("id, name, logo_data, approval_status")
             .eq("id", userId)
-            .single();
+            .maybeSingle();
         return throwIfError(result);
     }
 
@@ -125,8 +125,7 @@
         const userResult = await supabase.auth.getUser();
         if (userResult.error) throw new Error(userResult.error.message);
         const user = userResult.data.user;
-        if (!user) throw new Error("Sign in with a company account before updating your profile picture.");
-
+        if (!user) throw new Error("Sign in with an approved company account before updating its picture.");
         const result = await supabase
             .from("companies")
             .update({ logo_data: logo })
@@ -134,6 +133,142 @@
             .select("id")
             .single();
         throwIfError(result);
+    }
+
+    async function getCompanyPortalStatus() {
+        const result = await supabase.rpc("get_company_portal_status");
+        return throwIfError(result);
+    }
+
+    function createCompanyDocumentPath(userId, file) {
+        const extensionsByType = {
+            "application/pdf": "pdf",
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp"
+        };
+        const extension = extensionsByType[file.type];
+        if (!extension || file.size > 10 * 1024 * 1024) {
+            throw new Error("Company documents must be PDF, JPG, PNG, or WebP files up to 10 MB.");
+        }
+        const randomBytes = new Uint8Array(16);
+        window.crypto.getRandomValues(randomBytes);
+        const fileId = Array.from(randomBytes, function(byte) {
+            return byte.toString(16).padStart(2, "0");
+        }).join("");
+        return userId + "/" + fileId + "." + extension;
+    }
+
+    async function submitCompanyApplication(application) {
+        const userResult = await supabase.auth.getUser();
+        if (userResult.error) throw new Error(userResult.error.message);
+        const user = userResult.data.user;
+        if (!user) throw new Error("Sign in with your company account before submitting an application.");
+        if (!application.businessDocument ||
+            (!application.licenseNotApplicable && !application.transportLicense)) {
+            throw new Error("Upload the required company documents before submitting the application.");
+        }
+
+        const uploadedPaths = [];
+        async function uploadDocument(file) {
+            if (!file) return null;
+            const path = createCompanyDocumentPath(user.id, file);
+            const result = await supabase.storage
+                .from("company-documents")
+                .upload(path, file, { contentType: file.type, upsert: false });
+            throwIfError(result);
+            uploadedPaths.push(path);
+            return path;
+        }
+
+        try {
+            const businessDocumentPath = await uploadDocument(application.businessDocument);
+            const transportLicensePath = application.licenseNotApplicable
+                ? null
+                : await uploadDocument(application.transportLicense);
+            const result = await supabase.rpc("submit_company_application", {
+                p_company_name: application.companyName,
+                p_representative_name: application.representativeName,
+                p_official_email: application.officialEmail,
+                p_contact_phone: application.contactPhone,
+                p_company_address: application.companyAddress,
+                p_company_location: application.companyLocation,
+                p_business_registration: application.businessRegistration,
+                p_business_document_path: businessDocumentPath,
+                p_transport_license_path: transportLicensePath,
+                p_license_not_applicable: application.licenseNotApplicable
+            });
+            return throwIfError(result);
+        } catch (error) {
+            if (uploadedPaths.length) {
+                try {
+                    const cleanupResult = await supabase.storage.from("company-documents").remove(uploadedPaths);
+                    if (cleanupResult.error) {
+                        console.error("Could not remove temporary company application documents.", cleanupResult.error);
+                    }
+                } catch (cleanupError) {
+                    console.error("Could not remove temporary company application documents.", cleanupError);
+                }
+            }
+            throw error;
+        }
+    }
+
+    async function isWaylineAdmin() {
+        const result = await supabase.rpc("is_wayline_admin");
+        return throwIfError(result) === true;
+    }
+
+    async function getAdminApplications() {
+        const result = await supabase
+            .from("company_applications")
+            .select("id, company_id, company_name, representative_name, official_email, contact_phone, company_address, company_location, business_registration, business_document_path, transport_license_path, license_not_applicable, status, review_notes, submitted_at, updated_at")
+            .not("submitted_at", "is", null)
+            .order("submitted_at", { ascending: true });
+        return throwIfError(result);
+    }
+
+    async function getAdminCompanies() {
+        const result = await supabase
+            .from("companies")
+            .select("id, name, approval_status")
+            .in("approval_status", ["approved", "suspended"])
+            .order("name");
+        return throwIfError(result);
+    }
+
+    async function getAdminActivityLog() {
+        const result = await supabase
+            .from("company_activity_log")
+            .select("id, actor_id, company_id, event_type, record_id, details, created_at")
+            .order("created_at", { ascending: false })
+            .limit(100);
+        return throwIfError(result);
+    }
+
+    async function getCompanyDocumentUrl(path) {
+        const result = await supabase.storage
+            .from("company-documents")
+            .createSignedUrl(path, 60, { download: true });
+        return throwIfError(result).signedUrl;
+    }
+
+    async function reviewCompanyApplication(applicationId, status, notes) {
+        const result = await supabase.rpc("review_company_application", {
+            p_application_id: applicationId,
+            p_status: status,
+            p_review_notes: notes
+        });
+        return throwIfError(result);
+    }
+
+    async function setCompanyAccessStatus(companyId, status, reason) {
+        const result = await supabase.rpc("set_company_access_status", {
+            p_company_id: companyId,
+            p_status: status,
+            p_reason: reason
+        });
+        return throwIfError(result);
     }
 
     async function createSchedule(bus, logo) {
@@ -324,6 +459,15 @@
         loadBookings: loadBookings,
         getCompanyProfile: getCompanyProfile,
         updateCompanyProfilePicture: updateCompanyProfilePicture,
+        getCompanyPortalStatus: getCompanyPortalStatus,
+        submitCompanyApplication: submitCompanyApplication,
+        isWaylineAdmin: isWaylineAdmin,
+        getAdminApplications: getAdminApplications,
+        getAdminCompanies: getAdminCompanies,
+        getAdminActivityLog: getAdminActivityLog,
+        getCompanyDocumentUrl: getCompanyDocumentUrl,
+        reviewCompanyApplication: reviewCompanyApplication,
+        setCompanyAccessStatus: setCompanyAccessStatus,
         createSchedule: createSchedule,
         updateSchedule: updateSchedule,
         setScheduleActive: setScheduleActive,

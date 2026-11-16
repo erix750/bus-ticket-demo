@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Protected Wayline administrator company verification portal.">
+    <meta name="theme-color" content="#173f70">
+    <title>Wayline | Administrator</title>
+    <link rel="stylesheet" href="style.css?v=wayline-company-verification">
+</head>
+<body class="admin-page">
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="index.html" aria-label="Wayline home">
+                <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
+                <span>WAYLINE <small>ADMIN</small></span>
+            </a>
+        </div>
+    </header>
+    <main class="admin-main">
+        <section class="admin-login-card" id="adminLoginPanel" aria-labelledby="adminLoginTitle">
+            <p class="eyebrow">WAYLINE ADMINISTRATION</p>
+            <h1 id="adminLoginTitle">Administrator sign in</h1>
+            <p>Use an administrator account provisioned through Wayline's secure process. There is no public admin registration.</p>
+            <form id="adminLoginForm" class="login-form">
+                <div class="field">
+                    <label for="adminEmail">Email address</label>
+                    <input id="adminEmail" type="email" autocomplete="username" required>
+                </div>
+                <div class="field">
+                    <label for="adminPassword">Password</label>
+                    <input id="adminPassword" type="password" autocomplete="current-password" required>
+                </div>
+                <button class="button button-primary" id="adminSignIn" type="submit">Sign in</button>
+                <p id="adminLoginMessage" class="form-message" role="status" aria-live="polite"></p>
+                <a class="button button-text" href="index.html">Return to Wayline</a>
+            </form>
+        </section>
+
+        <section class="admin-dashboard" id="adminDashboard" hidden aria-labelledby="adminDashboardTitle">
+            <header class="admin-dashboard-header">
+                <div>
+                    <p class="eyebrow">VERIFICATION AND ACCOUNTABILITY</p>
+                    <h1 id="adminDashboardTitle">Company applications</h1>
+                    <p>Review submitted company details and private supporting documents before granting dashboard access.</p>
+                </div>
+                <button class="header-button" id="adminSignOut" type="button">Sign out</button>
+            </header>
+            <p id="adminDashboardMessage" class="form-message" role="status" aria-live="polite"></p>
+            <section aria-labelledby="applicationsTitle">
+                <div class="admin-section-heading">
+                    <h2 id="applicationsTitle">Applications</h2>
+                    <button class="button button-secondary" id="refreshAdminData" type="button">Refresh</button>
+                </div>
+                <div id="adminApplicationList" class="admin-application-list"></div>
+            </section>
+            <section aria-labelledby="companyAccountsTitle">
+                <div class="admin-section-heading">
+                    <h2 id="companyAccountsTitle">Approved and suspended companies</h2>
+                </div>
+                <div id="adminCompanyList" class="admin-company-list"></div>
+            </section>
+            <section class="admin-activity-section" aria-labelledby="activityTitle">
+                <div class="admin-section-heading">
+                    <h2 id="activityTitle">Recent activity</h2>
+                    <span class="field-hint">Latest 100 recorded events</span>
+                </div>
+                <div id="adminActivityList" class="admin-activity-list"></div>
+            </section>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
+    <script src="database.js?v=wayline-company-verification"></script>
+    <script src="admin.js?v=wayline-company-verification"></script>
+</body>
+</html>

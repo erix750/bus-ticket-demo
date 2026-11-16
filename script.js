@@ -115,6 +115,7 @@ const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
 const partnerLoginOpen = document.getElementById("partnerLoginOpen");
 const companyPage = document.getElementById("companyPage");
+const companyApplicationPanel = document.getElementById("companyApplicationPanel");
 const siteFooter = document.getElementById("siteFooter");
 const pageViews = Array.from(document.querySelectorAll("[data-page-view]"));
 const loginMessage = document.getElementById("loginMessage");
@@ -122,6 +123,7 @@ const companyNameField = document.getElementById("companyNameField");
 const partnerCompanyName = document.getElementById("partnerCompanyName");
 const passwordRecoveryForm = document.getElementById("passwordRecoveryForm");
 let activePage = "home";
+let companyPortalStatus = null;
 
 function navigateToPage(page, updateHistory) {
     const targetPage = pageViews.find(function(view) {
@@ -144,7 +146,8 @@ function navigateToPage(page, updateHistory) {
             link.removeAttribute("aria-current");
         }
     });
-    siteFooter.hidden = page !== "contact";
+    siteFooter.hidden = false;
+    siteFooter.classList.toggle("is-contact", page === "contact");
 
     if (updateHistory !== false && window.location.hash !== "#" + page) {
         window.history.pushState(null, "", "#" + page);
@@ -186,21 +189,90 @@ function showPartnerLoginForm() {
 }
 
 function setPartnerPreview(active) {
-    managementPanel.hidden = !active;
-    partnerLoginOpen.textContent = active ? "Company Dashboard" : "Company Sign In";
-    companyPage.hidden = !active;
-    document.getElementById("partnerLogout").hidden = !active;
-    const companyName = active ? partnerCompanyName.value || currentUser.email : "";
+    const signedIn = active && Boolean(currentUser);
+    const isApproved = signedIn && companyPortalStatus &&
+        companyPortalStatus.approval_status === "approved";
+    managementPanel.hidden = !isApproved;
+    companyApplicationPanel.hidden = !signedIn || isApproved;
+    partnerLoginOpen.textContent = isApproved ? "Company Dashboard" : "Company Sign In";
+    companyPage.hidden = !signedIn;
+    document.getElementById("partnerLogout").hidden = !isApproved;
+    document.getElementById("applicationLogout").hidden = !signedIn || isApproved;
+    const companyName = isApproved ? partnerCompanyName.value || currentUser.email : "";
     document.getElementById("dashboardCompanyName").textContent = companyName;
-    document.getElementById("dashboardWelcome").textContent = active
+    document.getElementById("dashboardWelcome").textContent = isApproved
         ? "Welcome back, " + companyName
         : "Welcome back";
-    if (active) {
+    if (signedIn) {
         navigateToPage("company");
         if (partnerLoginScreen.open) partnerLoginScreen.close();
     } else if (activePage === "company") {
         navigateToPage("home");
     }
+}
+
+function renderCompanyPortalStatus(status) {
+    companyPortalStatus = status;
+    const applicationStatus = status.application_status || status.approval_status;
+    const submitted = Boolean(status.submitted_at);
+    const statusLabels = {
+        pending: submitted ? "Pending" : "Not submitted",
+        under_review: "Under Review",
+        approved: "Approved",
+        rejected: "Rejected",
+        suspended: "Suspended"
+    };
+    const messages = {
+        pending: submitted
+            ? "Your company registration application has been submitted successfully. Your information is under review. You will receive an update once the verification process is complete."
+            : "Complete the company and document details below to submit your application for verification.",
+        under_review: "Your application is being checked by Wayline. If we requested more information or documents, use the form below to send an update; it will return to the pending queue for review.",
+        rejected: "Your application was not accepted. Review the administrator's note, correct the information or documents, and submit an updated application.",
+        suspended: "Access to your company account has been restricted. Contact Wayline support if you need more information."
+    };
+    const statusElement = document.getElementById("companyApplicationStatus");
+    statusElement.textContent = statusLabels[applicationStatus] || "Not submitted";
+    statusElement.dataset.status = applicationStatus || "pending";
+    document.getElementById("companyApplicationMessage").textContent =
+        messages[applicationStatus] || messages.pending;
+
+    const reviewNotes = document.getElementById("companyApplicationReviewNotes");
+    reviewNotes.textContent = status.review_notes || "";
+    reviewNotes.hidden = !status.review_notes;
+
+    document.getElementById("applicationCompanyName").value = status.company_name || "";
+    document.getElementById("applicationRepresentativeName").value = status.representative_name || "";
+    document.getElementById("applicationOfficialEmail").value =
+        status.official_email || (currentUser && currentUser.email) || "";
+    document.getElementById("applicationContactPhone").value = status.contact_phone || "";
+    document.getElementById("applicationCompanyAddress").value = status.company_address || "";
+    document.getElementById("applicationCompanyLocation").value = status.company_location || "";
+    document.getElementById("applicationBusinessRegistration").value = status.business_registration || "";
+
+    const applicationForm = document.getElementById("companyApplicationForm");
+    const canSubmit = applicationStatus !== "approved" && applicationStatus !== "suspended";
+    applicationForm.hidden = !canSubmit;
+    document.getElementById("submitCompanyApplication").textContent =
+        applicationStatus === "under_review"
+            ? "Send requested information"
+            : applicationStatus === "rejected" || submitted
+                ? "Update and resubmit application"
+                : "Submit for verification";
+}
+
+async function loadCompanyPortalStatus() {
+    const status = await window.WaylineDatabase.getCompanyPortalStatus();
+    renderCompanyPortalStatus(status);
+    return status;
+}
+
+function setCompanyProfilePicture(logo) {
+    const image = document.getElementById("companyProfilePicture");
+    const placeholder = document.getElementById("companyProfilePicturePlaceholder");
+    image.hidden = !logo;
+    placeholder.hidden = Boolean(logo);
+    if (logo) image.src = logo;
+    else image.removeAttribute("src");
 }
 
 function setPartnerFormMode(signUp) {
@@ -415,17 +487,30 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
             currentUser = result.user;
             partnerCompanyName.value = companyName;
             document.getElementById("company").value = companyName;
+            setCompanyProfilePicture("");
+            await loadCompanyPortalStatus();
             await refreshAppData();
             setPartnerPreview(true);
-            loginMessage.textContent = "Company account created.";
             return;
         }
 
         const result = await window.WaylineDatabase.signIn(email, password);
         currentUser = result.user;
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
+        if (!profile) {
+            const isAdmin = await window.WaylineDatabase.isWaylineAdmin();
+            currentUser = null;
+            setCompanyProfilePicture("");
+            setPartnerPreview(false);
+            loginMessage.textContent = isAdmin
+                ? "Administrator accounts use the protected admin portal at admin.html."
+                : "This account does not have a company profile. Register a company account or contact Wayline support.";
+            return;
+        }
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
+        setCompanyProfilePicture(profile.logo_data);
+        await loadCompanyPortalStatus();
         await refreshAppData();
         setPartnerPreview(true);
     } catch (error) {
@@ -443,16 +528,126 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
     }
 });
 
+document.getElementById("companyProfileForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const input = document.getElementById("companyProfilePictureFile");
+    const file = input.files[0];
+    const message = document.getElementById("companyProfileMessage");
+    const submitButton = document.getElementById("saveCompanyProfilePicture");
+    message.textContent = "";
+
+    if (!currentUser) {
+        message.textContent = "Sign in with your company account before updating your profile picture.";
+        return;
+    }
+    if (!file) {
+        message.textContent = "Choose a picture to upload.";
+        input.focus();
+        return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+        message.textContent = "Choose a PNG, JPG, or WebP image.";
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        message.textContent = "The company picture must be 10 MB or smaller.";
+        return;
+    }
+
+    submitButton.disabled = true;
+    try {
+        const logo = await resizeCompanyLogo(file);
+        await window.WaylineDatabase.updateCompanyProfilePicture(logo);
+        setCompanyProfilePicture(logo);
+        input.value = "";
+        message.textContent = "Profile picture saved.";
+        try {
+            await refreshAppData();
+        } catch (error) {
+            console.error("Profile picture was saved, but bus listings could not refresh.", error);
+            message.textContent = "Profile picture saved, but bus listings could not refresh. Reload the page to see it everywhere.";
+        }
+    } catch (error) {
+        message.textContent = error.message || "Could not save the profile picture. Please try again.";
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
 document.getElementById("togglePartnerMode").addEventListener("click", function() {
     setPartnerFormMode(!isPartnerSignUp);
 });
 
-document.getElementById("partnerLogout").addEventListener("click", async function() {
-    const button = document.getElementById("partnerLogout");
+document.getElementById("applicationLicenseNotApplicable").addEventListener("change", function() {
+    const licenseInput = document.getElementById("applicationTransportLicense");
+    licenseInput.disabled = this.checked;
+    licenseInput.required = !this.checked;
+    if (this.checked) licenseInput.value = "";
+});
+
+document.getElementById("companyApplicationForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const businessDocument = document.getElementById("applicationBusinessDocument").files[0];
+    const transportLicense = document.getElementById("applicationTransportLicense").files[0];
+    const licenseNotApplicable = document.getElementById("applicationLicenseNotApplicable").checked;
+    const message = document.getElementById("companyApplicationFormMessage");
+    const button = document.getElementById("submitCompanyApplication");
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    const documents = [businessDocument, licenseNotApplicable ? null : transportLicense].filter(Boolean);
+
+    message.textContent = "";
+    if (!currentUser) {
+        message.textContent = "Sign in with your company account before submitting an application.";
+        return;
+    }
+    if (documents.some(function(file) {
+        return !allowedTypes.includes(file.type) || file.size > 10 * 1024 * 1024;
+    })) {
+        message.textContent = "Choose PDF, JPG, PNG, or WebP documents up to 10 MB each.";
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Submitting securely...";
+    try {
+        const status = await window.WaylineDatabase.submitCompanyApplication({
+            companyName: document.getElementById("applicationCompanyName").value.trim(),
+            representativeName: document.getElementById("applicationRepresentativeName").value.trim(),
+            officialEmail: document.getElementById("applicationOfficialEmail").value.trim(),
+            contactPhone: document.getElementById("applicationContactPhone").value.trim(),
+            companyAddress: document.getElementById("applicationCompanyAddress").value.trim(),
+            companyLocation: document.getElementById("applicationCompanyLocation").value.trim(),
+            businessRegistration: document.getElementById("applicationBusinessRegistration").value.trim(),
+            businessDocument: businessDocument,
+            transportLicense: transportLicense,
+            licenseNotApplicable: licenseNotApplicable
+        });
+        form.reset();
+        document.getElementById("applicationTransportLicense").disabled = false;
+        document.getElementById("applicationTransportLicense").required = true;
+        renderCompanyPortalStatus(status);
+        message.textContent = "Your company registration application has been submitted successfully. Your information is under review. You will receive an update once the verification process is complete.";
+    } catch (error) {
+        message.textContent = error.message || "Could not submit the company application. Please try again.";
+    } finally {
+        button.disabled = false;
+        const appStatus = companyPortalStatus && companyPortalStatus.application_status;
+        button.textContent = appStatus === "under_review"
+            ? "Send requested information"
+            : appStatus === "rejected" || (companyPortalStatus && companyPortalStatus.submitted_at)
+                ? "Update and resubmit application"
+                : "Submit for verification";
+    }
+});
+
+async function signOutCompany(button) {
     button.disabled = true;
     try {
         if (currentUser) await window.WaylineDatabase.signOut();
         currentUser = null;
+        companyPortalStatus = null;
+        setCompanyProfilePicture("");
         await refreshAppData();
         setPartnerPreview(false);
     } catch (error) {
@@ -460,6 +655,18 @@ document.getElementById("partnerLogout").addEventListener("click", async functio
     } finally {
         button.disabled = false;
     }
+}
+
+document.getElementById("partnerLogout").addEventListener("click", function() {
+    signOutCompany(this);
+});
+
+document.getElementById("applicationLogout").addEventListener("click", function() {
+    signOutCompany(this);
+});
+
+document.getElementById("companyApplicationForm").addEventListener("input", function() {
+    document.getElementById("companyApplicationFormMessage").textContent = "";
 });
 
 async function initializeApp() {
@@ -472,10 +679,21 @@ async function initializeApp() {
     currentUser = sessionResult.data.session ? sessionResult.data.session.user : null;
     if (currentUser) {
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
-        partnerCompanyName.value = profile.name;
-        document.getElementById("company").value = profile.name;
-        setPartnerPreview(true);
+        if (profile) {
+            partnerCompanyName.value = profile.name;
+            document.getElementById("company").value = profile.name;
+            setCompanyProfilePicture(profile.logo_data);
+            await loadCompanyPortalStatus();
+            setPartnerPreview(true);
+        } else {
+            currentUser = null;
+            companyPortalStatus = null;
+            setCompanyProfilePicture("");
+            setPartnerPreview(false);
+        }
     } else {
+        companyPortalStatus = null;
+        setCompanyProfilePicture("");
         setPartnerPreview(false);
     }
     await refreshAppData();
@@ -1819,6 +2037,7 @@ busForm.addEventListener("submit", async function(event) {
             buses.unshift(savedBus);
         }
         partnerCompanyName.value = company;
+        if (logo) setCompanyProfilePicture(logo);
         document.getElementById("dashboardCompanyName").textContent = company;
         document.getElementById("dashboardWelcome").textContent = "Welcome back, " + company;
         await refreshAppData();

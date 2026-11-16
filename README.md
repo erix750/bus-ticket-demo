@@ -31,7 +31,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Full buses and trips whose departure time has passed are automatically excluded from public search while company schedules and booking records are retained.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
 - The website can be installed from a supported mobile browser on Android and iPhone.
-- Persistent section navigation switches between Home, passenger booking, Company Portal, About, and Contact without a long scrolling page. The Home hero keeps one booking button.
+- Footer section navigation switches between Home, passenger booking, Company Portal, About, and Contact without a long scrolling page. The Home hero keeps one booking button; the header contains the brand and website settings only.
 - Passengers search and book without an account. Company Portal provides separate sign-in and registration actions; applications require administrator approval before schedules or company bookings are accessible.
 - New company accounts must submit company details and private supporting documents, then wait for administrator verification. Only approved companies can manage schedules or view their bookings.
 - The protected [`admin.html`](./admin.html) portal lets provisioned Wayline administrators review applications, approve or reject companies, request changes, suspend or reactivate access, and inspect recent company activity.

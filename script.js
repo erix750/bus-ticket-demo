@@ -136,7 +136,7 @@ function navigateToPage(page, updateHistory) {
         view.hidden = !isActive;
         view.classList.toggle("is-active", isActive);
     });
-    document.querySelectorAll(".footer-page-nav [data-page-link], .header-page-nav [data-page-link]").forEach(function(link) {
+    document.querySelectorAll(".footer-page-nav [data-page-link]").forEach(function(link) {
         const isActive = link.dataset.pageLink === page;
         link.classList.toggle("is-active", isActive);
         if (isActive) {

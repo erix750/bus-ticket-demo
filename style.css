@@ -4677,28 +4677,6 @@ html[data-theme="dark"] .faq-item a {
     min-height: 78px;
 }
 
-.header-page-nav {
-    display: flex;
-    margin-left: auto;
-    align-items: center;
-    gap: clamp(12px, 1.8vw, 26px);
-}
-
-.header-page-nav .nav-link {
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-@media (max-width: 900px) and (min-width: 761px) {
-    .header-page-nav {
-        gap: 10px;
-    }
-
-    .header-page-nav .nav-link {
-        font-size: 0.8rem;
-    }
-}
-
 .navigation-footer {
     position: fixed;
     right: 0;
@@ -4935,23 +4913,8 @@ html[data-theme="dark"] .contact-card h1 {
         gap: 12px;
     }
 
-    .header-page-nav {
-        order: 2;
-        width: 100%;
-        margin-left: 0;
-        justify-content: space-between;
-        gap: 16px;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scrollbar-width: thin;
-    }
-
     .site-controls {
         margin-left: auto;
-    }
-
-    .header-page-nav .nav-link {
-        font-size: 0.78rem;
     }
 
     .brand {

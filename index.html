@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-search-name-20261110">
+    <link rel="stylesheet" href="style.css?v=wayline-footer-navigation-20261115">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -25,11 +25,10 @@
     </div>
     <header class="site-header">
         <div class="header-inner">
-            <a class="brand" href="#top" aria-label="Wayline home">
+            <a class="brand" href="#home" data-page-link="home" aria-label="Wayline home">
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
-
         </div>
     </header>
 
@@ -193,19 +192,22 @@
     </dialog>
 
     <main id="top" class="welcome-main">
-        <section class="intro hero-landing" aria-labelledby="page-title">
-            <div class="hero-copy">
-                <div class="hero-title-wrap">
-                    <div class="hero-logo-line" aria-hidden="true"></div>
-                    <h1 id="page-title">
-                        <span class="title-main">WAYLINE</span>
-                    </h1>
+        <section class="page-view is-active" id="homePage" data-page-view="home" aria-labelledby="page-title">
+            <section class="intro hero-landing" aria-labelledby="page-title">
+                <div class="hero-copy">
+                    <div class="hero-title-wrap">
+                        <div class="hero-logo-line" aria-hidden="true"></div>
+                        <h1 id="page-title">
+                            <span class="title-main">WAYLINE</span>
+                        </h1>
+                    </div>
+                    <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
+                    <button class="cta-button" id="bookJourneyButton" type="button">Book Your Journey <span aria-hidden="true">›</span></button>
                 </div>
-                <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
-                <button class="cta-button" id="bookJourneyButton" type="button">Book Your Journey <span aria-hidden="true">›</span></button>
-            </div>
+            </section>
         </section>
 
+        <section class="page-view" id="aboutPage" data-page-view="about" aria-label="About Wayline" hidden>
         <section class="landing-features" id="about" aria-labelledby="about-title">
             <div class="feature-row">
                 <div class="feature-item">
@@ -295,7 +297,7 @@
                     <p class="eyebrow">AVAILABLE ONLINE</p>
                     <h3>Book on the website</h3>
                     <p>Search bus schedules, compare fares and available seats, then reserve with your name and phone number.</p>
-                    <a class="button button-secondary" href="#searchPanel">Search buses</a>
+                    <a class="button button-secondary" href="#booking" data-page-link="booking">Search buses</a>
                 </article>
                 <article class="booking-method-card booking-method-ussd">
                     <div class="booking-method-title">
@@ -310,7 +312,9 @@
                 </article>
             </div>
         </section>
+        </section>
 
+        <section class="page-view" id="bookingPage" data-page-view="booking" aria-label="Passenger booking" hidden>
         <section class="panel search-panel original-search-panel" id="searchPanel" aria-labelledby="search-title">
             <div class="section-heading">
                 <div>
@@ -368,6 +372,7 @@
                     </section>
                 </div>
             </div>
+            </details>
             <form id="searchForm" class="form-grid">
                 <div class="field">
                     <label for="companyFilter">Bus company</label>
@@ -433,7 +438,23 @@
             <p class="field-hint" id="passengerDetailsHint">After you select a bus, enter the passenger's full name and phone number in the booking form.</p>
             <div id="searchResults" class="results-list" aria-live="polite"></div>
         </section>
+        </section>
 
+        <section class="page-view contact-page" id="contactPage" data-page-view="contact" aria-labelledby="contactTitle" hidden>
+            <div class="contact-card">
+                <p class="eyebrow">WE’RE HERE TO HELP</p>
+                <h1 id="contactTitle">Contact Wayline</h1>
+                <p>For help with the website or a booking, get in touch with our support team. For trip changes, contact the bus company listed on your reservation.</p>
+                <div class="contact-actions">
+                    <a class="button button-primary" href="mailto:muvunyieric25@gmail.com">Email Wayline</a>
+                    <a class="button button-secondary" href="https://wa.me/250798230630">WhatsApp +250 798 230 630</a>
+                    <a class="button button-text" href="booking.html">Find My Booking</a>
+                </div>
+                <p class="field-hint">Rwanda Time (CAT, UTC+2). Support hours are not published.</p>
+            </div>
+        </section>
+
+        <section class="page-view company-page" id="companyPage" data-page-view="company" aria-label="Bus company portal" hidden>
         <section class="company-dashboard" id="managementPanel" hidden aria-label="Company dashboard">
             <aside class="dashboard-sidebar">
                 <a class="dashboard-brand" href="#dashboardOverview">
@@ -494,30 +515,6 @@
                         </div>
                     </div>
                 </section>
-                <section class="dashboard-panel company-profile-panel" aria-labelledby="companyProfileTitle">
-                    <div class="dashboard-section-heading">
-                        <div>
-                            <p class="eyebrow">COMPANY PROFILE</p>
-                            <h3 id="companyProfileTitle">Edit profile picture</h3>
-                        </div>
-                    </div>
-                    <p class="section-note">Choose the picture passengers will see with your company name and bus trips.</p>
-                    <form id="companyProfileForm" class="company-profile-form">
-                        <div class="company-profile-preview">
-                            <img id="companyProfilePicture" alt="Current company profile picture" hidden>
-                            <span id="companyProfilePicturePlaceholder">No picture yet</span>
-                        </div>
-                        <div class="field company-profile-upload">
-                            <label for="companyProfilePictureFile">Choose a company picture</label>
-                            <input type="file" id="companyProfilePictureFile" name="companyProfilePictureFile" accept="image/png,image/jpeg,image/webp">
-                            <p class="field-hint">PNG, JPG, or WebP, up to 10 MB. The image is resized for display.</p>
-                        </div>
-                        <div class="company-profile-actions">
-                            <button class="button button-primary" id="saveCompanyProfilePicture" type="submit">Save profile picture</button>
-                            <p id="companyProfileMessage" class="form-message" role="status" aria-live="polite"></p>
-                        </div>
-                    </form>
-                </section>
                 <section class="dashboard-panel" id="dashboardSchedules" aria-labelledby="dashboardSchedulesTitle">
                     <div class="dashboard-section-heading">
                         <div>
@@ -535,7 +532,7 @@
                     <div class="field field-wide">
                         <label for="companyLogo">Company logo or picture (optional)</label>
                         <input type="file" id="companyLogo" name="companyLogo" accept="image/png,image/jpeg,image/webp">
-                        <p class="field-hint">PNG, JPG, or WebP, up to 10 MB. Images are resized for display.</p>
+                        <p class="field-hint">PNG, JPG, or WebP. Images are resized for display.</p>
                     </div>
                     <div class="field">
                         <label for="busName">Bus name or number</label>
@@ -649,24 +646,35 @@
                 </section>
             </div>
         </section>
+        </section>
         <p class="storage-note" hidden>Fares are calculated from the route distance using RURA's published per-kilometre tariffs. Route distance is entered by the operator; fares are rounded to the nearest RWF. <a href="https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf" target="_blank" rel="noopener noreferrer">View RURA tariff document</a>. Bookings are shared online; payments are not collected yet.</p>
 
     </main>
 
-    <footer class="site-footer">
+    <footer class="navigation-footer">
+        <nav class="footer-page-nav" aria-label="Main navigation">
+            <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
+            <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
+            <a class="nav-link" href="#about" data-page-link="about">About Us</a>
+            <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
+            <button class="footer-company-action" id="partnerLoginOpen" type="button">Company Sign In</button>
+        </nav>
+    </footer>
+
+    <footer class="site-footer" id="siteFooter" hidden>
         <div class="footer-inner">
-            <a class="footer-brand" href="#top" aria-label="Wayline home">
+            <a class="footer-brand" href="#home" data-page-link="home" aria-label="Wayline home">
                 <strong>WAYLINE</strong>
                 <span>Your journey, your way.</span>
             </a>
             <nav class="footer-navigation" aria-label="Footer navigation">
                 <section class="footer-link-group">
                     <h2>Explore</h2>
-                    <a class="footer-nav-link" href="#about">About</a>
-                    <a class="footer-nav-link" href="#searchPanel">Find a Bus</a>
-                    <a class="footer-nav-link" href="#searchPanel">Our Routes</a>
+                    <a class="footer-nav-link" href="#about" data-page-link="about">About</a>
+                    <a class="footer-nav-link" href="#booking" data-page-link="booking">Find a Bus</a>
+                    <a class="footer-nav-link" href="#booking" data-page-link="booking">Our Routes</a>
                 </section>
-                <section class="footer-link-group footer-support" id="contact">
+                <section class="footer-link-group footer-support" id="footerSupport">
                     <h2>Support</h2>
                     <details class="footer-help" id="help">
                         <summary class="footer-nav-link">Help Center</summary>
@@ -705,7 +713,6 @@
                     </details>
                     <a class="footer-nav-link" href="booking.html">Find My Booking</a>
                     <p class="footer-support-note">Email: <a href="mailto:muvunyieric25@gmail.com">muvunyieric25@gmail.com</a><br>WhatsApp: <a href="https://wa.me/250798230630">+250 798 230 630</a><br>Rwanda Time (CAT, UTC+2). Support hours are not published.</p>
-                    <button class="footer-nav-link footer-action-link sign-in-button" id="partnerLoginOpen" type="button">Company Sign In</button>
                 </section>
                 <section class="footer-link-group">
                     <h2>Legal</h2>
@@ -737,7 +744,7 @@
     <script src="database.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=wayline-live-route-suggestions-20261110"></script>
+    <script src="script.js?v=wayline-footer-navigation-20261115"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

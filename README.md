@@ -9,7 +9,7 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Passengers provide a name and phone number at checkout; contact details are available to the relevant bus company.
 - Passengers search and book without creating an account.
 - Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
-- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload or independently update a company profile picture (PNG, JPG, or WebP up to 10 MB). Images are resized for display. Schedule edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
+- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload a company logo. Edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
 - Operators can list intermediate stops and estimated journey duration; online and USSD route labels share the same city-name formatting.
@@ -18,7 +18,6 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Passengers review company, bus, route, stops, date, departure, estimated duration, seats and total before saving, and can copy the booking reference.
 - Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
 - A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options; all page footers include legal links, a Made in Rwanda identity, and a current-year copyright.
-- The landing page and booking lookup footer provide English, Kinyarwanda, and French for shared navigation and the main booking interface. Legal policy documents remain in English.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
@@ -31,7 +30,8 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 - Full buses and trips whose departure time has passed are automatically excluded from public search while company schedules and booking records are retained.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
 - The website can be installed from a supported mobile browser on Android and iPhone.
-- Passengers see trip search first; company account sign-in and registration open from the footer.
+- Persistent footer navigation switches between Home, passenger booking, About, and Contact views without requiring visitors to scroll between sections. The header keeps the Wayline logo, and the Home hero has one booking button.
+- Passengers can search and book without an account; company sign-in and registration remain in the separate Company Sign In portal available from the footer navigation.
 
 ## Supabase setup
 
@@ -53,7 +53,7 @@ Passenger records are not listed publicly. The separate [`booking.html`](./booki
 The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; lets passengers choose their departure, destination, travel date, and bus company; searches matching future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
 
 1. Apply the current [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates private USSD session storage and the service-role-only `ussd_book_bus` function.
-2. Deploy `ussd-service/` on a Node.js 22+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
+2. Deploy `ussd-service/` on a Node.js 20+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
 3. Copy `.env.example` to `.env`. Set the Supabase project URL, **service-role key**, and a URL-safe random callback token of at least 32 characters (for example, generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`). `USSD_SERVICE_CODE` defaults to `*200#` and must match the code assigned by Africa's Talking. Keep `.env` and all server credentials private; never add them to the website's `config.js`.
 4. Start the server with `npm start`; check `GET /health`. Run the test suite with `npm test`.
 5. After Africa's Talking provisions `*200#` for your account, configure that service code in its dashboard and point the USSD application's POST callback to `https://<your-host>/ussd?token=<USSD_CALLBACK_TOKEN>`. The service rejects callback requests for any other code. Use the sandbox before a live short code. Ensure host and proxy access logs redact the callback query token.

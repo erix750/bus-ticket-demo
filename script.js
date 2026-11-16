@@ -114,11 +114,62 @@ const passengerPhoneInput = document.getElementById("passengerPhone");
 const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
 const partnerLoginOpen = document.getElementById("partnerLoginOpen");
-const dashboard = document.getElementById("top");
+const companyPage = document.getElementById("companyPage");
+const siteFooter = document.getElementById("siteFooter");
+const pageViews = Array.from(document.querySelectorAll("[data-page-view]"));
 const loginMessage = document.getElementById("loginMessage");
 const companyNameField = document.getElementById("companyNameField");
 const partnerCompanyName = document.getElementById("partnerCompanyName");
 const passwordRecoveryForm = document.getElementById("passwordRecoveryForm");
+let activePage = "home";
+
+function navigateToPage(page, updateHistory) {
+    const targetPage = pageViews.find(function(view) {
+        return view.dataset.pageView === page;
+    });
+    if (!targetPage || (page === "company" && !currentUser)) return;
+
+    activePage = page;
+    pageViews.forEach(function(view) {
+        const isActive = view === targetPage;
+        view.hidden = !isActive;
+        view.classList.toggle("is-active", isActive);
+    });
+    document.querySelectorAll(".footer-page-nav [data-page-link]").forEach(function(link) {
+        const isActive = link.dataset.pageLink === page;
+        link.classList.toggle("is-active", isActive);
+        if (isActive) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
+    siteFooter.hidden = page !== "contact";
+
+    if (updateHistory !== false && window.location.hash !== "#" + page) {
+        window.history.pushState(null, "", "#" + page);
+    }
+}
+
+document.querySelectorAll("[data-page-link]").forEach(function(link) {
+    link.addEventListener("click", function(event) {
+        event.preventDefault();
+        navigateToPage(link.dataset.pageLink);
+    });
+});
+
+window.addEventListener("hashchange", function() {
+    const page = window.location.hash.slice(1);
+    if (pageViews.some(function(view) { return view.dataset.pageView === page; })) {
+        navigateToPage(page, false);
+    }
+});
+
+const initialPage = window.location.hash.slice(1);
+if (pageViews.some(function(view) { return view.dataset.pageView === initialPage; }) &&
+    initialPage !== "company") {
+    navigateToPage(initialPage, false);
+}
 
 function showPasswordRecoveryForm() {
     document.getElementById("partnerLoginForm").hidden = true;
@@ -135,25 +186,21 @@ function showPartnerLoginForm() {
 }
 
 function setPartnerPreview(active) {
-    dashboard.hidden = false;
     managementPanel.hidden = !active;
-    partnerLoginOpen.hidden = active;
+    partnerLoginOpen.textContent = active ? "Company Dashboard" : "Company Sign In";
+    companyPage.hidden = !active;
     document.getElementById("partnerLogout").hidden = !active;
     const companyName = active ? partnerCompanyName.value || currentUser.email : "";
     document.getElementById("dashboardCompanyName").textContent = companyName;
     document.getElementById("dashboardWelcome").textContent = active
         ? "Welcome back, " + companyName
         : "Welcome back";
-    if (active && partnerLoginScreen.open) partnerLoginScreen.close();
-}
-
-function setCompanyProfilePicture(logo) {
-    const image = document.getElementById("companyProfilePicture");
-    const placeholder = document.getElementById("companyProfilePicturePlaceholder");
-    image.hidden = !logo;
-    placeholder.hidden = Boolean(logo);
-    if (logo) image.src = logo;
-    else image.removeAttribute("src");
+    if (active) {
+        navigateToPage("company");
+        if (partnerLoginScreen.open) partnerLoginScreen.close();
+    } else if (activePage === "company") {
+        navigateToPage("home");
+    }
 }
 
 function setPartnerFormMode(signUp) {
@@ -237,8 +284,10 @@ document.getElementById("refreshAvailability").addEventListener("click", functio
 });
 
 document.getElementById("bookJourneyButton").addEventListener("click", function() {
-    document.getElementById("searchPanel").scrollIntoView({ behavior: "smooth", block: "start" });
-    document.getElementById("from").focus({ preventScroll: true });
+    navigateToPage("booking");
+    window.requestAnimationFrame(function() {
+        document.getElementById("from").focus({ preventScroll: true });
+    });
 });
 
 document.getElementById("popularRoutes").addEventListener("click", function(event) {
@@ -264,6 +313,10 @@ document.getElementById("popularRoutes").addEventListener("click", function(even
 });
 
 partnerLoginOpen.addEventListener("click", function() {
+    if (currentUser) {
+        navigateToPage("company");
+        return;
+    }
     loginMessage.textContent = "";
     showPartnerLoginForm();
     setPartnerFormMode(false);
@@ -364,7 +417,6 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
             document.getElementById("company").value = companyName;
             await refreshAppData();
             setPartnerPreview(true);
-            managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
             loginMessage.textContent = "Company account created.";
             return;
         }
@@ -374,10 +426,8 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
-        setCompanyProfilePicture(profile.logo_data);
         await refreshAppData();
         setPartnerPreview(true);
-        managementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
         const signUpEmailUnavailable = isPartnerSignUp &&
             /invalid email|email.*invalid|already registered|user already exists|email.*already|already.*email/i.test(error.message || "");
@@ -393,52 +443,6 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
     }
 });
 
-document.getElementById("companyProfileForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
-    const input = document.getElementById("companyProfilePictureFile");
-    const file = input.files[0];
-    const message = document.getElementById("companyProfileMessage");
-    const submitButton = document.getElementById("saveCompanyProfilePicture");
-    message.textContent = "";
-
-    if (!currentUser) {
-        message.textContent = "Sign in with your company account before updating your profile picture.";
-        return;
-    }
-    if (!file) {
-        message.textContent = "Choose a picture to upload.";
-        input.focus();
-        return;
-    }
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-        message.textContent = "Choose a PNG, JPG, or WebP image.";
-        return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-        message.textContent = "The company picture must be 10 MB or smaller.";
-        return;
-    }
-
-    submitButton.disabled = true;
-    try {
-        const logo = await resizeCompanyLogo(file);
-        await window.WaylineDatabase.updateCompanyProfilePicture(logo);
-        setCompanyProfilePicture(logo);
-        input.value = "";
-        message.textContent = "Profile picture saved.";
-        try {
-            await refreshAppData();
-        } catch (error) {
-            console.error("Profile picture was saved, but bus listings could not refresh.", error);
-            message.textContent = "Profile picture saved, but bus listings could not refresh. Reload the page to see it everywhere.";
-        }
-    } catch (error) {
-        message.textContent = error.message || "Could not save the profile picture. Please try again.";
-    } finally {
-        submitButton.disabled = false;
-    }
-});
-
 document.getElementById("togglePartnerMode").addEventListener("click", function() {
     setPartnerFormMode(!isPartnerSignUp);
 });
@@ -449,7 +453,6 @@ document.getElementById("partnerLogout").addEventListener("click", async functio
     try {
         if (currentUser) await window.WaylineDatabase.signOut();
         currentUser = null;
-        setCompanyProfilePicture("");
         await refreshAppData();
         setPartnerPreview(false);
     } catch (error) {
@@ -471,10 +474,8 @@ async function initializeApp() {
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
-        setCompanyProfilePicture(profile.logo_data);
         setPartnerPreview(true);
     } else {
-        setCompanyProfilePicture("");
         setPartnerPreview(false);
     }
     await refreshAppData();
@@ -774,7 +775,7 @@ function resizeCompanyLogo(file) {
             const image = new Image();
             image.onerror = function() { reject(new Error("The selected file is not a valid image.")); };
             image.onload = function() {
-                const maxDimension = 512;
+                const maxDimension = 256;
                 const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
                 const canvas = document.createElement("canvas");
                 canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -1782,8 +1783,8 @@ busForm.addEventListener("submit", async function(event) {
         busMessage.textContent = "Choose a PNG, JPG, or WebP image for the company logo.";
         return;
     }
-    if (logoFile && logoFile.size > 10 * 1024 * 1024) {
-        busMessage.textContent = "The company image must be 10 MB or smaller.";
+    if (logoFile && logoFile.size > 2 * 1024 * 1024) {
+        busMessage.textContent = "The company image must be 2 MB or smaller.";
         return;
     }
 
@@ -1818,7 +1819,6 @@ busForm.addEventListener("submit", async function(event) {
             buses.unshift(savedBus);
         }
         partnerCompanyName.value = company;
-        if (logo) setCompanyProfilePicture(logo);
         document.getElementById("dashboardCompanyName").textContent = company;
         document.getElementById("dashboardWelcome").textContent = "Welcome back, " + company;
         await refreshAppData();

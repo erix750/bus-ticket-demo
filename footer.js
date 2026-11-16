@@ -8,8 +8,12 @@ const siteTranslations = {
     "Your journey, your way.": { rw: "Urugendo rwawe, uko ubishaka.", fr: "Votre voyage, à votre façon." },
     "Home": { rw: "Ahabanza", fr: "Accueil" },
     "Book a Ticket": { rw: "Andika itike", fr: "Réserver un billet" },
+    "Company Portal": { rw: "Urubuga rw’amakompanyi", fr: "Espace des compagnies" },
     "About Us": { rw: "Ibyerekeye", fr: "À propos" },
     "Contact Us": { rw: "Twandikire", fr: "Contactez-nous" },
+    "Register Your Company": { rw: "Iyandikishe nka kompanyi", fr: "Inscrire votre compagnie" },
+    "Register your transport company for verification, or sign in if your company has already been approved.": { rw: "Iyandikishe nka kompanyi y’ubwikorezi kugira ngo igenzurwe, cyangwa winjire niba yamaze kwemezwa.", fr: "Inscrivez votre compagnie de transport pour vérification, ou connectez-vous si elle a déjà été approuvée." },
+    "Only approved companies can publish bus schedules or access company bookings.": { rw: "Amakompanyi yemejwe gusa ni yo ashobora gushyiraho ingengabihe za bisi no kubona booking zayo.", fr: "Seules les compagnies approuvées peuvent publier des horaires ou accéder à leurs réservations." },
     "Company Dashboard": { rw: "Imbonerahamwe ya kompanyi", fr: "Tableau de bord entreprise" },
     "Explore": { rw: "Menya Wayline", fr: "Découvrir" },
     "About": { rw: "Ibyerekeye", fr: "À propos" },
@@ -277,12 +281,15 @@ function translateTree(root) {
 }
 
 function installLanguageSelector() {
+    const headerControls = document.querySelector(".site-controls");
     const footerGroup = document.querySelector(".footer-link-group:last-child");
-    if (!footerGroup) return;
-    let controls = footerGroup.querySelector(".footer-controls");
+    let controls = headerControls || (footerGroup && footerGroup.querySelector(".footer-controls"));
+    if (!controls && !footerGroup) return;
     if (!controls) {
         controls = document.createElement("div");
         controls.className = "footer-controls";
+        controls.setAttribute("role", "group");
+        controls.setAttribute("aria-label", "Website settings");
         footerGroup.appendChild(controls);
     }
     const label = document.createElement("label");

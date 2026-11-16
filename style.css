@@ -2364,7 +2364,8 @@ summary:focus-visible {
     margin-top: 8px;
 }
 
-.footer-controls .header-button {
+.footer-controls .header-button,
+.site-controls .header-button {
     min-height: 34px;
     padding: 5px 9px;
     border-color: #363636;
@@ -2372,7 +2373,8 @@ summary:focus-visible {
     color: #ccc;
 }
 
-.footer-controls .header-button:hover {
+.footer-controls .header-button:hover,
+.site-controls .header-button:hover {
     border-color: #666;
     color: #fff;
 }
@@ -4675,6 +4677,28 @@ html[data-theme="dark"] .faq-item a {
     min-height: 78px;
 }
 
+.header-page-nav {
+    display: flex;
+    margin-left: auto;
+    align-items: center;
+    gap: clamp(12px, 1.8vw, 26px);
+}
+
+.header-page-nav .nav-link {
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) and (min-width: 761px) {
+    .header-page-nav {
+        gap: 10px;
+    }
+
+    .header-page-nav .nav-link {
+        font-size: 0.8rem;
+    }
+}
+
 .navigation-footer {
     position: fixed;
     right: 0;
@@ -4724,51 +4748,28 @@ html[data-theme="dark"] .faq-item a {
     transform: translateY(-1px);
 }
 
-.site-footer:not(.is-contact) {
-    position: fixed;
-    right: 12px;
-    bottom: 78px;
-    z-index: 39;
-    width: auto;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.site-footer:not(.is-contact) .footer-inner {
-    display: block;
-    width: auto;
-    margin: 0;
-}
-
-.site-footer:not(.is-contact) .footer-brand,
-.site-footer:not(.is-contact) .footer-bottom,
-.site-footer:not(.is-contact) .footer-navigation > .footer-link-group:not(:last-child) {
+#siteFooter:not(.is-contact) {
     display: none !important;
 }
 
-.site-footer:not(.is-contact) .footer-navigation {
-    display: block;
-}
-
-.site-footer:not(.is-contact) .footer-link-group:last-child {
-    width: auto;
-}
-
-.site-footer:not(.is-contact) .footer-link-group:last-child > :not(.footer-controls) {
-    display: none !important;
-}
-
-.site-footer:not(.is-contact) .footer-controls {
+.site-controls {
     display: flex;
-    margin: 0;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
-    background: rgba(7, 19, 35, 0.97);
-    box-shadow: 0 8px 26px rgba(7, 19, 35, 0.18);
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.site-controls .header-button:not(.icon-button) {
+    flex: 0 1 160px;
+    width: 160px;
+    min-width: 0;
+    max-width: 160px;
+    box-sizing: border-box;
+    justify-content: center;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
 }
 
 .footer-language-control {
@@ -4870,8 +4871,44 @@ main.welcome-main {
     min-height: calc(100svh - 148px);
 }
 
+.company-portal-entry {
+    width: min(860px, calc(100% - 36px));
+    margin: 32px auto;
+    padding: clamp(24px, 5vw, 52px);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--white);
+    box-shadow: 0 18px 48px rgba(24, 45, 70, 0.1);
+}
+
+.company-portal-entry h1 {
+    margin: 0 0 12px;
+    color: var(--forest);
+}
+
+.company-portal-entry > p:not(.eyebrow) {
+    max-width: 62ch;
+    line-height: 1.65;
+}
+
+.company-portal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0 16px;
+}
+
 .company-page .company-dashboard {
     min-height: calc(100svh - 148px);
+}
+
+html[data-theme="dark"] .company-portal-entry {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: #142231;
+}
+
+html[data-theme="dark"] .company-portal-entry h1 {
+    color: #f3f6fa;
 }
 
 html[data-theme="dark"] .contact-page {
@@ -4896,6 +4933,25 @@ html[data-theme="dark"] .contact-card h1 {
         padding-block: 12px;
         flex-wrap: wrap;
         gap: 12px;
+    }
+
+    .header-page-nav {
+        order: 2;
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+        gap: 16px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+    }
+
+    .site-controls {
+        margin-left: auto;
+    }
+
+    .header-page-nav .nav-link {
+        font-size: 0.78rem;
     }
 
     .brand {
@@ -4934,10 +4990,6 @@ html[data-theme="dark"] .contact-card h1 {
         font-size: 0.8rem;
     }
 
-    .footer-company-action {
-        padding-inline: 14px;
-        font-size: 0.8rem;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -113,8 +113,7 @@ const passengerNameInput = document.getElementById("passengerName");
 const passengerPhoneInput = document.getElementById("passengerPhone");
 const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
-const partnerLoginOpen = document.getElementById("partnerLoginOpen");
-const companyPage = document.getElementById("companyPage");
+const companyPortalEntry = document.getElementById("companyPortalEntry");
 const companyApplicationPanel = document.getElementById("companyApplicationPanel");
 const siteFooter = document.getElementById("siteFooter");
 const pageViews = Array.from(document.querySelectorAll("[data-page-view]"));
@@ -129,7 +128,7 @@ function navigateToPage(page, updateHistory) {
     const targetPage = pageViews.find(function(view) {
         return view.dataset.pageView === page;
     });
-    if (!targetPage || (page === "company" && !currentUser)) return;
+    if (!targetPage) return;
 
     activePage = page;
     pageViews.forEach(function(view) {
@@ -137,7 +136,7 @@ function navigateToPage(page, updateHistory) {
         view.hidden = !isActive;
         view.classList.toggle("is-active", isActive);
     });
-    document.querySelectorAll(".footer-page-nav [data-page-link]").forEach(function(link) {
+    document.querySelectorAll(".footer-page-nav [data-page-link], .header-page-nav [data-page-link]").forEach(function(link) {
         const isActive = link.dataset.pageLink === page;
         link.classList.toggle("is-active", isActive);
         if (isActive) {
@@ -169,8 +168,7 @@ window.addEventListener("hashchange", function() {
 });
 
 const initialPage = window.location.hash.slice(1);
-if (pageViews.some(function(view) { return view.dataset.pageView === initialPage; }) &&
-    initialPage !== "company") {
+if (pageViews.some(function(view) { return view.dataset.pageView === initialPage; })) {
     navigateToPage(initialPage, false);
 }
 
@@ -194,8 +192,7 @@ function setPartnerPreview(active) {
         companyPortalStatus.approval_status === "approved";
     managementPanel.hidden = !isApproved;
     companyApplicationPanel.hidden = !signedIn || isApproved;
-    partnerLoginOpen.textContent = isApproved ? "Company Dashboard" : "Company Sign In";
-    companyPage.hidden = !signedIn;
+    companyPortalEntry.hidden = signedIn;
     document.getElementById("partnerLogout").hidden = !isApproved;
     document.getElementById("applicationLogout").hidden = !signedIn || isApproved;
     const companyName = isApproved ? partnerCompanyName.value || currentUser.email : "";
@@ -206,8 +203,6 @@ function setPartnerPreview(active) {
     if (signedIn) {
         navigateToPage("company");
         if (partnerLoginScreen.open) partnerLoginScreen.close();
-    } else if (activePage === "company") {
-        navigateToPage("home");
     }
 }
 
@@ -384,15 +379,19 @@ document.getElementById("popularRoutes").addEventListener("click", function(even
     document.getElementById("date").focus();
 });
 
-partnerLoginOpen.addEventListener("click", function() {
-    if (currentUser) {
-        navigateToPage("company");
-        return;
-    }
+function openCompanySignIn(signUp) {
     loginMessage.textContent = "";
     showPartnerLoginForm();
-    setPartnerFormMode(false);
+    setPartnerFormMode(signUp);
     partnerLoginScreen.showModal();
+}
+
+document.getElementById("companyPortalSignIn").addEventListener("click", function() {
+    openCompanySignIn(false);
+});
+
+document.getElementById("companyPortalRegister").addEventListener("click", function() {
+    openCompanySignIn(true);
 });
 
 document.getElementById("closePartnerLogin").addEventListener("click", function() {

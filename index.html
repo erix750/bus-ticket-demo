@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-company-verification-20261116">
+    <link rel="stylesheet" href="style.css?v=wayline-header-settings-20261116">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -29,6 +29,19 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
+            <nav class="header-page-nav" aria-label="Section navigation">
+                <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
+                <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
+                <a class="nav-link" href="#company" data-page-link="company">Company Portal</a>
+                <a class="nav-link" href="#about" data-page-link="about">About Us</a>
+                <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
+            </nav>
+            <div class="site-controls" role="group" aria-label="Website settings">
+                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
+                    <span id="themeToggleIcon" aria-hidden="true"></span>
+                </button>
+                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
+            </div>
         </div>
     </header>
 
@@ -65,7 +78,7 @@
                     <button class="button button-text" id="resendPasswordReset" type="button">Send another reset link</button>
                 </details>
                 <button class="button button-text" id="togglePartnerMode" type="button">Create a company account</button>
-                <p class="login-note">Use an email inbox you can access and confirm it before creating a company account. Payments are not processed yet.</p>
+                <p class="login-note">Use an email inbox you can access and confirm it before creating a company account.</p>
             </form>
             <form id="passwordRecoveryForm" class="login-form" hidden>
                 <p class="eyebrow">ACCOUNT RECOVERY</p>
@@ -455,6 +468,16 @@
         </section>
 
         <section class="page-view company-page" id="companyPage" data-page-view="company" aria-label="Bus company portal" hidden>
+        <section class="company-portal-entry" id="companyPortalEntry" aria-labelledby="companyPortalTitle">
+            <p class="eyebrow">WAYLINE PARTNERS</p>
+            <h1 id="companyPortalTitle">Company Portal</h1>
+            <p>Register your transport company for verification, or sign in if your company has already been approved.</p>
+            <div class="company-portal-actions">
+                <button class="button button-primary" id="companyPortalSignIn" type="button">Company Sign In</button>
+                <button class="button button-secondary" id="companyPortalRegister" type="button">Register Your Company</button>
+            </div>
+            <p class="field-hint">Only approved companies can publish bus schedules or access company bookings.</p>
+        </section>
         <section class="company-application-panel" id="companyApplicationPanel" hidden aria-labelledby="companyApplicationTitle">
             <header class="application-portal-header">
                 <div>
@@ -750,9 +773,9 @@
         <nav class="footer-page-nav" aria-label="Main navigation">
             <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
             <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
+            <a class="nav-link" href="#company" data-page-link="company">Company Portal</a>
             <a class="nav-link" href="#about" data-page-link="about">About Us</a>
             <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
-            <button class="footer-company-action" id="partnerLoginOpen" type="button">Company Sign In</button>
         </nav>
     </footer>
 
@@ -819,12 +842,6 @@
                     <h2>Service</h2>
                     <p class="footer-service-area">Service area: Rwanda.</p>
                     <p class="footer-made-in-rwanda"><span role="img" aria-label="Flag of Rwanda">🇷🇼</span> Made in Rwanda</p>
-                    <div class="footer-controls" role="group" aria-label="Website settings">
-                        <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
-                            <span id="themeToggleIcon" aria-hidden="true"></span>
-                        </button>
-                        <button class="header-button" id="installApp" type="button" hidden>Install app</button>
-                    </div>
                 </section>
             </nav>
             <div class="footer-bottom">
@@ -839,7 +856,7 @@
     <script src="database.js?v=wayline-company-verification-20261116"></script>
     <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=wayline-company-verification-20261116"></script>
+    <script src="script.js?v=wayline-navigation-ussd-20261116"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

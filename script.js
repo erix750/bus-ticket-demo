@@ -48,10 +48,7 @@ function setColorTheme(theme, persist) {
     if (isDark) {
         themeToggleIcon.textContent = "☾";
     } else {
-        const sunIcon = document.createElement("img");
-        sunIcon.src = "assets/light-mode-sun.png";
-        sunIcon.alt = "";
-        themeToggleIcon.appendChild(sunIcon);
+        themeToggleIcon.textContent = "Light";
     }
     themeToggle.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
     themeToggle.title = isDark ? "Turn off dark mode" : "Turn on dark mode";

@@ -3579,11 +3579,11 @@ body.intro-active {
 .icon-button {
     display: inline-grid;
     place-items: center;
-    width: 46px;
-    padding: 0;
-    border-radius: 50%;
+    width: 62px;
+    padding: 0 10px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
-    font-size: 1.5rem;
+    font-size: 1rem;
 }
 
 .sign-in-button {

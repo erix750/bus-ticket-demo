@@ -31,6 +31,30 @@
         return result.data;
     }
 
+    function normalizeEmail(email) {
+        return String(email || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(email) {
+        const normalizedEmail = normalizeEmail(email);
+        const addressParts = normalizedEmail.split("@");
+        return normalizedEmail.length <= 254 &&
+            addressParts.length === 2 &&
+            addressParts[0].length <= 64 &&
+            /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9](?:[a-z0-9-]{0,57}[a-z0-9])?)$/.test(normalizedEmail);
+    }
+
+    function getPasswordValidationError(password) {
+        if (typeof password !== "string" || password.length < 12 || password.length > 128) {
+            return "Use a password between 12 and 128 characters.";
+        }
+        if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) ||
+            !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+            return "Include an uppercase letter, a lowercase letter, a number, and a symbol.";
+        }
+        return "";
+    }
+
     function mapBus(record) {
         const company = Array.isArray(record.companies) ? record.companies[0] : record.companies;
         return {
@@ -415,29 +439,39 @@
     }
 
     async function signIn(email, password) {
-        const result = await supabase.auth.signInWithPassword({ email: email, password: password });
+        const normalizedEmail = normalizeEmail(email);
+        if (!isValidEmail(normalizedEmail)) throw new Error("Enter a valid email address.");
+        const result = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: password });
         return throwIfError(result);
     }
 
     async function sendPasswordRecovery(email) {
+        const normalizedEmail = normalizeEmail(email);
+        if (!isValidEmail(normalizedEmail)) throw new Error("Enter a valid email address.");
         const siteUrl = (config.siteUrl || "").trim();
         if (!siteUrl) throw new Error("Set the published Wayline URL in config.js before requesting a password reset.");
-        const result = await supabase.auth.resetPasswordForEmail(email, {
+        const result = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
             redirectTo: siteUrl
         });
         throwIfError(result);
     }
 
     async function updatePassword(password) {
+        const passwordError = getPasswordValidationError(password);
+        if (passwordError) throw new Error(passwordError);
         const result = await supabase.auth.updateUser({ password: password });
         return throwIfError(result);
     }
 
     async function signUp(email, password, companyName) {
+        const normalizedEmail = normalizeEmail(email);
+        if (!isValidEmail(normalizedEmail)) throw new Error("Enter a valid company email address.");
+        const passwordError = getPasswordValidationError(password);
+        if (passwordError) throw new Error(passwordError);
         const siteUrl = (config.siteUrl || "").trim();
         if (!siteUrl) throw new Error("Set the published Wayline URL in config.js before creating a company account.");
         const result = await supabase.auth.signUp({
-            email: email,
+            email: normalizedEmail,
             password: password,
             options: {
                 data: { company_name: companyName },
@@ -478,6 +512,8 @@
         verifyPassengerBookingOtp: verifyPassengerBookingOtp,
         findPassengerBooking: findPassengerBooking,
         clearPassengerBookingSession: clearPassengerBookingSession,
+        isValidEmail: isValidEmail,
+        getPasswordValidationError: getPasswordValidationError,
         signIn: signIn,
         sendPasswordRecovery: sendPasswordRecovery,
         updatePassword: updatePassword,

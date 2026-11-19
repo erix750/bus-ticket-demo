@@ -6,7 +6,7 @@
     <meta name="description" content="Protected Wayline administrator company verification portal.">
     <meta name="theme-color" content="#173f70">
     <title>Wayline | Administrator</title>
-    <link rel="stylesheet" href="style.css?v=wayline-company-verification">
+    <link rel="stylesheet" href="style.css?v=company-auth-hardening-20261119">
 </head>
 <body class="admin-page">
     <header class="site-header">
@@ -35,6 +35,37 @@
                 <p id="adminLoginMessage" class="form-message" role="status" aria-live="polite"></p>
                 <a class="button button-text" href="index.html">Return to Wayline</a>
             </form>
+        </section>
+
+        <section class="admin-login-card" id="adminMfaPanel" hidden aria-labelledby="adminMfaTitle">
+            <p class="eyebrow">MULTI-FACTOR AUTHENTICATION</p>
+            <h1 id="adminMfaTitle">Verify administrator access</h1>
+            <p id="adminMfaMessage" class="form-message" role="status" aria-live="polite"></p>
+            <div id="adminMfaEnrollPrompt" hidden>
+                <p>Set up an authenticator app before accessing company records and documents.</p>
+                <button class="button button-primary" id="beginAdminMfaSetup" type="button">Set up authenticator</button>
+            </div>
+            <div id="adminMfaEnrollSetup" hidden>
+                <p>Scan this QR code with an authenticator app, then enter its current six-digit code.</p>
+                <img id="adminMfaQrCode" alt="Authenticator setup QR code">
+                <p class="field-hint">Manual setup key: <code id="adminMfaSecret"></code></p>
+                <form id="adminMfaEnrollForm" class="login-form">
+                    <div class="field">
+                        <label for="adminMfaEnrollCode">Authenticator code</label>
+                        <input id="adminMfaEnrollCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+                    </div>
+                    <button class="button button-primary" type="submit">Verify and enable MFA</button>
+                </form>
+            </div>
+            <form id="adminMfaChallengeForm" class="login-form" hidden>
+                <p>Enter the current six-digit code from your authenticator app.</p>
+                <div class="field">
+                    <label for="adminMfaChallengeCode">Authenticator code</label>
+                    <input id="adminMfaChallengeCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
+                <button class="button button-primary" type="submit">Verify and continue</button>
+            </form>
+            <button class="button button-text" id="adminMfaSignOut" type="button">Cancel and sign out</button>
         </section>
 
         <section class="admin-dashboard" id="adminDashboard" hidden aria-labelledby="adminDashboardTitle">
@@ -71,7 +102,7 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=wayline-company-verification"></script>
-    <script src="admin.js?v=wayline-company-verification"></script>
+    <script src="database.js?v=company-auth-hardening-20261119"></script>
+    <script src="admin.js?v=company-auth-hardening-20261119"></script>
 </body>
 </html>

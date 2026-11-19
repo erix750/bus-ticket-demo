@@ -284,7 +284,10 @@ function setPartnerFormMode(signUp) {
         ? "Already have an account? Sign in"
         : "Create a company account";
     document.getElementById("partnerPassword").autocomplete = signUp ? "new-password" : "current-password";
-    document.getElementById("partnerPassword").placeholder = "At least 6 characters";
+    document.getElementById("partnerPassword").minLength = signUp ? 12 : 0;
+    document.getElementById("partnerPassword").placeholder = signUp
+        ? "At least 12 characters with upper/lowercase, number and symbol"
+        : "Enter your password";
     loginMessage.textContent = "";
 }
 
@@ -433,6 +436,12 @@ passwordRecoveryForm.addEventListener("submit", async function(event) {
     const password = document.getElementById("newPartnerPassword").value;
     const confirmation = document.getElementById("confirmPartnerPassword").value;
     const message = document.getElementById("passwordRecoveryMessage");
+    const passwordError = window.WaylineDatabase.getPasswordValidationError(password);
+    if (passwordError) {
+        message.textContent = passwordError;
+        document.getElementById("newPartnerPassword").focus();
+        return;
+    }
     if (password !== confirmation) {
         message.textContent = "The passwords do not match.";
         document.getElementById("confirmPartnerPassword").focus();
@@ -469,6 +478,17 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
         const email = document.getElementById("partnerEmail").value.trim();
         const password = document.getElementById("partnerPassword").value;
         if (isPartnerSignUp) {
+            if (!window.WaylineDatabase.isValidEmail(email)) {
+                loginMessage.textContent = "Enter a valid company email address with a working inbox.";
+                document.getElementById("partnerEmail").focus();
+                return;
+            }
+            const passwordError = window.WaylineDatabase.getPasswordValidationError(password);
+            if (passwordError) {
+                loginMessage.textContent = passwordError;
+                document.getElementById("partnerPassword").focus();
+                return;
+            }
             const companyName = partnerCompanyName.value.trim();
             if (companyName.length < 2) {
                 loginMessage.textContent = "Enter a company name with at least 2 characters.";

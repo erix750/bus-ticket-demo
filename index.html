@@ -12,7 +12,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-theme-label-20261117">
+    <link rel="stylesheet" href="style.css?v=company-auth-hardening-20261119">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -60,7 +60,7 @@
                 </div>
                 <div class="field">
                     <label for="partnerPassword">Password</label>
-                    <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
+                    <input type="password" id="partnerPassword" autocomplete="current-password" placeholder="At least 12 characters with upper/lowercase, number and symbol" required>
                 </div>
                 <button class="button button-primary" id="partnerSubmitButton" type="submit">Sign in</button>
                 <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
@@ -79,11 +79,11 @@
                 <p class="login-intro">Enter a new password for your company account.</p>
                 <div class="field">
                     <label for="newPartnerPassword">New password</label>
-                    <input type="password" id="newPartnerPassword" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required>
+                    <input type="password" id="newPartnerPassword" autocomplete="new-password" minlength="12" maxlength="128" placeholder="At least 12 characters with upper/lowercase, number and symbol" required>
                 </div>
                 <div class="field">
                     <label for="confirmPartnerPassword">Confirm new password</label>
-                    <input type="password" id="confirmPartnerPassword" autocomplete="new-password" minlength="6" placeholder="Enter the password again" required>
+                    <input type="password" id="confirmPartnerPassword" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Enter the password again" required>
                 </div>
                 <button class="button button-primary" id="saveNewPassword" type="submit">Save new password</button>
                 <p class="form-message" id="passwordRecoveryMessage" role="status" aria-live="polite"></p>
@@ -846,10 +846,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
-    <script src="database.js?v=wayline-company-verification-20261116"></script>
+    <script src="database.js?v=company-auth-hardening-20261119"></script>
     <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=wayline-navigation-ussd-20261116"></script>
+    <script src="script.js?v=company-auth-hardening-20261119"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

@@ -2643,6 +2643,18 @@ summary:focus-visible {
         box-shadow: none;
     }
 
+    #adminMfaQrCode {
+        display: block;
+        width: min(220px, 100%);
+        margin: 18px auto;
+        border-radius: 8px;
+        background: #fff;
+    }
+
+    #adminMfaSecret {
+        overflow-wrap: anywhere;
+    }
+
     .admin-dashboard {
         max-width: 1200px;
     }

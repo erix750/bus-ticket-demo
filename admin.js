@@ -3,11 +3,50 @@ const adminLoginPanel = document.getElementById("adminLoginPanel");
 const adminDashboard = document.getElementById("adminDashboard");
 const adminLoginMessage = document.getElementById("adminLoginMessage");
 const adminDashboardMessage = document.getElementById("adminDashboardMessage");
+const adminMfaPanel = document.getElementById("adminMfaPanel");
 let adminClient;
+let adminMfaFactorId = null;
+let adminMfaSetupFactorId = null;
 
 function setAdminView(isAdmin) {
     adminLoginPanel.hidden = isAdmin;
     adminDashboard.hidden = !isAdmin;
+    adminMfaPanel.hidden = true;
+}
+
+function showAdminMfa(mode, message) {
+    adminLoginPanel.hidden = true;
+    adminDashboard.hidden = true;
+    adminMfaPanel.hidden = false;
+    document.getElementById("adminMfaEnrollPrompt").hidden = mode !== "enroll";
+    document.getElementById("adminMfaEnrollSetup").hidden = mode !== "enroll-code";
+    document.getElementById("adminMfaChallengeForm").hidden = mode !== "challenge";
+    document.getElementById("adminMfaMessage").textContent = message || "";
+}
+
+async function prepareAdminMfa() {
+    const factorsResult = await adminClient.auth.mfa.listFactors();
+    if (factorsResult.error) throw new Error(factorsResult.error.message);
+    const verifiedFactor = (factorsResult.data.totp || []).find(function(factor) {
+        return factor.status === "verified";
+    });
+    if (verifiedFactor) {
+        adminMfaFactorId = verifiedFactor.id;
+        showAdminMfa("challenge", "Administrator access requires a verified authenticator factor.");
+        return;
+    }
+    showAdminMfa("enroll", "Set up an authenticator before accessing administrator features.");
+}
+
+async function verifyAdminMfaCode(factorId, code) {
+    const challengeResult = await adminClient.auth.mfa.challenge({ factorId: factorId });
+    if (challengeResult.error) throw new Error(challengeResult.error.message);
+    const verifyResult = await adminClient.auth.mfa.verify({
+        factorId: factorId,
+        challengeId: challengeResult.data.id,
+        code: code
+    });
+    if (verifyResult.error) throw new Error(verifyResult.error.message);
 }
 
 function appendText(parent, tagName, text, className) {
@@ -265,9 +304,17 @@ async function loadAdminDashboard() {
 }
 
 async function verifyAdminAndShowDashboard() {
+    const assuranceResult = await adminClient.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assuranceResult.error) throw new Error(assuranceResult.error.message);
+    if (assuranceResult.data.currentLevel !== "aal2") {
+        await prepareAdminMfa();
+        return false;
+    }
+
     const authorized = await adminDatabase.isWaylineAdmin();
     if (!authorized) {
         await adminDatabase.signOut();
+        adminMfaPanel.hidden = true;
         setAdminView(false);
         adminLoginMessage.textContent = "This account is not authorized to access Wayline administration.";
         return false;
@@ -276,6 +323,79 @@ async function verifyAdminAndShowDashboard() {
     await loadAdminDashboard();
     return true;
 }
+
+document.getElementById("beginAdminMfaSetup").addEventListener("click", async function() {
+    this.disabled = true;
+    const message = document.getElementById("adminMfaMessage");
+    message.textContent = "";
+    try {
+        const result = await adminClient.auth.mfa.enroll({
+            factorType: "totp",
+            issuer: "Wayline"
+        });
+        if (result.error) throw new Error(result.error.message);
+        adminMfaSetupFactorId = result.data.id;
+        document.getElementById("adminMfaQrCode").src = result.data.totp.qr_code;
+        document.getElementById("adminMfaSecret").textContent = result.data.totp.secret;
+        showAdminMfa("enroll-code", "Scan the QR code and verify a code to finish setup.");
+    } catch (error) {
+        message.textContent = error.message || "Could not set up administrator MFA.";
+    } finally {
+        this.disabled = false;
+    }
+});
+
+document.getElementById("adminMfaEnrollForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const button = this.querySelector("button[type='submit']");
+    button.disabled = true;
+    const message = document.getElementById("adminMfaMessage");
+    message.textContent = "";
+    try {
+        await verifyAdminMfaCode(
+            adminMfaSetupFactorId,
+            document.getElementById("adminMfaEnrollCode").value.trim()
+        );
+        await verifyAdminAndShowDashboard();
+    } catch (error) {
+        message.textContent = error.message || "Could not verify the authenticator code.";
+    } finally {
+        button.disabled = false;
+    }
+});
+
+document.getElementById("adminMfaChallengeForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const button = this.querySelector("button[type='submit']");
+    button.disabled = true;
+    const message = document.getElementById("adminMfaMessage");
+    message.textContent = "";
+    try {
+        await verifyAdminMfaCode(
+            adminMfaFactorId,
+            document.getElementById("adminMfaChallengeCode").value.trim()
+        );
+        await verifyAdminAndShowDashboard();
+    } catch (error) {
+        message.textContent = error.message || "Could not verify the authenticator code.";
+    } finally {
+        button.disabled = false;
+    }
+});
+
+document.getElementById("adminMfaSignOut").addEventListener("click", async function() {
+    this.disabled = true;
+    try {
+        await adminDatabase.signOut();
+        adminMfaPanel.hidden = true;
+        setAdminView(false);
+        adminLoginMessage.textContent = "You have signed out.";
+    } catch (error) {
+        document.getElementById("adminMfaMessage").textContent = error.message || "Could not sign out.";
+    } finally {
+        this.disabled = false;
+    }
+});
 
 document.getElementById("adminLoginForm").addEventListener("submit", async function(event) {
     event.preventDefault();
@@ -317,6 +437,12 @@ document.getElementById("adminSignOut").addEventListener("click", async function
 
 async function initializeAdminPortal() {
     adminClient = await adminDatabase.open();
+    adminClient.auth.onAuthStateChange(function(event) {
+        if (event === "SIGNED_OUT") {
+            setAdminView(false);
+            adminLoginMessage.textContent = "Your administrator session has ended. Sign in again.";
+        }
+    });
     const sessionResult = await adminClient.auth.getSession();
     if (sessionResult.error) throw new Error(sessionResult.error.message);
     if (!sessionResult.data.session) {

@@ -190,6 +190,43 @@ function createLocalDemoService(fareService) {
                 return { data: null, error: { message: "The selected trip has already departed." } };
             }
 
+            const nowMs = Date.now();
+            const activeHoldBookings = [];
+            client.bookings.forEach(function(booking) {
+                if (booking.passenger_phone !== phone ||
+                    booking.cancelled ||
+                    !["demo-unpaid", "pending"].includes(booking.payment_status)) {
+                    return;
+                }
+                if (booking.reservation_expires_at_ms <= nowMs) {
+                    booking.payment_status = "expired";
+                    booking.cancelled = true;
+                    booking.expired_at = new Date(nowMs).toISOString();
+                    const heldBus = client.buses.find(function(item) {
+                        return item.id === booking.bus_id;
+                    });
+                    if (heldBus) {
+                        heldBus.available_seats = Math.min(
+                            heldBus.total_seats,
+                            heldBus.available_seats + booking.seat_count
+                        );
+                    }
+                    return;
+                }
+                activeHoldBookings.push(booking);
+            });
+            const activeSeatCount = activeHoldBookings.reduce(function(total, booking) {
+                return total + booking.seat_count;
+            }, 0);
+            if (activeHoldBookings.length >= 3 || activeSeatCount + parameters.p_seat_count > 20) {
+                return {
+                    data: null,
+                    error: {
+                        message: "This phone number already has the maximum active seat holds."
+                    }
+                };
+            }
+
             bus.available_seats -= parameters.p_seat_count;
             const booking = {
                 id: randomUUID(),
@@ -203,6 +240,9 @@ function createLocalDemoService(fareService) {
                 payment_method: parameters.p_payment_method,
                 payment_status: "demo-unpaid",
                 cancelled: false,
+                reservation_expires_at: new Date(nowMs + (15 * 60 * 1000)).toISOString(),
+                reservation_expires_at_ms: nowMs + (15 * 60 * 1000),
+                expired_at: null,
                 company_name: bus.companies.name,
                 bus_name: bus.name,
                 from_city: bus.from_city,

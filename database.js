@@ -109,6 +109,8 @@
             paymentMethod: record.payment_method,
             paymentStatus: record.payment_status,
             cancelled: Boolean(record.cancelled),
+            reservationExpiresAt: record.reservation_expires_at || "",
+            expiredAt: record.expired_at || "",
             companyView: companyView
         };
     }

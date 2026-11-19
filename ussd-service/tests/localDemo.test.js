@@ -56,3 +56,31 @@ test("local prototype rejects overselling and invalid caller data", async functi
     assert.match(result.error.message, /no longer available/i);
     assert.equal(demo.bookings().length, 0);
 });
+
+test("local prototype enforces the three-booking and twenty-seat hold limits", async function() {
+    const demo = createLocalDemoService(createFareService());
+    const trip = (await createTripService(demo.client).listUpcoming())[0];
+    const phone = "+250781234567";
+
+    for (let index = 0; index < 3; index += 1) {
+        const result = await demo.client.rpc("ussd_book_bus", {
+            p_session_id: "AT-limit-" + index,
+            p_bus_id: trip.id,
+            p_passenger_name: "Test Passenger",
+            p_passenger_phone: phone,
+            p_seat_count: 1,
+            p_payment_method: "MTN Mobile Money"
+        });
+        assert.equal(result.error, null);
+    }
+
+    const fourth = await demo.client.rpc("ussd_book_bus", {
+        p_session_id: "AT-limit-fourth",
+        p_bus_id: trip.id,
+        p_passenger_name: "Test Passenger",
+        p_passenger_phone: phone,
+        p_seat_count: 1,
+        p_payment_method: "MTN Mobile Money"
+    });
+    assert.match(fourth.error.message, /maximum active seat holds/i);
+});

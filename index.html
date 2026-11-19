@@ -13,7 +13,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=company-auth-hardening-20261119">
+    <link rel="stylesheet" href="style.css?v=wayline-home-search-20261119">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -31,10 +31,24 @@
                 <span>WAYLINE</span>
             </a>
             <div class="site-controls" role="group" aria-label="Website settings">
-                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Turn on dark mode" aria-pressed="false" title="Turn on dark mode">
+                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
                     <span id="themeToggleIcon" aria-hidden="true"></span>
                 </button>
-                <button class="header-button" id="installApp" type="button" hidden>Install app</button>
+                <details class="header-menu">
+                    <summary class="header-button header-menu-toggle" aria-label="Menu" title="Menu">
+                        <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                    </summary>
+                    <div class="header-menu-panel">
+                        <nav class="header-page-nav" aria-label="Main navigation">
+                            <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
+                            <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
+                            <a class="nav-link" href="#company" data-page-link="company">Company Portal</a>
+                            <a class="nav-link" href="#about" data-page-link="about">About Us</a>
+                            <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
+                        </nav>
+                        <button class="header-button header-install-button" id="installApp" type="button" hidden>Install app</button>
+                    </div>
+                </details>
             </div>
         </div>
     </header>
@@ -202,14 +216,62 @@
         <section class="page-view is-active" id="homePage" data-page-view="home" aria-labelledby="page-title">
             <section class="intro hero-landing" aria-labelledby="page-title">
                 <div class="hero-copy">
-                    <div class="hero-title-wrap">
-                        <div class="hero-logo-line" aria-hidden="true"></div>
-                        <h1 id="page-title">
-                            <span class="title-main">WAYLINE</span>
-                        </h1>
+                    <p class="eyebrow hero-eyebrow">Rwanda’s bus booking</p>
+                    <h1 id="page-title">Book bus tickets across Rwanda</h1>
+                    <p>No account needed to book.</p>
+                </div>
+                <form class="hero-search" id="heroSearchForm" aria-label="Search bus schedules">
+                    <div class="field">
+                        <label for="heroFrom">Leaving from</label>
+                        <input type="text" id="heroFrom" name="from" maxlength="60" placeholder="Departure city" autocomplete="address-level2" required>
                     </div>
-                    <p>Book your bus tickets easily, travel comfortably and reach your destination.</p>
-                    <button class="cta-button" id="bookJourneyButton" type="button">Book Your Journey <span aria-hidden="true">›</span></button>
+                    <div class="field">
+                        <label for="heroTo">Going to</label>
+                        <input type="text" id="heroTo" name="to" maxlength="60" placeholder="Destination city" autocomplete="off" required>
+                    </div>
+                    <div class="field">
+                        <label for="heroDate">Travel date</label>
+                        <input type="date" id="heroDate" name="date" required>
+                    </div>
+                    <div class="field">
+                        <label for="heroPassengers">Passengers</label>
+                        <input type="number" id="heroPassengers" name="passengers" min="1" max="20" value="1" required>
+                    </div>
+                    <button class="button button-primary" type="submit">Search buses <span aria-hidden="true">→</span></button>
+                </form>
+            </section>
+            <section class="home-trust" aria-labelledby="homeTrustTitle">
+                <div class="home-trust-heading">
+                    <div>
+                        <p class="eyebrow">PLAN WITH CONFIDENCE</p>
+                        <h2 id="homeTrustTitle">See what’s available</h2>
+                    </div>
+                    <p>Routes and starting fares are based on current published schedules.</p>
+                </div>
+                <div class="home-route-grid" id="homeRouteHighlights" aria-live="polite"></div>
+                <div class="home-trust-points">
+                    <article class="home-trust-card home-company-proof">
+                        <span class="home-trust-icon" aria-hidden="true">✓</span>
+                        <div>
+                            <h3>Approved company schedules</h3>
+                            <p><strong id="homeCompanyCount">0</strong> companies with upcoming trips</p>
+                            <div class="home-company-names" id="homeCompanyNames"></div>
+                        </div>
+                    </article>
+                    <article class="home-trust-card">
+                        <span class="home-trust-icon" aria-hidden="true">↗</span>
+                        <div>
+                            <h3>No passenger account</h3>
+                            <p>Search and reserve with your contact details.</p>
+                        </div>
+                    </article>
+                    <article class="home-trust-card">
+                        <span class="home-trust-icon" aria-hidden="true">RWF</span>
+                        <div>
+                            <h3>Payments coming soon</h3>
+                            <p>MTN MoMo and Airtel Money are planned. Wayline does not collect payments yet.</p>
+                        </div>
+                    </article>
                 </div>
             </section>
         </section>
@@ -856,8 +918,8 @@
     <script src="database.js?v=company-auth-hardening-20261119"></script>
     <script src="booking-status.js?v=wayline-hold-expiration-20261119"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=wayline-hold-expiration-20261119"></script>
-    <script src="pwa.js"></script>
-    <script src="footer.js"></script>
+    <script src="script.js?v=wayline-home-search-20261119"></script>
+    <script src="pwa.js?v=wayline-home-search-20261119"></script>
+    <script src="footer.js?v=wayline-home-search-20261119"></script>
 </body>
 </html>

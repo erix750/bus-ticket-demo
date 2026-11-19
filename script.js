@@ -46,12 +46,12 @@ function setColorTheme(theme, persist) {
     themeToggle.setAttribute("aria-pressed", String(isDark));
     themeToggleIcon.replaceChildren();
     if (isDark) {
-        themeToggleIcon.textContent = "☾";
+        themeToggleIcon.textContent = "☀";
     } else {
-        themeToggleIcon.textContent = "Light";
+        themeToggleIcon.textContent = "☾";
     }
-    themeToggle.setAttribute("aria-label", isDark ? "Light mode" : "Dark mode");
-    themeToggle.title = isDark ? "Turn off dark mode" : "Turn on dark mode";
+    themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    themeToggle.title = isDark ? "Switch to light mode" : "Switch to dark mode";
     themeColorMeta.content = isDark ? "#0d1620" : "#173f70";
 
     if (persist) {
@@ -100,6 +100,7 @@ function normalizeBus(bus) {
 }
 
 const searchForm = document.getElementById("searchForm");
+const heroSearchForm = document.getElementById("heroSearchForm");
 const busForm = document.getElementById("busForm");
 const searchMessage = document.getElementById("searchMessage");
 const searchResults = document.getElementById("searchResults");
@@ -133,7 +134,7 @@ function navigateToPage(page, updateHistory) {
         view.hidden = !isActive;
         view.classList.toggle("is-active", isActive);
     });
-    document.querySelectorAll(".footer-page-nav [data-page-link]").forEach(function(link) {
+    document.querySelectorAll(".footer-page-nav [data-page-link], .header-page-nav [data-page-link]").forEach(function(link) {
         const isActive = link.dataset.pageLink === page;
         link.classList.toggle("is-active", isActive);
         if (isActive) {
@@ -154,6 +155,8 @@ document.querySelectorAll("[data-page-link]").forEach(function(link) {
     link.addEventListener("click", function(event) {
         event.preventDefault();
         navigateToPage(link.dataset.pageLink);
+        const headerMenu = link.closest(".header-menu");
+        if (headerMenu) headerMenu.open = false;
     });
 });
 
@@ -311,6 +314,7 @@ async function refreshAppData() {
     updateCitySuggestions();
     updateCompanyOptions();
     updatePopularRoutes();
+    renderHomeTrustCues();
     renderBookings();
     renderBuses();
 }
@@ -329,6 +333,7 @@ async function refreshBusAvailability(showSuccess) {
         updateCitySuggestions();
         updateCompanyOptions();
         updatePopularRoutes();
+        renderHomeTrustCues();
         renderBuses();
         if (document.getElementById("date").value) performSearch();
         if (showSuccess) {
@@ -348,13 +353,6 @@ async function refreshBusAvailability(showSuccess) {
 
 document.getElementById("refreshAvailability").addEventListener("click", function() {
     refreshBusAvailability(true);
-});
-
-document.getElementById("bookJourneyButton").addEventListener("click", function() {
-    navigateToPage("booking");
-    window.requestAnimationFrame(function() {
-        document.getElementById("from").focus({ preventScroll: true });
-    });
 });
 
 document.getElementById("popularRoutes").addEventListener("click", function(event) {
@@ -765,6 +763,8 @@ function isTripUpcoming(bus) {
 const today = getRwandaDateTime().date;
 document.getElementById("date").min = today;
 document.getElementById("busDate").min = today;
+document.getElementById("heroDate").min = today;
+document.getElementById("heroDate").value = today;
 const routeDistanceInput = document.getElementById("routeDistance");
 const routeDistanceStatus = document.getElementById("routeDistanceStatus");
 const calculateRouteDistanceButton = document.getElementById("calculateRouteDistance");
@@ -1120,6 +1120,86 @@ function updatePopularRoutes() {
         routeGroup.appendChild(button);
     });
     routeGroup.hidden = routes.size === 0;
+}
+
+function renderHomeTrustCues() {
+    const availableBuses = buses.filter(function(bus) {
+        return bus.isActive && !bus.isCancelled && bus.availableSeats > 0 &&
+            bus.routeDistanceKm > 0 && bus.company && bus.from && bus.to &&
+            isTripUpcoming(bus);
+    });
+    const companies = Array.from(new Set(availableBuses.map(function(bus) {
+        return bus.company.trim();
+    }))).filter(Boolean).sort(function(first, second) {
+        return first.localeCompare(second);
+    });
+    document.getElementById("homeCompanyCount").textContent = String(companies.length);
+
+    const companyNames = document.getElementById("homeCompanyNames");
+    companyNames.replaceChildren();
+    if (companies.length) {
+        companies.slice(0, 4).forEach(function(company) {
+            companyNames.appendChild(makeElement("span", "home-company-chip", company));
+        });
+    } else {
+        companyNames.appendChild(makeElement("span", "home-company-empty", "No trips are currently listed."));
+    }
+
+    const routes = new Map();
+    availableBuses.forEach(function(bus) {
+        const key = routeUtils.normalizeCity(bus.from) + "::" + routeUtils.normalizeCity(bus.to);
+        let route = routes.get(key);
+        if (!route) {
+            route = {
+                from: bus.from,
+                to: bus.to,
+                fare: Number(bus.fare),
+                date: bus.date,
+                departureTime: bus.departureTime,
+                departures: 0
+            };
+            routes.set(key, route);
+        }
+        route.departures += 1;
+        route.fare = Math.min(route.fare, Number(bus.fare));
+        if (bus.date < route.date ||
+            (bus.date === route.date && bus.departureTime < route.departureTime)) {
+            route.date = bus.date;
+            route.departureTime = bus.departureTime;
+        }
+    });
+
+    const routeHighlights = document.getElementById("homeRouteHighlights");
+    routeHighlights.replaceChildren();
+    const featuredRoutes = Array.from(routes.values()).sort(function(first, second) {
+        return second.departures - first.departures ||
+            first.fare - second.fare ||
+            first.from.localeCompare(second.from);
+    }).slice(0, 3);
+
+    if (!featuredRoutes.length) {
+        routeHighlights.appendChild(makeElement("p", "home-route-empty", "No trips are currently listed."));
+        return;
+    }
+
+    featuredRoutes.forEach(function(route) {
+        const card = makeElement("button", "home-route-card");
+        card.type = "button";
+        card.dataset.from = route.from;
+        card.dataset.to = route.to;
+        card.dataset.date = route.date;
+        const fare = makeElement("span", "home-route-fare");
+        fare.append(
+            makeElement("span", "home-route-fare-label", "From"),
+            makeElement("strong", "", formatFare(route.fare))
+        );
+        card.append(
+            makeElement("strong", "home-route-name", routeUtils.formatRoute(route.from, route.to)),
+            fare,
+            makeElement("span", "home-route-action", "Search this route")
+        );
+        routeHighlights.appendChild(card);
+    });
 }
 
 function updateCitySuggestions() {
@@ -2050,6 +2130,29 @@ searchForm.addEventListener("submit", function(event) {
     event.preventDefault();
     searchMessage.textContent = "";
     performSearch();
+});
+
+heroSearchForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+    document.getElementById("from").value = document.getElementById("heroFrom").value.trim();
+    document.getElementById("to").value = document.getElementById("heroTo").value.trim();
+    document.getElementById("date").value = document.getElementById("heroDate").value;
+    document.getElementById("seatCount").value = document.getElementById("heroPassengers").value;
+    companyFilter.value = "";
+    navigateToPage("booking");
+    window.requestAnimationFrame(function() {
+        searchForm.requestSubmit();
+    });
+});
+
+document.getElementById("homeRouteHighlights").addEventListener("click", function(event) {
+    const route = event.target.closest(".home-route-card");
+    if (!route) return;
+    document.getElementById("heroFrom").value = route.dataset.from;
+    document.getElementById("heroTo").value = route.dataset.to;
+    document.getElementById("heroDate").value = route.dataset.date;
+    document.getElementById("heroPassengers").value = "1";
+    heroSearchForm.requestSubmit();
 });
 
 busForm.addEventListener("submit", async function(event) {

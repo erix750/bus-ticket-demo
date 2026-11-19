@@ -10,12 +10,12 @@
     const isInstalled = window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
 
-    installButton.hidden = isInstalled;
+    installButton.hidden = isInstalled || !(isAppleMobile || isAndroid);
 
     window.addEventListener("beforeinstallprompt", function(event) {
         event.preventDefault();
         installPrompt = event;
-        installButton.hidden = false;
+        if (!isInstalled) installButton.hidden = false;
     });
 
     installButton.addEventListener("click", async function() {

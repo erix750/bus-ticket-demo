@@ -92,11 +92,11 @@ function createUssdController(services) {
             page.items = state.tripOptions;
             return pageMessage(state, "tripPrompt", page, function(trip) {
                 return trip.departureTime + " " + trip.name.slice(0, 8) + " " +
-                    fareService.formatRwf(trip.fare);
+                    fareService.formatRwf(trip.selectedFare || trip.fare);
             }).message;
         }
         if (state.step === "seats") {
-            const trip = await tripService.getAvailableById(state.tripId);
+            const trip = await tripService.getAvailableById(state.tripId, state.origin, state.destination);
             if (!trip) return translate(state, "tripUnavailable");
             return translate(state, "seatsPrompt") + "\n" + seatService.options(trip.availableSeats).map(function(seats) {
                 return seats + ". " + seats;
@@ -105,12 +105,12 @@ function createUssdController(services) {
         if (state.step === "name") return translate(state, "namePrompt");
         if (state.step === "payment") return translate(state, "paymentPrompt");
         if (state.step === "confirm") {
-            const trip = await tripService.getAvailableById(state.tripId);
+            const trip = await tripService.getAvailableById(state.tripId, state.origin, state.destination);
             if (!trip) return translate(state, "tripUnavailable");
             return translate(state, "confirmPrompt", {
                 route: mapService.routeSummary(trip),
                 seats: state.seats,
-                total: fareService.formatRwf(fareService.total(trip.fare, state.seats)),
+                total: fareService.formatRwf(fareService.total(trip.selectedFare || trip.fare, state.seats)),
                 method: state.paymentMethod
             });
         }
@@ -284,7 +284,7 @@ function createUssdController(services) {
         }
 
         if (state.step === "seats") {
-            const trip = await tripService.getAvailableById(state.tripId);
+            const trip = await tripService.getAvailableById(state.tripId, state.origin, state.destination);
             const seats = Number(value);
             if (!trip) {
                 state.step = "trip";
@@ -329,7 +329,7 @@ function createUssdController(services) {
             }
             if (value !== "1") return invalid();
             await sessionService.save(session.sessionId, session.phone, state, nextCursor);
-            const trip = await tripService.getAvailableById(state.tripId);
+            const trip = await tripService.getAvailableById(state.tripId, state.origin, state.destination);
             if (!trip || !seatService.isAvailable(trip.availableSeats, state.seats)) {
                 const completed = completedState(state, "unavailable");
                 await sessionService.save(session.sessionId, session.phone, completed, nextCursor);
@@ -341,7 +341,9 @@ function createUssdController(services) {
                 passengerName: state.passengerName,
                 phone: session.phone,
                 seats: state.seats,
-                paymentMethod: state.paymentMethod
+                paymentMethod: state.paymentMethod,
+                origin: state.origin,
+                destination: state.destination
             });
             const reference = String(booking.id).replace(/-/g, "").slice(0, 12).toUpperCase();
             const completed = completedState(state, "booked", reference);

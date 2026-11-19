@@ -1,13 +1,37 @@
+const routeUtils = require("../../route-utils");
+
 function createLocationService() {
+    function pathForTrip(trip) {
+        const path = routeUtils.routePath(trip.from, trip.to, trip.intermediateStops);
+        const segments = trip.routeSegments || [];
+        if (!path.length || segments.length !== path.length - 1) return [trip.from, trip.to];
+        const validSegments = segments.every(function(segment, index) {
+            return routeUtils.normalizeCity(segment.from) === routeUtils.normalizeCity(path[index]) &&
+                routeUtils.normalizeCity(segment.to) === routeUtils.normalizeCity(path[index + 1]) &&
+                Number.isFinite(segment.distanceKm) && segment.distanceKm >= 0.1;
+        });
+        return validSegments ? path : [trip.from, trip.to];
+    }
+
     function listOrigins(trips) {
-        return Array.from(new Set(trips.map(function(trip) { return trip.from; })))
+        const origins = [];
+        trips.forEach(function(trip) {
+            pathForTrip(trip).slice(0, -1).forEach(function(city) { origins.push(city); });
+        });
+        return Array.from(new Set(origins))
             .sort(function(first, second) { return first.localeCompare(second); });
     }
 
     function listDestinations(trips, origin) {
-        return Array.from(new Set(trips.filter(function(trip) {
-            return trip.from.toLocaleLowerCase() === origin.toLocaleLowerCase();
-        }).map(function(trip) { return trip.to; })))
+        const destinations = [];
+        trips.forEach(function(trip) {
+            const path = pathForTrip(trip);
+            const originIndex = path.findIndex(function(city) {
+                return routeUtils.normalizeCity(city) === routeUtils.normalizeCity(origin);
+            });
+            if (originIndex >= 0) destinations.push.apply(destinations, path.slice(originIndex + 1));
+        });
+        return Array.from(new Set(destinations))
             .sort(function(first, second) { return first.localeCompare(second); });
     }
 

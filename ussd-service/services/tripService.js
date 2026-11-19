@@ -34,7 +34,18 @@ function createTripService(supabase) {
             fare: Number(record.fare),
             routeDistanceKm: Number(record.route_distance_km) || 0,
             estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
-            intermediateStops: record.intermediate_stops || ""
+            intermediateStops: record.intermediate_stops || "",
+            fareCategory: record.fare_category || "intercity",
+            routeSegments: Array.isArray(record.route_segments) ? record.route_segments.map(function(segment) {
+                return {
+                    from: segment.from,
+                    to: segment.to,
+                    distanceKm: Number(segment.distanceKm),
+                    fare: Number(segment.fare)
+                };
+            }) : [],
+            isCancelled: record.is_cancelled === true,
+            companyApproved: Boolean(company && company.approval_status === "approved")
         };
     }
 
@@ -42,48 +53,98 @@ function createTripService(supabase) {
         return trip.date > now.date || (trip.date === now.date && trip.departureTime > now.time);
     }
 
+    function selectTrips(now, id, includeSegments) {
+        const columns = [
+            "id", "from_city", "to_city", "travel_date", "departure_time", "name",
+            "available_seats", "fare", "route_distance_km", "fare_category",
+            "estimated_duration_minutes", "intermediate_stops", "is_cancelled",
+            "companies(name, approval_status)"
+        ];
+        if (includeSegments) columns.splice(columns.indexOf("companies(name, approval_status)"), 0, "route_segments");
+        let query = supabase
+            .from("buses")
+            .select(columns.join(", "))
+            .eq("is_active", true)
+            .eq("is_cancelled", false)
+            .gt("available_seats", 0)
+            .gte("travel_date", now.date);
+        if (id) return query.eq("id", id).maybeSingle();
+        return query.order("travel_date").order("departure_time").limit(1000);
+    }
+
+    async function fetchTrips(now, id) {
+        let result = await selectTrips(now, id, true);
+        if (result.error && (result.error.code === "42703" || /route_segments/i.test(result.error.message || ""))) {
+            result = await selectTrips(now, id, false);
+        }
+        if (result.error) throw new Error(result.error.message);
+        return result.data;
+    }
+
+    function withRouteSection(trip, origin, destination) {
+        let fareDetails = null;
+        if (trip.routeSegments.length) {
+            fareDetails = routeUtils.calculateSegmentFare(
+                trip.from,
+                trip.to,
+                trip.intermediateStops,
+                trip.routeSegments,
+                origin,
+                destination,
+                trip.fareCategory
+            );
+        } else if (routeUtils.normalizeCity(trip.from) === routeUtils.normalizeCity(origin) &&
+            routeUtils.normalizeCity(trip.to) === routeUtils.normalizeCity(destination)) {
+            fareDetails = {
+                from: trip.from,
+                to: trip.to,
+                distanceKm: trip.routeDistanceKm,
+                fare: trip.fare
+            };
+        }
+        if (!fareDetails) return null;
+        const section = routeUtils.findRouteSection(
+            trip.from,
+            trip.to,
+            trip.intermediateStops,
+            fareDetails.from,
+            fareDetails.to
+        );
+        return Object.assign({}, trip, {
+            selectedFrom: fareDetails.from,
+            selectedTo: fareDetails.to,
+            selectedDistanceKm: fareDetails.distanceKm,
+            selectedFare: fareDetails.fare,
+            selectedStops: section.slice(1, -1)
+        });
+    }
+
     async function listUpcoming() {
         const now = rwandaDateTime();
-        const result = await supabase
-            .from("buses")
-            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, estimated_duration_minutes, intermediate_stops, companies(name)")
-            .eq("is_active", true)
-            .gt("available_seats", 0)
-            .gte("travel_date", now.date)
-            .order("travel_date")
-            .order("departure_time")
-            .limit(1000);
-        if (result.error) throw new Error(result.error.message);
-        return result.data.map(mapTrip).filter(function(trip) {
-            return isUpcoming(trip, now) && trip.from && trip.to &&
+        const records = await fetchTrips(now);
+        return records.map(mapTrip).filter(function(trip) {
+            return trip.companyApproved && !trip.isCancelled && isUpcoming(trip, now) && trip.from && trip.to &&
                 trip.routeDistanceKm > 0 && trip.fare > 0;
         });
     }
 
     async function listForRoute(origin, destination, date, company) {
         return (await listUpcoming()).filter(function(trip) {
-            return routeUtils.normalizeCity(trip.from) === routeUtils.normalizeCity(origin) &&
-                routeUtils.normalizeCity(trip.to) === routeUtils.normalizeCity(destination) &&
-                trip.date === date &&
+            return trip.date === date &&
                 (!company || trip.company.toLocaleLowerCase() === company.toLocaleLowerCase());
-        });
+        }).map(function(trip) {
+            return withRouteSection(trip, origin, destination);
+        }).filter(Boolean);
     }
 
-    async function getAvailableById(id) {
+    async function getAvailableById(id, origin, destination) {
         const now = rwandaDateTime();
-        const result = await supabase
-            .from("buses")
-            .select("id, from_city, to_city, travel_date, departure_time, name, available_seats, fare, route_distance_km, estimated_duration_minutes, intermediate_stops, companies(name)")
-            .eq("id", id)
-            .eq("is_active", true)
-            .gt("available_seats", 0)
-            .maybeSingle();
-        if (result.error) throw new Error(result.error.message);
-        if (!result.data) return null;
-        const trip = mapTrip(result.data);
-        return isUpcoming(trip, now) && trip.routeDistanceKm > 0 && trip.fare > 0
-            ? trip
-            : null;
+        const record = await fetchTrips(now, id);
+        if (!record) return null;
+        const trip = mapTrip(record);
+        if (!trip.companyApproved || trip.isCancelled || !isUpcoming(trip, now) ||
+            trip.routeDistanceKm <= 0 || trip.fare <= 0) return null;
+        return origin && destination ? withRouteSection(trip, origin, destination) : trip;
     }
 
     function travelDates() {

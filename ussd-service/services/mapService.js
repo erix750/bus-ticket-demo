@@ -2,11 +2,16 @@ const routeUtils = require("../../route-utils");
 
 function createMapService() {
     function routeSummary(trip) {
-        const distance = Number(trip.routeDistanceKm);
-        const from = trip.from.length > 18 ? trip.from.slice(0, 15) + "..." : trip.from;
-        const to = trip.to.length > 18 ? trip.to.slice(0, 15) + "..." : trip.to;
+        const selectedFrom = trip.selectedFrom || trip.from;
+        const selectedTo = trip.selectedTo || trip.to;
+        const selectedDistance = Number(trip.selectedDistanceKm);
+        const distance = selectedDistance > 0 ? selectedDistance : Number(trip.routeDistanceKm);
+        const from = selectedFrom.length > 18 ? selectedFrom.slice(0, 15) + "..." : selectedFrom;
+        const to = selectedTo.length > 18 ? selectedTo.slice(0, 15) + "..." : selectedTo;
         const route = routeUtils.formatRoute(from, to);
-        const stops = routeUtils.parseStops(trip.intermediateStops)
+        const stops = (Array.isArray(trip.selectedStops)
+            ? trip.selectedStops
+            : routeUtils.parseStops(trip.intermediateStops))
             .slice(0, 2)
             .map(function(stop) {
                 return stop.length > 18 ? stop.slice(0, 15) + "..." : stop;
@@ -14,7 +19,9 @@ function createMapService() {
         const details = [];
         if (stops.length) details.push("via " + stops.slice(0, 2).join(", "));
         if (Number.isFinite(distance) && distance > 0) details.push(distance + " km");
-        if (Number.isFinite(trip.estimatedDurationMinutes) && trip.estimatedDurationMinutes > 0) {
+        const isFullRoute = routeUtils.normalizeCity(selectedFrom) === routeUtils.normalizeCity(trip.from) &&
+            routeUtils.normalizeCity(selectedTo) === routeUtils.normalizeCity(trip.to);
+        if (isFullRoute && Number.isFinite(trip.estimatedDurationMinutes) && trip.estimatedDurationMinutes > 0) {
             details.push("about " + Math.ceil(trip.estimatedDurationMinutes / 60) + "h");
         }
         return details.length ? route + " (" + details.join(", ") + ")" : route;

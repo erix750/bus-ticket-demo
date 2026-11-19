@@ -1,5 +1,16 @@
 (function() {
     function describe(booking) {
+        const paymentStatus = String(booking.paymentStatus || "").toLowerCase().replace(/_/g, "-");
+        if (paymentStatus === "expired") {
+            return {
+                bookingLabel: "Reservation expired",
+                paymentLabel: "Not paid",
+                description: "The unpaid seat hold expired and the seats have been released.",
+                nextStep: "Search again for available seats or contact the bus company.",
+                className: "status-cancelled"
+            };
+        }
+
         if (booking.cancelled) {
             return {
                 bookingLabel: "Cancelled",
@@ -10,7 +21,6 @@
             };
         }
 
-        const paymentStatus = String(booking.paymentStatus || "").toLowerCase().replace(/_/g, "-");
         if (paymentStatus === "paid") {
             return {
                 bookingLabel: "Paid ticket confirmed",

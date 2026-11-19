@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'; upgrade-insecure-requests; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://fkmpiuoveqqkboolzyid.supabase.co wss://fkmpiuoveqqkboolzyid.supabase.co https://photon.komoot.io https://router.project-osrm.org; worker-src 'self' blob:; manifest-src 'self'">
     <meta name="description" content="Securely look up your Wayline bus booking with your reference and verified phone number.">
     <meta name="theme-color" content="#173f70">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -104,10 +105,10 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0" integrity="sha384-gnyZit14c5lnGcarmA166QQjjJXpucw25ogZXuwH3HxxY904zHkBqmxVpelsPorb" crossorigin="anonymous"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=wayline-trip-cancellation-20261110"></script>
-    <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
+    <script src="booking-status.js?v=wayline-hold-expiration-20261119"></script>
     <script src="route-utils.js?v=wayline-routes-20261110"></script>
     <script src="booking-lookup.js?v=wayline-booking-snapshot-20261110"></script>
     <script src="pwa.js"></script>

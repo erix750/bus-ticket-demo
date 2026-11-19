@@ -1,4 +1,4 @@
-const CACHE_NAME = "wayline-shell-v63";
+const CACHE_NAME = "wayline-shell-v64";
 const APP_SHELL = [
     "./",
     "./index.html",

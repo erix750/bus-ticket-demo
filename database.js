@@ -73,6 +73,14 @@
             estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
             intermediateStops: record.intermediate_stops || "",
             fareCategory: record.fare_category || "intercity",
+            routeSegments: Array.isArray(record.route_segments) ? record.route_segments.map(function(segment) {
+                return {
+                    from: segment.from,
+                    to: segment.to,
+                    distanceKm: Number(segment.distanceKm),
+                    fare: Number(segment.fare)
+                };
+            }) : [],
             isActive: record.is_active !== false,
             isCancelled: record.is_cancelled === true,
             logo: company ? company.logo_data : ""
@@ -311,7 +319,7 @@
             .single();
         throwIfError(profileResult);
 
-        const insertResult = await supabase.from("buses").insert({
+        const schedule = {
             company_id: user.id,
             name: bus.name,
             from_city: bus.from,
@@ -323,7 +331,12 @@
             estimated_duration_minutes: bus.estimatedDurationMinutes || null,
             intermediate_stops: bus.intermediateStops || "",
             fare_category: bus.fareCategory
-        }).select("*, companies(name, logo_data)").single();
+        };
+        if (Array.isArray(bus.routeSegments) && bus.routeSegments.length) {
+            schedule.route_segments = bus.routeSegments;
+        }
+        const insertResult = await supabase.from("buses").insert(schedule)
+            .select("*, companies(name, logo_data)").single();
         return mapBus(throwIfError(insertResult));
     }
 
@@ -333,9 +346,7 @@
         const user = userResult.data.user;
         if (!user) throw new Error("Sign in with a company account before updating schedules.");
 
-        const result = await supabase
-            .from("buses")
-            .update({
+        const schedule = {
                 name: bus.name,
                 from_city: bus.from,
                 to_city: bus.to,
@@ -346,7 +357,11 @@
                 estimated_duration_minutes: bus.estimatedDurationMinutes || null,
                 intermediate_stops: bus.intermediateStops || "",
                 fare_category: bus.fareCategory
-            })
+            };
+        if (Array.isArray(bus.routeSegments)) schedule.route_segments = bus.routeSegments;
+        const result = await supabase
+            .from("buses")
+            .update(schedule)
             .eq("id", busId)
             .eq("company_id", user.id)
             .select("*, companies(name, logo_data)")
@@ -394,14 +409,28 @@
         if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to remove it.");
     }
 
-    async function createBooking(bus, passengerName, passengerPhone, seatCount, paymentMethod) {
-        const result = await supabase.rpc("book_bus", {
-            p_bus_id: bus.id,
-            p_passenger_name: passengerName,
-            p_passenger_phone: passengerPhone,
-            p_seat_count: seatCount,
-            p_payment_method: paymentMethod
-        });
+    async function createBooking(bus, passengerName, passengerPhone, seatCount, paymentMethod, origin, destination) {
+        const isFullRoute = !origin || !destination || (
+            window.WaylineRouteUtils.normalizeCity(origin) === window.WaylineRouteUtils.normalizeCity(bus.from) &&
+            window.WaylineRouteUtils.normalizeCity(destination) === window.WaylineRouteUtils.normalizeCity(bus.to)
+        );
+        const result = isFullRoute
+            ? await supabase.rpc("book_bus", {
+                p_bus_id: bus.id,
+                p_passenger_name: passengerName,
+                p_passenger_phone: passengerPhone,
+                p_seat_count: seatCount,
+                p_payment_method: paymentMethod
+            })
+            : await supabase.rpc("book_bus_segment", {
+                p_bus_id: bus.id,
+                p_origin_city: origin,
+                p_destination_city: destination,
+                p_passenger_name: passengerName,
+                p_passenger_phone: passengerPhone,
+                p_seat_count: seatCount,
+                p_payment_method: paymentMethod
+            });
         const booking = throwIfError(result);
         return Object.assign(mapBooking(booking, false), {
             company: bus.company,

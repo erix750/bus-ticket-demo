@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-src 'none'; upgrade-insecure-requests; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://fkmpiuoveqqkboolzyid.supabase.co wss://fkmpiuoveqqkboolzyid.supabase.co https://photon.komoot.io https://router.project-osrm.org; worker-src 'self' blob:; manifest-src 'self'">
     <meta name="description" content="Find Rwanda bus trips, check RURA-based fares in RWF, and manage your tickets with Wayline.">
     <meta name="theme-color" content="#173f70">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -694,6 +695,11 @@
                         <label for="intermediateStops">Intermediate stops (optional)</label>
                         <input type="text" id="intermediateStops" name="intermediateStops" maxlength="300" placeholder="Enter stops in order, separated by commas">
                     </div>
+                    <div class="field field-wide" id="routeSegmentDistanceField" hidden>
+                        <label for="routeSegmentDistances">Verified distance per leg (km)</label>
+                        <input type="text" id="routeSegmentDistances" name="routeSegmentDistances" inputmode="decimal" autocomplete="off" placeholder="e.g. 40, 35, 45">
+                        <p class="field-hint" id="routeSegmentDistanceHint">Enter one verified driving distance for each adjacent pair of stops, in route order.</p>
+                    </div>
                     <label class="field-wide route-check-label" for="routeActualChecked">
                         <input type="checkbox" id="routeActualChecked" required>
                         <span>I checked this distance against the actual bus route before publishing this fare.</span>
@@ -737,7 +743,7 @@
                         </div>
                         <span id="companyBookingCount" class="count-badge">0</span>
                     </div>
-                    <p class="field-hint">Bookings show their unpaid or cancelled status. Wayline does not process payments yet.</p>
+                    <p class="field-hint">Bookings show their unpaid, expired, or cancelled status. Wayline does not process payments yet.</p>
                     <div class="dashboard-filters" aria-label="Filter bookings">
                         <label class="field">
                             <span>Search bookings</span>
@@ -749,6 +755,7 @@
                                 <option value="all">All trips</option>
                                 <option value="upcoming">Upcoming</option>
                                 <option value="completed">Completed</option>
+                                <option value="expired">Expired reservations</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </label>
@@ -844,12 +851,12 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0" integrity="sha384-gnyZit14c5lnGcarmA166QQjjJXpucw25ogZXuwH3HxxY904zHkBqmxVpelsPorb" crossorigin="anonymous"></script>
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=company-auth-hardening-20261119"></script>
-    <script src="booking-status.js?v=wayline-trip-cancellation-20261110"></script>
+    <script src="booking-status.js?v=wayline-hold-expiration-20261119"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
-    <script src="script.js?v=company-auth-hardening-20261119"></script>
+    <script src="script.js?v=wayline-hold-expiration-20261119"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>

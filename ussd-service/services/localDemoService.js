@@ -56,7 +56,8 @@ function createSeedBuses(fareService) {
             fare_category: item[6],
             fare: fareService.calculate(item[5], item[6]),
             is_active: true,
-            companies: { name: item[4] }
+            is_cancelled: false,
+            companies: { name: item[4], approval_status: "approved" }
         };
     });
 }

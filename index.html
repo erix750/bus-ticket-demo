@@ -13,7 +13,7 @@
     <link rel="icon" href="icons/wayline-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/wayline-192.png">
     <title>Wayline | Rwanda Bus Tickets and Schedules</title>
-    <link rel="stylesheet" href="style.css?v=wayline-home-search-20261119">
+    <link rel="stylesheet" href="style.css?v=clean-header-v1">
 </head>
 <body>
     <div class="brand-reveal" id="brandReveal" aria-live="polite">
@@ -30,24 +30,21 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
-            <details class="header-menu">
-                <summary class="header-button header-menu-toggle" aria-label="Menu" title="Menu">
-                    <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-                </summary>
-            </details>
-            <div class="header-menu-panel">
-                <nav class="header-page-nav" aria-label="Main navigation">
-                    <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
-                    <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
-                    <a class="nav-link" href="#company" data-page-link="company">Company Portal</a>
-                    <a class="nav-link" href="#about" data-page-link="about">About Us</a>
-                    <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
-                </nav>
-                <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
-            </div>
-            <div class="site-controls" role="group" aria-label="Website settings">
+            <nav class="header-page-nav" id="siteNav" aria-label="Main navigation">
+                <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
+                <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
+                <a class="nav-link" href="#about" data-page-link="about">About Us</a>
+                <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
+                <a class="nav-link nav-cta" href="#company" data-page-link="company">Company Portal</a>
+                <div class="nav-mobile-actions"></div>
+            </nav>
+            <div class="header-actions" role="group" aria-label="Website settings">
                 <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
                     <span id="themeToggleIcon" aria-hidden="true"></span>
+                </button>
+                <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
+                <button class="header-button icon-button menu-toggle" id="menuToggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="siteNav" title="Menu">
+                    <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
                 </button>
             </div>
         </div>
@@ -940,8 +937,8 @@
     <script src="booking-status.js?v=wayline-hold-expiration-20261119"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
     <script src="booking-utils.js?v=wayline-unit-test-utils-20261121"></script>
-    <script src="script.js?v=wayline-home-search-20261119"></script>
-    <script src="pwa.js?v=wayline-home-search-20261119"></script>
-    <script src="footer.js?v=wayline-home-search-20261119"></script>
+    <script src="script.js?v=clean-header-v1"></script>
+    <script src="pwa.js?v=clean-header-v1"></script>
+    <script src="footer.js?v=clean-header-v1"></script>
 </body>
 </html>

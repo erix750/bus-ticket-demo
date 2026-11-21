@@ -313,9 +313,10 @@ function translateTree(root) {
 }
 
 function installLanguageSelector() {
+    const headerActions = document.querySelector(".header-actions");
     const headerControls = document.querySelector(".site-controls");
     const footerGroup = document.querySelector(".footer-link-group:last-child");
-    let controls = headerControls || (footerGroup && footerGroup.querySelector(".footer-controls"));
+    let controls = headerActions || headerControls || (footerGroup && footerGroup.querySelector(".footer-controls"));
     if (!controls && !footerGroup) return;
     if (!controls) {
         controls = document.createElement("div");
@@ -346,16 +347,119 @@ function installLanguageSelector() {
         } catch (error) {
             console.error("Could not save the Wayline language preference.", error);
         }
-        translateTree(document);
+        translateTree(headerOnlyTranslation ? document.querySelector(".site-header") : document);
         select.value = currentLanguage;
     });
     label.appendChild(select);
     controls.prepend(label);
 }
 
-if (!document.querySelector(".policy-page")) {
-    installLanguageSelector();
-    document.documentElement.lang = currentLanguage === "rw" ? "rw" : currentLanguage;
+const policyPage = Boolean(document.querySelector(".policy-page"));
+const headerOnlyTranslation = policyPage || document.body.classList.contains("admin-page");
+
+function initializeThemeToggle() {
+    const themeToggle = document.getElementById("themeToggle");
+    const themeToggleIcon = document.getElementById("themeToggleIcon");
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeToggle || !themeToggleIcon) return;
+
+    function setColorTheme(theme, persist) {
+        const isDark = theme === "dark";
+        const label = translatedValue(isDark ? "Switch to light mode" : "Switch to dark mode", currentLanguage);
+        document.documentElement.dataset.theme = isDark ? "dark" : "light";
+        themeToggle.setAttribute("aria-pressed", String(isDark));
+        themeToggleIcon.textContent = isDark ? "☀" : "☾";
+        themeToggle.setAttribute("aria-label", label);
+        themeToggle.title = label;
+        if (themeColorMeta) themeColorMeta.content = isDark ? "#0d1620" : "#173f70";
+
+        if (persist) {
+            try {
+                localStorage.setItem("wayline-theme", isDark ? "dark" : "light");
+            } catch (error) {
+                console.error("Could not save the Wayline color theme preference.", error);
+            }
+        }
+    }
+
+    let savedTheme = "light";
+    try {
+        if (localStorage.getItem("wayline-theme") === "dark") savedTheme = "dark";
+    } catch (error) {
+        console.error("Could not read the Wayline color theme preference.", error);
+    }
+    setColorTheme(savedTheme, false);
+
+    themeToggle.addEventListener("click", function() {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        setColorTheme(nextTheme, true);
+    });
+}
+
+function initializeHeaderMenu() {
+    const siteHeader = document.querySelector(".site-header");
+    const siteNav = document.getElementById("siteNav");
+    const headerActions = document.querySelector(".header-actions");
+    const menuToggle = document.getElementById("menuToggle");
+    const mobileActions = siteNav && siteNav.querySelector(".nav-mobile-actions");
+    const languageControl = headerActions && headerActions.querySelector(".footer-language-control");
+    const themeToggle = document.getElementById("themeToggle");
+    const installButton = document.getElementById("installApp");
+    if (!siteHeader || !siteNav || !headerActions || !menuToggle || !mobileActions || !languageControl) return;
+
+    function setMenuOpen(isOpen, returnFocus) {
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        siteHeader.classList.toggle("is-menu-open", isOpen);
+        if (!isOpen && returnFocus) menuToggle.focus();
+    }
+
+    function moveHeaderActions() {
+        const isMobile = window.innerWidth < 900;
+        if (isMobile) {
+            mobileActions.append(languageControl);
+            if (installButton) mobileActions.append(installButton);
+            return;
+        }
+
+        if (themeToggle) headerActions.insertBefore(languageControl, themeToggle);
+        if (installButton) headerActions.insertBefore(installButton, menuToggle);
+        setMenuOpen(false, false);
+    }
+
+    menuToggle.addEventListener("click", function() {
+        setMenuOpen(menuToggle.getAttribute("aria-expanded") !== "true", false);
+    });
+
+    siteNav.addEventListener("click", function(event) {
+        const link = event.target instanceof Element && event.target.closest("[data-page-link]");
+        if (link) setMenuOpen(false, false);
+    });
+
+    document.addEventListener("click", function(event) {
+        if (menuToggle.getAttribute("aria-expanded") === "true" &&
+            !siteNav.contains(event.target) &&
+            !menuToggle.contains(event.target)) {
+            setMenuOpen(false, false);
+        }
+    });
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+            setMenuOpen(false, true);
+        }
+    });
+
+    window.addEventListener("resize", moveHeaderActions);
+    moveHeaderActions();
+}
+
+installLanguageSelector();
+initializeThemeToggle();
+initializeHeaderMenu();
+document.documentElement.lang = currentLanguage === "rw" ? "rw" : currentLanguage;
+if (headerOnlyTranslation) {
+    translateTree(document.querySelector(".site-header"));
+} else {
     translateTree(document);
     new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {

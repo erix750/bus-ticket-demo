@@ -7,7 +7,7 @@
     <meta name="description" content="Protected Wayline administrator company verification portal.">
     <meta name="theme-color" content="#173f70">
     <title>Wayline | Administrator</title>
-    <link rel="stylesheet" href="style.css?v=company-auth-hardening-20261119">
+    <link rel="stylesheet" href="style.css?v=clean-header-v1">
 </head>
 <body class="admin-page">
     <header class="site-header">
@@ -16,6 +16,23 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE <small>ADMIN</small></span>
             </a>
+            <nav class="header-page-nav" id="siteNav" aria-label="Main navigation">
+                <a class="nav-link" href="index.html#home" data-page-link="home">Home</a>
+                <a class="nav-link" href="index.html#booking" data-page-link="booking">Book a Ticket</a>
+                <a class="nav-link" href="index.html#about" data-page-link="about">About Us</a>
+                <a class="nav-link" href="index.html#contact" data-page-link="contact">Contact Us</a>
+                <a class="nav-link nav-cta is-active" href="index.html#company" data-page-link="company" aria-current="page">Company Portal</a>
+                <div class="nav-mobile-actions"></div>
+            </nav>
+            <div class="header-actions" role="group" aria-label="Website settings">
+                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+                    <span id="themeToggleIcon" aria-hidden="true"></span>
+                </button>
+                <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
+                <button class="header-button icon-button menu-toggle" id="menuToggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="siteNav" title="Menu">
+                    <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                </button>
+            </div>
         </div>
     </header>
     <main class="admin-main">
@@ -105,5 +122,7 @@
     <script src="config.js?v=password-recovery-redirect-20261029-1"></script>
     <script src="database.js?v=company-auth-hardening-20261119"></script>
     <script src="admin.js?v=company-auth-hardening-20261119"></script>
+    <script src="pwa.js?v=clean-header-v1"></script>
+    <script src="footer.js?v=clean-header-v1"></script>
 </body>
 </html>

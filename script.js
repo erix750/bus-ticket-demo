@@ -30,9 +30,6 @@ if (introReveal) {
     window.setTimeout(hideIntro, introDuration);
 }
 
-const themeToggle = document.getElementById("themeToggle");
-const themeToggleIcon = document.getElementById("themeToggleIcon");
-const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const routeUtils = window.WaylineRouteUtils;
 const ruraFarePerKm = routeUtils.ruraFarePerKm;
 const calculateFare = routeUtils.calculateFare;
@@ -40,42 +37,6 @@ const bookingUtils = window.WaylineBookingUtils;
 const validatePassengerNames = bookingUtils.validatePassengerNames;
 const normalizeRwandaPhoneNumber = bookingUtils.normalizeRwandaPhoneNumber;
 const commonCities = routeUtils.cities;
-
-function setColorTheme(theme, persist) {
-    const isDark = theme === "dark";
-    document.documentElement.dataset.theme = isDark ? "dark" : "light";
-    themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggleIcon.replaceChildren();
-    if (isDark) {
-        themeToggleIcon.textContent = "☀";
-    } else {
-        themeToggleIcon.textContent = "☾";
-    }
-    themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-    themeToggle.title = isDark ? "Switch to light mode" : "Switch to dark mode";
-    themeColorMeta.content = isDark ? "#0d1620" : "#173f70";
-
-    if (persist) {
-        try {
-            localStorage.setItem("wayline-theme", isDark ? "dark" : "light");
-        } catch (error) {
-            console.error("Could not save the Wayline color theme preference.", error);
-        }
-    }
-}
-
-let savedTheme = "light";
-try {
-    if (localStorage.getItem("wayline-theme") === "dark") savedTheme = "dark";
-} catch (error) {
-    console.error("Could not read the Wayline color theme preference.", error);
-}
-setColorTheme(savedTheme, false);
-
-themeToggle.addEventListener("click", function() {
-    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    setColorTheme(nextTheme, true);
-});
 
 function normalizeBus(bus) {
     return {
@@ -177,8 +138,6 @@ document.querySelectorAll("[data-page-link]").forEach(function(link) {
     link.addEventListener("click", function(event) {
         event.preventDefault();
         navigateToPage(link.dataset.pageLink);
-        const headerMenu = link.closest(".header-page-nav") && document.querySelector(".header-menu");
-        if (headerMenu) headerMenu.open = false;
     });
 });
 

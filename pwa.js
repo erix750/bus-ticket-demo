@@ -2,7 +2,52 @@
     const installButton = document.getElementById("installApp");
     if (!installButton) return;
 
-    const installGuide = document.getElementById("installGuide");
+    let installGuide = document.getElementById("installGuide");
+    if (!installGuide) {
+        installGuide = document.createElement("dialog");
+        installGuide.className = "checkout-dialog install-dialog";
+        installGuide.id = "installGuide";
+        installGuide.setAttribute("aria-labelledby", "installGuideTitle");
+
+        const content = document.createElement("div");
+        content.className = "checkout-content";
+
+        const closeButton = document.createElement("button");
+        closeButton.className = "dialog-close";
+        closeButton.id = "closeInstallGuide";
+        closeButton.type = "button";
+        closeButton.setAttribute("aria-label", "Close install instructions");
+        closeButton.innerHTML = "&times;";
+
+        const eyebrow = document.createElement("p");
+        eyebrow.className = "eyebrow";
+        eyebrow.textContent = "INSTALL WAYLINE";
+
+        const title = document.createElement("h2");
+        title.id = "installGuideTitle";
+        title.textContent = "Add Wayline to your phone";
+
+        const intro = document.createElement("p");
+        intro.id = "installGuideIntro";
+        intro.className = "checkout-route";
+
+        const steps = document.createElement("ol");
+        steps.id = "installGuideSteps";
+        steps.className = "install-steps";
+
+        const actions = document.createElement("div");
+        actions.className = "checkout-actions";
+        const doneButton = document.createElement("button");
+        doneButton.className = "button button-primary";
+        doneButton.id = "doneInstallGuide";
+        doneButton.type = "button";
+        doneButton.textContent = "Got it";
+        actions.appendChild(doneButton);
+
+        content.append(closeButton, eyebrow, title, intro, steps, actions);
+        installGuide.appendChild(content);
+        document.body.appendChild(installGuide);
+    }
     const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/i.test(navigator.userAgent);

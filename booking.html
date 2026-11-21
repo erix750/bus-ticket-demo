@@ -113,5 +113,17 @@
     <script src="booking-lookup.js?v=wayline-booking-snapshot-20261110"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
+    <script>
+        (function() {
+            try {
+                var names = JSON.parse(sessionStorage.getItem("wayline-passenger-names") || "[]");
+                if (!Array.isArray(names) || !names.length) {
+                    window.location.replace("index.html?passengerNamesRequired=1#home");
+                }
+            } catch (error) {
+                window.location.replace("index.html?passengerNamesRequired=1#home");
+            }
+        })();
+    </script>
 </body>
 </html>

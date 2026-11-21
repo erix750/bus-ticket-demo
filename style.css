@@ -5263,6 +5263,27 @@ main.welcome-main {
     white-space: nowrap;
 }
 
+.hero-passenger-names {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.hero-passenger-names .field {
+    border-right: 0;
+}
+
+.checkout-passenger-list,
+.field-label {
+    color: var(--ink);
+}
+
+.field-label {
+    margin: 0 0 6px;
+    font-weight: 700;
+}
+
 .home-trust {
     width: min(100% - 40px, 1280px);
     margin: clamp(28px, 5vw, 64px) auto 72px;
@@ -5594,6 +5615,10 @@ html[data-theme="dark"] .home-trust-icon {
         gap: 8px 10px;
         padding: 12px;
         border-radius: 16px;
+    }
+
+    .hero-passenger-names {
+        grid-template-columns: 1fr;
     }
 
     .hero-search .field {

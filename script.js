@@ -106,8 +106,6 @@ const searchMessage = document.getElementById("searchMessage");
 const searchResults = document.getElementById("searchResults");
 const busList = document.getElementById("busList");
 const companyFilter = document.getElementById("companyFilter");
-const passengerNameSearchInput = document.getElementById("searchPassengerName");
-const passengerNameInput = document.getElementById("passengerName");
 const passengerPhoneInput = document.getElementById("passengerPhone");
 const managementPanel = document.getElementById("managementPanel");
 const partnerLoginScreen = document.getElementById("partnerLoginScreen");
@@ -121,8 +119,39 @@ const partnerCompanyName = document.getElementById("partnerCompanyName");
 const passwordRecoveryForm = document.getElementById("passwordRecoveryForm");
 let activePage = "home";
 let companyPortalStatus = null;
+let passengerNames = [];
+
+function readPassengerNames() {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem("wayline-passenger-names") || "[]");
+        return Array.isArray(stored)
+            ? stored.map(function(name) { return String(name).trim(); }).filter(Boolean)
+            : [];
+    } catch (error) {
+        console.error("Could not read passenger names.", error);
+        return [];
+    }
+}
+
+passengerNames = readPassengerNames();
+
+function formatPassengerNames(names) {
+    return names.map(function(name, index) { return (index + 1) + ". " + name; }).join(" ");
+}
+
+function validatePassengerNames(names, seatCount) {
+    return Array.isArray(names) &&
+        names.length === seatCount &&
+        names.every(function(name) {
+            return typeof name === "string" && name.trim().length >= 1 && name.trim().length <= 80;
+        });
+}
 
 function navigateToPage(page, updateHistory) {
+    if (page === "booking" && !passengerNames.length) {
+        window.location.href = "index.html?passengerNamesRequired=1#home";
+        return;
+    }
     const targetPage = pageViews.find(function(view) {
         return view.dataset.pageView === page;
     });
@@ -170,6 +199,22 @@ window.addEventListener("hashchange", function() {
 const initialPage = window.location.hash.slice(1);
 if (pageViews.some(function(view) { return view.dataset.pageView === initialPage; })) {
     navigateToPage(initialPage, false);
+}
+
+if (initialPage === "booking" && !passengerNames.length) {
+    window.history.replaceState(null, "", "?passengerNamesRequired=1#home");
+}
+if (new URLSearchParams(window.location.search).get("passengerNamesRequired") === "1") {
+    window.requestAnimationFrame(function() {
+        const heroForm = document.getElementById("heroSearchForm");
+        if (!heroForm.querySelector(".hero-search-message")) {
+            const message = document.createElement("p");
+            message.className = "form-message hero-search-message";
+            message.textContent = "Enter passenger names to continue.";
+            message.setAttribute("role", "alert");
+            heroForm.prepend(message);
+        }
+    });
 }
 
 function showPasswordRecoveryForm() {
@@ -1339,8 +1384,10 @@ function openDemoCheckout(busId, seatCount, baseFare, totalFare, selectedBus) {
         return;
     }
 
-    passengerNameInput.value = passengerNameSearchInput.value.trim();
-    passengerNameInput.setCustomValidity("");
+    if (!validatePassengerNames(passengerNames, seatCount)) {
+        window.location.href = "index.html?passengerNamesRequired=1#home";
+        return;
+    }
     passengerPhoneInput.value = "";
     passengerPhoneInput.setCustomValidity("");
     document.getElementById("paymentMethod").value = "";
@@ -1362,11 +1409,12 @@ function openDemoCheckout(busId, seatCount, baseFare, totalFare, selectedBus) {
         " | " + bus.availableSeats + " seats remaining";
     document.getElementById("checkoutFare").textContent = formatFare(baseFare);
     document.getElementById("checkoutTotal").textContent = formatFare(totalFare);
+    document.getElementById("checkoutPassengerNames").textContent = "Passengers: " + formatPassengerNames(passengerNames);
     document.getElementById("checkoutEntryStep").hidden = false;
     document.getElementById("checkoutReviewStep").hidden = true;
     setBookingProgress(2);
     document.getElementById("checkoutDialog").showModal();
-    passengerNameInput.focus();
+    passengerPhoneInput.focus();
 }
 
 function performSearch() {
@@ -1479,7 +1527,7 @@ function populateBookingReview(bus) {
     const isFullRoute = routeUtils.normalizeCity(pendingBooking.from) === routeUtils.normalizeCity(bus.from) &&
         routeUtils.normalizeCity(pendingBooking.to) === routeUtils.normalizeCity(bus.to);
     const estimatedArrival = isFullRoute ? getEstimatedArrival(bus) : null;
-    document.getElementById("reviewPassenger").textContent = passengerNameInput.value.trim();
+    document.getElementById("reviewPassenger").textContent = "Passengers: " + formatPassengerNames(passengerNames);
     document.getElementById("reviewPhone").textContent =
         normalizeRwandaPhoneNumber(passengerPhoneInput.value);
     document.getElementById("reviewCompany").textContent = bus.company;
@@ -1508,12 +1556,12 @@ function populateBookingReview(bus) {
         document.getElementById("paymentMethod").value + " (not processed)";
 }
 
-async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, passengerPhone, paymentMethod, from, to) {
+async function bookTrip(busId, seatCount, baseFare, totalFare, passengerNamesToSave, passengerPhone, paymentMethod, from, to) {
     const bus = buses.find(function(item) { return item.id === busId; });
     const normalizedPhone = normalizeRwandaPhoneNumber(passengerPhone);
 
-    if (!passengerName) {
-        document.getElementById("passengerName").focus();
+    if (!validatePassengerNames(passengerNamesToSave, seatCount)) {
+        window.location.href = "index.html?passengerNamesRequired=1#home";
         return false;
     }
     if (!normalizedPhone) {
@@ -1531,7 +1579,7 @@ async function bookTrip(busId, seatCount, baseFare, totalFare, passengerName, pa
 
     const booking = await window.WaylineDatabase.createBooking(
         bus,
-        passengerName,
+        passengerNamesToSave,
         normalizedPhone,
         seatCount,
         paymentMethod,
@@ -1562,16 +1610,12 @@ document.getElementById("cancelCheckout").addEventListener("click", function() {
 
 document.getElementById("checkoutDialog").addEventListener("close", function() {
     pendingBooking = null;
-    passengerNameInput.value = "";
     passengerPhoneInput.value = "";
     document.getElementById("paymentMethod").value = "";
     document.getElementById("checkoutEntryStep").hidden = false;
     document.getElementById("checkoutReviewStep").hidden = true;
 });
 
-passengerNameInput.addEventListener("input", function() {
-    passengerNameInput.setCustomValidity("");
-});
 passengerPhoneInput.addEventListener("input", function() {
     passengerPhoneInput.setCustomValidity("");
 });
@@ -1579,14 +1623,15 @@ passengerPhoneInput.addEventListener("input", function() {
 document.getElementById("reviewBooking").addEventListener("click", function() {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
-    passengerNameInput.setCustomValidity(passengerNameInput.value.trim()
-        ? ""
-        : "Enter the passenger's full name.");
+    if (!validatePassengerNames(passengerNames, pendingBooking.seatCount)) {
+        window.location.href = "index.html?passengerNamesRequired=1#home";
+        return;
+    }
     const normalizedPhone = normalizeRwandaPhoneNumber(passengerPhoneInput.value);
     passengerPhoneInput.setCustomValidity(normalizedPhone
         ? ""
         : "Enter a valid Rwanda mobile number, such as 078 123 4567.");
-    if (!passengerNameInput.reportValidity() || !passengerPhoneInput.reportValidity()) return;
+    if (!passengerPhoneInput.reportValidity()) return;
     if (!paymentMethod.value) {
         paymentMethod.reportValidity();
         return;
@@ -1609,18 +1654,18 @@ document.getElementById("reviewBooking").addEventListener("click", function() {
 document.getElementById("editBookingDetails").addEventListener("click", function() {
     document.getElementById("checkoutReviewStep").hidden = true;
     document.getElementById("checkoutEntryStep").hidden = false;
-    passengerNameInput.focus();
+    passengerPhoneInput.focus();
 });
 
 document.getElementById("confirmBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
-    passengerNameInput.setCustomValidity("");
     passengerPhoneInput.setCustomValidity("");
-    if (!passengerNameInput.value.trim()) {
-        passengerNameInput.setCustomValidity("Enter the passenger's name.");
+    if (!validatePassengerNames(passengerNames, pendingBooking.seatCount)) {
+        window.location.href = "index.html?passengerNamesRequired=1#home";
+        return;
     }
-    if (!passengerNameInput.reportValidity() || !passengerPhoneInput.reportValidity()) return;
+    if (!passengerPhoneInput.reportValidity()) return;
     if (!paymentMethod.value) {
         paymentMethod.reportValidity();
         return;
@@ -1634,7 +1679,7 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
             pendingBooking.seatCount,
             pendingBooking.baseFare,
             pendingBooking.totalFare,
-            passengerNameInput.value.trim(),
+            passengerNames,
             passengerPhoneInput.value.trim(),
             paymentMethod.value,
             pendingBooking.from,
@@ -1649,7 +1694,8 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
             document.getElementById("bookingConfirmationTravel").textContent =
                 formatDate(booking.date) +
                 (booking.departureTime ? " at " + booking.departureTime : "");
-            document.getElementById("bookingConfirmationPassenger").textContent = booking.name;
+            document.getElementById("bookingConfirmationPassenger").textContent =
+                "Passengers: " + formatPassengerNames(booking.names || passengerNames);
             document.getElementById("bookingConfirmationCompany").textContent =
                 booking.company || "Company not recorded";
             document.getElementById("bookingConfirmationAmount").textContent =
@@ -1749,7 +1795,7 @@ function downloadPassengerManifest(bus) {
     }
 
     const rows = [
-        ["Bus", "Route", "Travel date", "Departure time", "Booking reference", "Passenger name", "Phone number", "Seats", "Booking status", "Payment status"]
+        ["Bus", "Route", "Travel date", "Departure time", "Booking reference", "Passenger names", "Phone number", "Seats", "Booking status", "Payment status"]
     ].concat(manifestBookings.map(function(booking) {
         return [
             booking.busName,
@@ -1757,7 +1803,7 @@ function downloadPassengerManifest(bus) {
             booking.date,
             booking.departureTime,
             formatBookingReference(booking.id),
-            booking.name,
+            (booking.names || [booking.name]).join("; "),
             booking.phone,
             booking.seats,
             String(booking.paymentStatus || "").toLowerCase() === "expired"
@@ -1800,6 +1846,7 @@ function renderBookings() {
         const status = bookingTripStatus(booking);
         const searchable = [
             booking.name,
+            (booking.names || []).join(" "),
             booking.phone,
             booking.company,
             booking.busName,
@@ -1851,7 +1898,9 @@ function renderBookings() {
             const details = makeElement(
                 "p",
                 "record-details",
-                "Passenger: " + booking.name + (booking.phone ? " | " + booking.phone : "") +
+                "Passengers: " + (booking.names || [booking.name]).map(function(name, index) {
+                    return (index + 1) + ". " + name;
+                }).join(" ") + (booking.phone ? " | " + booking.phone : "") +
                     "\nCompany: " + (booking.company || "Company not recorded") +
                     (booking.busName ? " | " + booking.busName : "") +
                     "\n" + formatDate(booking.date) +
@@ -2219,6 +2268,27 @@ function setBookingProgress(step) {
 
 heroSearchForm.addEventListener("submit", function(event) {
     event.preventDefault();
+    const count = Number(document.getElementById("heroPassengers").value);
+    const names = Array.from(document.querySelectorAll("#heroPassengerNames input")).map(function(input) {
+        return input.value.trim();
+    });
+    if (!validatePassengerNames(names, count)) {
+        const firstInvalid = Array.from(document.querySelectorAll("#heroPassengerNames input")).find(function(input) {
+            return !input.value.trim();
+        });
+        if (firstInvalid) {
+            firstInvalid.setCustomValidity("Enter this passenger's full name.");
+            firstInvalid.reportValidity();
+            firstInvalid.focus();
+        }
+        return;
+    }
+    passengerNames = names;
+    try {
+        sessionStorage.setItem("wayline-passenger-names", JSON.stringify(passengerNames));
+    } catch (error) {
+        console.error("Could not save passenger names for refresh.", error);
+    }
     document.getElementById("from").value = document.getElementById("heroFrom").value.trim();
     document.getElementById("to").value = document.getElementById("heroTo").value.trim();
     document.getElementById("date").value = document.getElementById("heroDate").value;
@@ -2229,6 +2299,46 @@ heroSearchForm.addEventListener("submit", function(event) {
         searchForm.requestSubmit();
     });
 });
+
+const heroPassengers = document.getElementById("heroPassengers");
+const heroPassengerNames = document.getElementById("heroPassengerNames");
+let heroNameDrafts = passengerNames.slice();
+
+function syncHeroPassengerFields() {
+    const count = Number(heroPassengers.value);
+    if (!Number.isInteger(count) || count < 1) return;
+    const safeCount = Math.min(count, 20);
+    Array.from(heroPassengerNames.querySelectorAll("input")).forEach(function(input, index) {
+        heroNameDrafts[index] = input.value;
+    });
+    heroPassengerNames.replaceChildren();
+    for (let index = 1; index <= safeCount; index++) {
+        const field = document.createElement("div");
+        field.className = "field hero-passenger-field";
+        const label = document.createElement("label");
+        label.htmlFor = "heroPassengerName" + index;
+        label.textContent = "Passenger " + index + " full name";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = "heroPassengerName" + index;
+        input.name = "heroPassengerName" + index;
+        input.autocomplete = "name";
+        input.maxLength = 80;
+        input.required = true;
+        input.placeholder = "Passenger " + index + " full name";
+        input.value = heroNameDrafts[index - 1] || (passengerNames[index - 1] || "");
+        input.addEventListener("input", function() {
+            heroNameDrafts[index - 1] = input.value;
+            input.setCustomValidity("");
+        });
+        field.append(label, input);
+        heroPassengerNames.appendChild(field);
+    }
+}
+
+heroPassengers.addEventListener("change", syncHeroPassengerFields);
+heroPassengers.addEventListener("input", syncHeroPassengerFields);
+syncHeroPassengerFields();
 
 document.getElementById("homeRouteHighlights").addEventListener("click", function(event) {
     const route = event.target.closest(".home-route-card");

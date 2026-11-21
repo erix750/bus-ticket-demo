@@ -102,7 +102,9 @@
             const details = makeElement(
                 "p",
                 "record-details",
-                "Passenger: " + (booking.name || "Name not recorded") +
+                "Passengers: " + ((booking.names && booking.names.length
+                    ? booking.names.map(function(name, index) { return (index + 1) + ". " + name; }).join(" ")
+                    : (booking.name || "Name not recorded"))) +
                     "\nCompany: " + (booking.company || "Company not recorded") +
                     (booking.busName ? " | " + booking.busName : "") +
                     "\nDeparture: " + formatDate(booking.date) +

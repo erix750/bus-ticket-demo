@@ -6138,12 +6138,16 @@ main.welcome-main {
 
     .header-menu-panel .header-page-nav {
         gap: 4px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(23, 63, 112, 0.14);
     }
 
     .header-menu-panel .nav-link {
         display: flex;
         min-height: 44px;
         align-items: center;
+        justify-content: flex-start;
+        text-align: left;
         border: 1px solid transparent;
         transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
     }
@@ -6153,6 +6157,10 @@ main.welcome-main {
         border-color: rgba(23, 63, 112, 0.18);
         background: #edf3fa;
         color: #173f70;
+    }
+
+    .header-menu-panel .nav-link.is-active {
+        box-shadow: inset 3px 0 #d9a51c;
     }
 
     .header-menu-panel .nav-link[data-page-link="company"] {
@@ -6169,7 +6177,6 @@ main.welcome-main {
 
     .header-menu-panel .header-install-button {
         min-height: 44px;
-        margin-top: 4px;
         line-height: 1.25;
     }
 

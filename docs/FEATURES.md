@@ -1,0 +1,37 @@
+# Wayline features
+
+- Passengers can search published bus schedules and reserve seats.
+- Each saved booking receives a reference and a clear reservation/payment status. Wayline does not yet collect or verify payments, so new bookings remain saved and unpaid.
+- New unpaid web and USSD reservations hold seats for 15 minutes before automatic cancellation and seat release. A phone number can hold at most 3 active bookings and 20 seats across the system.
+- Passengers enter their names in the homepage search; the contact phone number is collected at checkout and made available to the relevant bus company.
+- Passengers search and book without creating an account.
+- Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
+- Bus companies can add, edit, hide, cancel, and remove schedules; manage seat capacity; review bookings; and upload or independently update a company profile picture (PNG, JPG, or WebP up to 10 MB). Images are resized for display. Schedule edits preserve existing reservations and their original itinerary details. Cancelling a trip cancels its reservations and releases seats; companies must contact affected passengers directly.
+- Company schedule lists include past and full schedules. Booking records are restricted to schedules owned by the signed-in company.
+- Schedule fares are calculated from the route distance and selected RURA fare area.
+- Operators can list intermediate stops and estimated journey duration; online and USSD route labels share the same city-name formatting.
+- Operators must confirm they checked estimated city-center road distance against the actual bus route before saving a fare.
+- Company dashboards can filter schedules and bookings, group bookings by upcoming/completed/expired/cancelled trip status, and download passenger manifests for their own schedules.
+- Passengers review company, bus, route, stops, date, departure, estimated duration, seats, and total before saving, and can copy the booking reference.
+- Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
+- A searchable Help Center suggests answers about booking, payment, cancellations, and contact options. Footers include legal links, a Made in Rwanda identity, and the current-year copyright.
+- The booking interface and shared navigation support English, Kinyarwanda, and French. Legal policy documents remain in English.
+- Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
+- Footer links show Wayline's Rwanda service area and the current copyright year.
+- Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
+- Payment statuses and private payment/fee-ledger tables are prepared for future server-side integrations; no payment provider or collection flow is enabled.
+- The repository includes an Africa's Talking USSD callback for basic-phone reservations. USSD is not live until the provider provisions the shortcode and the service is deployed and configured.
+- Seat reservations update shared availability in Supabase. Passengers request cancellations from the relevant bus company. Wayline support: muvunyieric25@gmail.com and WhatsApp +250 798 230 630; support hours are not published.
+- Planned Eastern, Southern, Northern, and Western Province corridors are listed separately from live route suggestions. Search suggestions are generated only from active, upcoming schedules with seats available.
+- Bus availability is refreshed through Supabase Realtime, with a 30-second fallback refresh.
+- Company records and schedules are protected by Supabase authentication and row-level ownership policies. Schedule edits keep reservations attached, and seat-capacity edits cannot reduce capacity below the number already reserved.
+- Public pages apply a Content Security Policy, and the Supabase JavaScript client is pinned to version 2.119.0 with Subresource Integrity.
+- Operators can calculate estimated road distances from route cities and review or edit the result before the RWF fare is calculated using the selected RURA area tariff.
+- Full buses and trips whose departure time has passed are automatically excluded from public search while company schedules and booking records are retained.
+- Operators can hide and restore schedules without deleting the bus or its booking history.
+- The website can be installed from a supported mobile browser on Android and iPhone.
+- The header menu switches between Home, passenger booking, Company Portal, About, and Contact. The Home hero includes route, date, and passenger search; language, theme, and menu controls share one row, and the app-install action is inside the menu.
+- Company Portal provides separate sign-in and registration actions. Applications require administrator approval before schedules or company bookings are accessible.
+- New company accounts must submit company details and private supporting documents, then wait for administrator verification. Only approved companies can manage schedules or view their bookings.
+- A protected administrator portal lets provisioned Wayline administrators review applications, approve or reject companies, request changes, suspend or reactivate access, and inspect recent company activity.
+- Company application documents use a private Supabase Storage bucket. RLS and database-side approval checks restrict applications, schedules, company profiles, bookings, activity records, and document access.

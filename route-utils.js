@@ -6,6 +6,11 @@
         root.WaylineRouteUtils = routeUtils;
     }
 })(typeof globalThis === "object" ? globalThis : this, function() {
+    const ruraFarePerKm = Object.freeze({
+        kigali: 59.28,
+        intercity: 41.58
+    });
+
     const knownCities = [
         "Gicumbi",
         "Gakenke",
@@ -59,6 +64,12 @@
         return canonicalCity(from) + " to " + canonicalCity(to);
     }
 
+    function calculateFare(routeDistanceKm, fareCategory) {
+        const rate = ruraFarePerKm[fareCategory];
+        if (!Number.isFinite(routeDistanceKm) || routeDistanceKm <= 0 || !rate) return 0;
+        return Math.round(routeDistanceKm * rate);
+    }
+
     function parseStops(value) {
         return String(value || "")
             .split(/[,\n]/)
@@ -96,8 +107,7 @@
 
     function calculateSegmentFare(from, to, stops, segments, origin, destination, fareCategory) {
         const path = routePath(from, to, stops);
-        const rates = { kigali: 59.28, intercity: 41.58 };
-        const rate = rates[fareCategory];
+        const rate = ruraFarePerKm[fareCategory];
         if (!rate || !Array.isArray(segments) || segments.length !== path.length - 1) return null;
 
         for (let index = 0; index < segments.length; index += 1) {
@@ -131,10 +141,12 @@
 
     return Object.freeze({
         canonicalCity: canonicalCity,
+        calculateFare: calculateFare,
         cities: Object.freeze(knownCities.slice()),
         formatRoute: formatRoute,
         normalizeCity: normalizeCity,
         parseStops: parseStops,
+        ruraFarePerKm: ruraFarePerKm,
         routePath: routePath,
         findRouteSection: findRouteSection,
         buildRouteSegments: buildRouteSegments,

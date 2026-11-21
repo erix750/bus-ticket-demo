@@ -1,7 +1,3 @@
-const ruraFarePerKm = {
-    kigali: 59.28,
-    intercity: 41.58
-};
 let database;
 let currentUser = null;
 let isPartnerSignUp = false;
@@ -38,6 +34,11 @@ const themeToggle = document.getElementById("themeToggle");
 const themeToggleIcon = document.getElementById("themeToggleIcon");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const routeUtils = window.WaylineRouteUtils;
+const ruraFarePerKm = routeUtils.ruraFarePerKm;
+const calculateFare = routeUtils.calculateFare;
+const bookingUtils = window.WaylineBookingUtils;
+const validatePassengerNames = bookingUtils.validatePassengerNames;
+const normalizeRwandaPhoneNumber = bookingUtils.normalizeRwandaPhoneNumber;
 const commonCities = routeUtils.cities;
 
 function setColorTheme(theme, persist) {
@@ -137,14 +138,6 @@ passengerNames = readPassengerNames();
 
 function formatPassengerNames(names) {
     return names.map(function(name, index) { return (index + 1) + ". " + name; }).join(" ");
-}
-
-function validatePassengerNames(names, seatCount) {
-    return Array.isArray(names) &&
-        names.length === seatCount &&
-        names.every(function(name) {
-            return typeof name === "string" && name.trim().length >= 1 && name.trim().length <= 80;
-        });
 }
 
 function navigateToPage(page, updateHistory) {
@@ -832,16 +825,6 @@ function normalizedText(value) {
     return value.trim().toLocaleLowerCase();
 }
 
-function normalizeRwandaPhoneNumber(value) {
-    let phone = value.trim().replace(/[\s()-]/g, "");
-    if (/^0[0-9]{9}$/.test(phone)) {
-        phone = "+250" + phone.slice(1);
-    } else if (/^250[0-9]{9}$/.test(phone)) {
-        phone = "+" + phone;
-    }
-    return /^\+2507[0-9]{8}$/.test(phone) ? phone : "";
-}
-
 function formatBookingReference(bookingId) {
     return String(bookingId).replace(/-/g, "").slice(0, 12).toUpperCase();
 }
@@ -859,12 +842,6 @@ function formatFare(amount) {
     return "RWF " + new Intl.NumberFormat("en-RW", {
         maximumFractionDigits: 0
     }).format(Number(amount) || 0);
-}
-
-function calculateFare(routeDistanceKm, fareCategory) {
-    const rate = ruraFarePerKm[fareCategory];
-    if (!Number.isFinite(routeDistanceKm) || routeDistanceKm <= 0 || !rate) return 0;
-    return Math.round(routeDistanceKm * rate);
 }
 
 function updateCalculatedFare() {

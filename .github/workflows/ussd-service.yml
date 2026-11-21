@@ -33,3 +33,5 @@ jobs:
             node --check "$file"
           done
       - run: npm test
+      - name: Run repository unit tests
+        run: node --test ../tests

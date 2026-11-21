@@ -20,7 +20,7 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
-            <a class="header-button" href="index.html#searchPanel">Search buses</a>
+            <a class="header-button" href="index.html#booking">Search buses</a>
         </div>
     </header>
 
@@ -75,8 +75,8 @@
                 <section class="footer-link-group">
                     <h2>Explore</h2>
                     <a class="footer-nav-link" href="index.html#about">About</a>
-                    <a class="footer-nav-link" href="index.html#searchPanel">Find a Bus</a>
-                    <a class="footer-nav-link" href="index.html#searchPanel">Our Routes</a>
+                    <a class="footer-nav-link" href="index.html#booking">Find a Bus</a>
+                    <a class="footer-nav-link" href="index.html#booking">Our Routes</a>
                 </section>
                 <section class="footer-link-group">
                     <h2>Support</h2>
@@ -112,5 +112,17 @@
     <script src="booking-lookup.js?v=wayline-booking-snapshot-20261110"></script>
     <script src="pwa.js"></script>
     <script src="footer.js"></script>
+    <script>
+        (function() {
+            try {
+                var names = JSON.parse(sessionStorage.getItem("wayline-passenger-names") || "[]");
+                if (!Array.isArray(names) || !names.length) {
+                    window.location.replace("index.html?passengerNamesRequired=1#home");
+                }
+            } catch (error) {
+                window.location.replace("index.html?passengerNamesRequired=1#home");
+            }
+        })();
+    </script>
 </body>
 </html>

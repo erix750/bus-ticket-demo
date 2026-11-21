@@ -2952,6 +2952,51 @@ summary:focus-visible {
     outline-offset: 4px;
 }
 
+.hero-search-form {
+    width: min(760px, 100%);
+    margin-top: 22px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 16px;
+    background: rgba(10, 28, 47, 0.72);
+    backdrop-filter: blur(12px);
+}
+
+.hero-search-grid,
+.hero-passenger-names {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.hero-passenger-names {
+    margin-top: 12px;
+}
+
+.hero-search-form .field {
+    margin: 0;
+}
+
+.hero-search-form .hero-search-button {
+    width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+}
+
+.hero-search-message {
+    grid-column: 1 / -1;
+}
+
+.checkout-passenger-list {
+    line-height: 1.6;
+    color: var(--ink);
+}
+
+.field-label {
+    margin: 0 0 6px;
+    font-weight: 700;
+}
+
 .landing-features .feature-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
@@ -3079,6 +3124,20 @@ summary:focus-visible {
 }
 
 @media (max-width: 560px) {
+    .hero-search-form {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .hero-search-grid,
+    .hero-passenger-names {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-search-form .hero-search-button {
+        width: 100%;
+    }
+
     .search-passenger-name {
         grid-column: 1 / -1;
     }

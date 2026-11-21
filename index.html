@@ -95,6 +95,14 @@
     <dialog class="checkout-dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
         <div class="checkout-content">
             <button class="dialog-close" id="closeCheckout" type="button" aria-label="Close checkout">&times;</button>
+            <nav class="booking-progress checkout-progress" aria-label="Booking progress">
+                <ol>
+                    <li data-booking-step="1"><span>1</span><strong>Choose bus</strong></li>
+                    <li class="is-current" data-booking-step="2" aria-current="step"><span>2</span><strong>Your details</strong></li>
+                    <li data-booking-step="3"><span>3</span><strong>Reserve</strong></li>
+                    <li data-booking-step="4"><span>4</span><strong>Confirmation</strong></li>
+                </ol>
+            </nav>
             <p class="eyebrow">PASSENGER DETAILS</p>
             <div id="checkoutEntryStep">
                 <h2 id="checkoutTitle">Complete your booking</h2>
@@ -174,7 +182,7 @@
                 <div><dt>Booking status</dt><dd><span class="status-badge status-saved" id="bookingConfirmationBookingStatus"></span></dd></div>
                 <div><dt>Payment status</dt><dd id="bookingConfirmationPaymentStatus"></dd></div>
             </dl>
-            <p class="checkout-notice" id="bookingConfirmationMessage" role="status" aria-live="polite"></p>
+            <p class="checkout-notice" id="bookingConfirmationMessage" role="status" aria-live="polite">Seat reserved. Pay within 15:00 to keep it. Booking is unpaid until the company confirms payment.</p>
             <p class="field-hint" id="bookingConfirmationNextStep"></p>
             <div class="checkout-actions">
                 <button class="button button-text" id="closeBookingConfirmationDone" type="button">Done</button>
@@ -325,8 +333,8 @@
             <ol>
                 <li class="is-current" data-booking-step="1" aria-current="step"><span>1</span><strong>Choose bus</strong></li>
                 <li data-booking-step="2"><span>2</span><strong>Your details</strong></li>
-                <li data-booking-step="3"><span>3</span><strong>Pay</strong></li>
-                <li data-booking-step="4"><span>4</span><strong>Get ticket</strong></li>
+                <li data-booking-step="3"><span>3</span><strong>Reserve</strong></li>
+                <li data-booking-step="4"><span>4</span><strong>Confirmation</strong></li>
             </ol>
         </nav>
         <section class="panel search-panel original-search-panel" id="searchPanel" aria-labelledby="search-title">
@@ -453,6 +461,11 @@
                 <option value="Rusumo"></option>
             </datalist>
             <p id="searchMessage" class="form-message" role="status" aria-live="polite"></p>
+            <div class="no-results-actions" id="noResultsActions" hidden>
+                <button class="button button-text" id="searchPreviousDay" type="button">Try the day before</button>
+                <button class="button button-text" id="searchNextDay" type="button">Try the day after</button>
+                <a class="button button-text" id="searchPopularRoutes" href="#popularRoutes">View popular routes</a>
+            </div>
             <p class="field-hint" id="passengerDetailsHint">After you select a bus, enter the passenger's full name and phone number in the booking form.</p>
             <div id="searchResults" class="results-list" aria-live="polite"></div>
         </section>

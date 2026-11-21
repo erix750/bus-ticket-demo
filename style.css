@@ -493,6 +493,43 @@ input {
     padding: 30px;
 }
 
+.checkout-progress {
+    width: 100%;
+    margin: 0 0 18px;
+}
+
+.checkout-progress ol {
+    gap: 4px;
+}
+
+.checkout-progress li {
+    min-height: 42px;
+    padding: 6px;
+    gap: 5px;
+}
+
+.checkout-progress li span {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+    font-size: 12px;
+}
+
+.checkout-progress li strong {
+    font-size: 11px;
+}
+
+.no-results-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -4px 0 14px;
+}
+
+.no-results-actions .button {
+    min-height: 38px;
+}
+
 .checkout-content h2 {
     margin: 0 40px 12px 0;
 }

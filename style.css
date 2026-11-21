@@ -1320,6 +1320,95 @@ main {
     padding: 25px 28px 27px;
 }
 
+.booking-progress {
+    width: min(100% - 40px, 1100px);
+    margin: 18px auto 0;
+}
+
+.booking-progress ol {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.booking-progress li {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    background: var(--paper);
+}
+
+.booking-progress li span {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    font-weight: 800;
+}
+
+.booking-progress li.is-current {
+    border-color: var(--forest);
+    color: #fff;
+    background: var(--forest);
+}
+
+.search-summary {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+}
+
+.search-summary p {
+    margin: 0;
+    font-weight: 700;
+}
+
+.search-summary .button {
+    flex: 0 0 auto;
+}
+
+#searchResults,
+#searchMessage {
+    scroll-margin-top: 18px;
+}
+
+@media (max-width: 560px) {
+    .booking-progress {
+        width: calc(100% - 24px);
+        overflow-x: auto;
+    }
+
+    .booking-progress ol {
+        min-width: 500px;
+    }
+
+    .search-summary {
+        align-items: flex-start;
+    }
+
+    .search-summary p {
+        line-height: 1.45;
+    }
+}
+
 @keyframes windowFloat {
     from {
         transform: translateY(4px);

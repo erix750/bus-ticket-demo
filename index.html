@@ -384,6 +384,14 @@
         </section>
 
         <section class="page-view" id="bookingPage" data-page-view="booking" aria-label="Passenger booking" hidden>
+        <nav class="booking-progress" aria-label="Booking progress">
+            <ol>
+                <li class="is-current" data-booking-step="1" aria-current="step"><span>1</span><strong>Choose bus</strong></li>
+                <li data-booking-step="2"><span>2</span><strong>Your details</strong></li>
+                <li data-booking-step="3"><span>3</span><strong>Pay</strong></li>
+                <li data-booking-step="4"><span>4</span><strong>Get ticket</strong></li>
+            </ol>
+        </nav>
         <section class="panel search-panel original-search-panel" id="searchPanel" aria-labelledby="search-title">
             <div class="section-heading">
                 <div>
@@ -442,6 +450,10 @@
                 </div>
             </div>
             </details>
+            <div id="searchSummary" class="search-summary" hidden>
+                <p id="searchSummaryText"></p>
+                <button class="button button-text" id="changeSearch" type="button">Change</button>
+            </div>
             <form id="searchForm" class="form-grid">
                 <div class="field">
                     <label for="companyFilter">Bus company</label>

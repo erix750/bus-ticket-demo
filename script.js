@@ -1364,6 +1364,7 @@ function openDemoCheckout(busId, seatCount, baseFare, totalFare, selectedBus) {
     document.getElementById("checkoutTotal").textContent = formatFare(totalFare);
     document.getElementById("checkoutEntryStep").hidden = false;
     document.getElementById("checkoutReviewStep").hidden = true;
+    setBookingProgress(2);
     document.getElementById("checkoutDialog").showModal();
     passengerNameInput.focus();
 }
@@ -1399,6 +1400,9 @@ function performSearch() {
         return;
     }
 
+    setBookingProgress(1);
+    collapseSearchForm(from, to, date, requestedSeats);
+
     const matches = buses.map(function(bus) {
         if (!bus.isActive || bus.isCancelled || bus.availableSeats < requestedSeats ||
             bus.routeDistanceKm <= 0 || (company && bus.company !== company) ||
@@ -1417,6 +1421,10 @@ function performSearch() {
     if (matches.length === 0) {
         searchMessage.textContent =
             "No buses are available for this route and date with enough seats. Try another date or route.";
+        searchMessage.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+            block: "start"
+        });
         return;
     }
 
@@ -1425,6 +1433,12 @@ function performSearch() {
     });
     searchMessage.textContent = matches.length + (matches.length === 1 ? " bus found." : " buses found.");
     renderSearchResults(matches, requestedSeats);
+    window.requestAnimationFrame(function() {
+        searchResults.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+            block: "start"
+        });
+    });
 }
 
 function formatDuration(minutes) {
@@ -1598,6 +1612,7 @@ document.getElementById("editBookingDetails").addEventListener("click", function
 document.getElementById("confirmBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
+    setBookingProgress(3);
     passengerNameInput.setCustomValidity("");
     passengerPhoneInput.setCustomValidity("");
     if (!passengerNameInput.value.trim()) {
@@ -1625,6 +1640,7 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
         if (booking) {
             const bookingStatus = window.WaylineBookingStatus.describe(booking);
             document.getElementById("checkoutDialog").close();
+            setBookingProgress(4);
             document.getElementById("bookingConfirmationRoute").textContent =
                 routeUtils.formatRoute(booking.from, booking.to);
             document.getElementById("bookingConfirmationTravel").textContent =
@@ -2131,6 +2147,41 @@ searchForm.addEventListener("submit", function(event) {
     searchMessage.textContent = "";
     performSearch();
 });
+
+const searchSummary = document.getElementById("searchSummary");
+const searchSummaryText = document.getElementById("searchSummaryText");
+const changeSearchButton = document.getElementById("changeSearch");
+
+function collapseSearchForm(from, to, date, requestedSeats) {
+    searchForm.hidden = true;
+    searchSummary.hidden = false;
+    const passengerLabel = requestedSeats === 1 ? "1 passenger" : requestedSeats + " passengers";
+    searchSummaryText.textContent =
+        routeUtils.formatRoute(from, to) + " · " + formatDate(date) + " · " + passengerLabel;
+}
+
+function expandSearchForm() {
+    searchForm.hidden = false;
+    searchSummary.hidden = true;
+    setBookingProgress(1);
+    window.requestAnimationFrame(function() {
+        document.getElementById("from").focus({ preventScroll: true });
+    });
+}
+
+changeSearchButton.addEventListener("click", expandSearchForm);
+
+function setBookingProgress(step) {
+    document.querySelectorAll("[data-booking-step]").forEach(function(item) {
+        const isCurrent = Number(item.dataset.bookingStep) === step;
+        item.classList.toggle("is-current", isCurrent);
+        if (isCurrent) {
+            item.setAttribute("aria-current", "step");
+        } else {
+            item.removeAttribute("aria-current");
+        }
+    });
+}
 
 heroSearchForm.addEventListener("submit", function(event) {
     event.preventDefault();

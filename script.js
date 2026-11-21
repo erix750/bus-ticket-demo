@@ -1401,8 +1401,6 @@ function performSearch() {
     }
 
     setBookingProgress(1);
-    collapseSearchForm(from, to, date, requestedSeats);
-
     const matches = buses.map(function(bus) {
         if (!bus.isActive || bus.isCancelled || bus.availableSeats < requestedSeats ||
             bus.routeDistanceKm <= 0 || (company && bus.company !== company) ||
@@ -1419,8 +1417,11 @@ function performSearch() {
     }).filter(Boolean);
 
     if (matches.length === 0) {
+        searchForm.hidden = false;
+        searchSummary.hidden = true;
         searchMessage.textContent =
             "No buses are available for this route and date with enough seats. Try another date or route.";
+        document.getElementById("noResultsActions").hidden = false;
         searchMessage.scrollIntoView({
             behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
             block: "start"
@@ -1428,6 +1429,8 @@ function performSearch() {
         return;
     }
 
+    document.getElementById("noResultsActions").hidden = true;
+    collapseSearchForm(from, to, date, requestedSeats);
     matches.sort(function(first, second) {
         return first.departureTime.localeCompare(second.departureTime);
     });
@@ -1612,7 +1615,6 @@ document.getElementById("editBookingDetails").addEventListener("click", function
 document.getElementById("confirmBooking").addEventListener("click", async function(event) {
     if (!pendingBooking) return;
     const paymentMethod = document.getElementById("paymentMethod");
-    setBookingProgress(3);
     passengerNameInput.setCustomValidity("");
     passengerPhoneInput.setCustomValidity("");
     if (!passengerNameInput.value.trim()) {
@@ -1623,6 +1625,7 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
         paymentMethod.reportValidity();
         return;
     }
+    setBookingProgress(3);
     const confirmButton = event.currentTarget;
     confirmButton.disabled = true;
     try {
@@ -1657,10 +1660,7 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
             document.getElementById("bookingConfirmationPaymentStatus").textContent =
                 bookingStatus.paymentLabel + " · " + (booking.paymentMethod || "No method selected");
             document.getElementById("bookingConfirmationMessage").textContent =
-                bookingStatus.description +
-                    (booking.paymentStatus === "demo-unpaid"
-                        ? " Unpaid seat holds expire after 15 minutes; expired seats are released automatically."
-                        : "");
+                "Seat reserved. Pay within 15:00 to keep it. Booking is unpaid until the company confirms payment.";
             document.getElementById("bookingConfirmationNextStep").textContent =
                 booking.refreshWarning
                     ? bookingStatus.nextStep + " " + booking.refreshWarning
@@ -1669,8 +1669,11 @@ document.getElementById("confirmBooking").addEventListener("click", async functi
                 formatBookingReference(booking.id);
             document.getElementById("copyBookingReferenceMessage").textContent = "";
             document.getElementById("bookingConfirmationDialog").showModal();
+        } else {
+            setBookingProgress(2);
         }
     } catch (error) {
+        setBookingProgress(2);
         document.getElementById("searchMessage").textContent = error.message || "Could not save the booking. Please try again.";
     } finally {
         confirmButton.disabled = false;
@@ -2145,7 +2148,38 @@ async function removeSchedule(busId) {
 searchForm.addEventListener("submit", function(event) {
     event.preventDefault();
     searchMessage.textContent = "";
+    document.getElementById("noResultsActions").hidden = true;
     performSearch();
+});
+
+function adjustSearchDate(days) {
+    const dateInput = document.getElementById("date");
+    if (!dateInput.value) return;
+    const date = new Date(dateInput.value + "T12:00:00");
+    date.setDate(date.getDate() + days);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    dateInput.value = year + "-" + month + "-" + day;
+    performSearch();
+}
+
+document.getElementById("searchPreviousDay").addEventListener("click", function() {
+    adjustSearchDate(-1);
+});
+
+document.getElementById("searchNextDay").addEventListener("click", function() {
+    adjustSearchDate(1);
+});
+
+document.getElementById("searchPopularRoutes").addEventListener("click", function(event) {
+    event.preventDefault();
+    const popularRoutes = document.getElementById("popularRoutes");
+    if (popularRoutes.hidden) {
+        document.querySelector(".planned-route-list")?.scrollIntoView({ block: "start" });
+    } else {
+        popularRoutes.scrollIntoView({ block: "start" });
+    }
 });
 
 const searchSummary = document.getElementById("searchSummary");

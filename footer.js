@@ -84,8 +84,15 @@ const siteTranslations = {
     "Compare trips": { rw: "Gereranya ingendo", fr: "Comparez les trajets" },
     "Choose bus": { rw: "Hitamo bisi", fr: "Choisir le bus" },
     "Your details": { rw: "Amakuru yawe", fr: "Vos informations" },
-    "Pay": { rw: "Ishyura", fr: "Payer" },
-    "Get ticket": { rw: "Bona itike", fr: "Obtenir le billet" },
+    "Reserve": { rw: "Bika umwanya", fr: "Réserver" },
+    "Confirmation": { rw: "Kwemeza", fr: "Confirmation" },
+    "Try the day before": { rw: "Gerageza umunsi ubanje", fr: "Essayer la veille" },
+    "Try the day after": { rw: "Gerageza umunsi ukurikiye", fr: "Essayer le lendemain" },
+    "View popular routes": { rw: "Reba inzira zikunze gukoreshwa", fr: "Voir les itinéraires populaires" },
+    "Seat reserved. Pay within 15:00 to keep it. Booking is unpaid until the company confirms payment.": {
+        rw: "Umwanya wabitswe. Wishyure bitarenze saa 09:00 z'umugoroba kugira ngo uwukomeze. Booking ntabwo yishyuwe kugeza kompanyi yemeje ubwishyu.",
+        fr: "Place réservée. Payez avant 15:00 pour la conserver. La réservation reste impayée jusqu’à ce que la compagnie confirme le paiement."
+    },
     "Change": { rw: "Hindura", fr: "Modifier" },
     "Add traveller details": { rw: "Andika amakuru y’umugenzi", fr: "Ajoutez les informations du voyageur" },
     "Choose where you are leaving from, where you are going and when you travel.": { rw: "Hitamo aho uva, aho ujya n’igihe uzagirira urugendo.", fr: "Choisissez votre lieu de départ, votre destination et la date du voyage." },

@@ -5947,3 +5947,194 @@ main.welcome-main {
         transition: none;
     }
 }
+
+@media (min-width: 900px) {
+    .header-inner {
+        flex-wrap: nowrap;
+        gap: clamp(8px, 1vw, 14px);
+    }
+
+    .header-menu {
+        display: none;
+    }
+
+    .header-menu-panel,
+    .header-menu[open] + .header-menu-panel,
+    .header-menu:not([open]) + .header-menu-panel {
+        position: static;
+        display: contents;
+        width: auto;
+        gap: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .header-menu-panel .header-page-nav {
+        display: flex;
+        flex: 1 1 auto;
+        order: 1;
+        min-width: 0;
+        justify-content: center;
+        gap: clamp(7px, 0.9vw, 13px);
+        margin: 0;
+    }
+
+    .header-menu-panel .nav-link {
+        flex: 0 0 auto;
+        padding: 7px 3px;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: clamp(0.78rem, 0.9vw, 0.9rem);
+        text-decoration: none;
+        text-decoration-color: #f7d934;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 6px;
+        transition: color 160ms ease, text-decoration-color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+        white-space: nowrap;
+    }
+
+    .header-menu-panel .nav-link:hover,
+    .header-menu-panel .nav-link.is-active {
+        background: transparent;
+        color: #f7d934;
+        text-decoration: underline;
+        text-decoration-color: #f7d934;
+    }
+
+    .header-menu-panel .nav-link[data-page-link="company"] {
+        padding-inline: 8px;
+        border: 1px solid rgba(247, 217, 52, 0.62);
+        border-radius: 8px;
+    }
+
+    .header-menu-panel .nav-link[data-page-link="company"]:hover,
+    .header-menu-panel .nav-link[data-page-link="company"].is-active {
+        border-color: #f7d934;
+        background: rgba(247, 217, 52, 0.1);
+    }
+
+    .header-menu-panel .nav-link:focus-visible {
+        outline: 2px solid #f7d934;
+        outline-offset: 3px;
+    }
+
+    .site-controls {
+        order: 2;
+        flex: 0 0 auto;
+        margin-left: 0;
+    }
+
+    .header-menu-panel .header-install-button {
+        order: 3;
+        flex: 0 0 auto;
+        width: auto;
+        min-height: 40px;
+        max-width: none;
+        padding: 7px 10px;
+        border-color: rgba(247, 217, 52, 0.62);
+        background: transparent;
+        color: #fff;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .header-menu-panel .header-install-button:hover {
+        border-color: #f7d934;
+        background: rgba(247, 217, 52, 0.1);
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1100px) {
+    .header-inner {
+        width: calc(100% - 28px);
+        gap: 7px;
+    }
+
+    .brand {
+        gap: 6px;
+        font-size: 1.08rem;
+    }
+
+    .brand-mark {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    .header-menu-panel .header-page-nav {
+        gap: 6px;
+    }
+
+    .header-menu-panel .nav-link {
+        padding-inline: 2px;
+        font-size: 0.78rem;
+    }
+
+    .header-menu-panel .nav-link[data-page-link="company"] {
+        padding-inline: 6px;
+    }
+
+    .site-controls {
+        gap: 5px;
+    }
+
+    .site-controls .footer-language-control select {
+        width: 112px;
+        padding-inline: 8px 22px;
+        font-size: 0.78rem;
+    }
+
+    .icon-button {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        flex-basis: 40px;
+    }
+
+    .header-menu-panel .header-install-button {
+        min-height: 38px;
+        padding-inline: 8px;
+        font-size: 0.74rem;
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1000px) {
+    .header-menu-panel .header-install-button {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        flex-basis: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+        font-size: 0;
+    }
+
+    .header-menu-panel .header-install-button::before {
+        content: "↓";
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 899px) {
+    .header-inner {
+        position: relative;
+    }
+
+    .header-menu:not([open]) + .header-menu-panel {
+        display: none;
+    }
+
+    .header-menu {
+        order: 3;
+    }
+
+    .site-controls {
+        order: 2;
+    }
+}

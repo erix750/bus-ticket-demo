@@ -177,7 +177,7 @@ document.querySelectorAll("[data-page-link]").forEach(function(link) {
     link.addEventListener("click", function(event) {
         event.preventDefault();
         navigateToPage(link.dataset.pageLink);
-        const headerMenu = link.closest(".header-menu");
+        const headerMenu = link.closest(".header-page-nav") && document.querySelector(".header-menu");
         if (headerMenu) headerMenu.open = false;
     });
 });

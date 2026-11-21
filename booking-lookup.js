@@ -6,17 +6,8 @@
     const phoneInput = document.getElementById("bookingLookupPhone");
     const referenceInput = document.getElementById("bookingLookupReference");
     const codeInput = document.getElementById("bookingLookupCode");
+    const normalizeRwandaPhoneNumber = window.WaylineBookingUtils.normalizeRwandaPhoneNumber;
     let pendingLookup = null;
-
-    function normalizeRwandaPhoneNumber(value) {
-        let phone = value.trim().replace(/[\s()-]/g, "");
-        if (/^0[0-9]{9}$/.test(phone)) {
-            phone = "+250" + phone.slice(1);
-        } else if (/^250[0-9]{9}$/.test(phone)) {
-            phone = "+" + phone;
-        }
-        return /^\+2507[0-9]{8}$/.test(phone) ? phone : "";
-    }
 
     function formatJourneyTiming(booking) {
         const duration = Number(booking.estimatedDurationMinutes);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "wayline-shell-v55";
+const CACHE_NAME = "wayline-shell-v56";
 const APP_SHELL = [
     "./",
     "./index.html",
@@ -11,6 +11,7 @@ const APP_SHELL = [
     "./database.js",
     "./booking-status.js",
     "./route-utils.js",
+    "./booking-utils.js",
     "./script.js",
     "./booking-lookup.js",
     "./footer.js",

@@ -46,8 +46,11 @@
             availableSeats: record.available_seats,
             fare: Number(record.fare),
             routeDistanceKm: Number(record.route_distance_km) || 0,
+            estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
+            intermediateStops: record.intermediate_stops || "",
             fareCategory: record.fare_category || "intercity",
             isActive: record.is_active !== false,
+            isCancelled: record.is_cancelled === true,
             logo: company ? company.logo_data : ""
         };
     }
@@ -65,6 +68,8 @@
             to: record.to_city,
             date: record.travel_date,
             departureTime: String(record.departure_time).slice(0, 5),
+            estimatedDurationMinutes: Number(record.estimated_duration_minutes) || 0,
+            intermediateStops: record.intermediate_stops || "",
             seats: record.seat_count,
             baseFare: Number(record.base_fare),
             platformFee: Number(record.platform_fee),
@@ -141,6 +146,8 @@
             departure_time: bus.departureTime,
             total_seats: bus.totalSeats,
             route_distance_km: bus.routeDistanceKm,
+            estimated_duration_minutes: bus.estimatedDurationMinutes || null,
+            intermediate_stops: bus.intermediateStops || "",
             fare_category: bus.fareCategory
         }).select("*, companies(name, logo_data)").single();
         return mapBus(throwIfError(insertResult));
@@ -162,6 +169,8 @@
                 departure_time: bus.departureTime,
                 total_seats: bus.totalSeats,
                 route_distance_km: bus.routeDistanceKm,
+                estimated_duration_minutes: bus.estimatedDurationMinutes || null,
+                intermediate_stops: bus.intermediateStops || "",
                 fare_category: bus.fareCategory
             })
             .eq("id", busId)
@@ -187,9 +196,15 @@
             .from("buses")
             .update({ is_active: isActive })
             .eq("id", busId)
+            .eq("is_cancelled", false)
             .select("id")
             .maybeSingle();
         if (!throwIfError(result)) throw new Error("The schedule was not found or you do not have permission to update it.");
+    }
+
+    async function cancelSchedule(busId) {
+        const result = await supabase.rpc("cancel_bus_trip", { p_bus_id: busId });
+        throwIfError(result);
     }
 
     async function removeSchedule(busId) {
@@ -269,10 +284,15 @@
     }
 
     async function signUp(email, password, companyName) {
+        const siteUrl = (config.siteUrl || "").trim();
+        if (!siteUrl) throw new Error("Set the published Wayline URL in config.js before creating a company account.");
         const result = await supabase.auth.signUp({
             email: email,
             password: password,
-            options: { data: { company_name: companyName } }
+            options: {
+                data: { company_name: companyName },
+                emailRedirectTo: siteUrl
+            }
         });
         return throwIfError(result);
     }
@@ -291,6 +311,7 @@
         createSchedule: createSchedule,
         updateSchedule: updateSchedule,
         setScheduleActive: setScheduleActive,
+        cancelSchedule: cancelSchedule,
         removeSchedule: removeSchedule,
         createBooking: createBooking,
         sendPassengerBookingOtp: sendPassengerBookingOtp,

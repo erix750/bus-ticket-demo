@@ -5,19 +5,27 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 ## Features
 
 - Passengers can search published bus schedules and reserve seats.
-- Each saved booking receives a reference and an unpaid confirmation.
+- Each saved booking receives a reference and a clear reservation/payment status. Wayline does not yet collect or verify payments, so new bookings remain saved and unpaid.
 - Passengers provide a name and phone number at checkout; contact details are available to the relevant bus company.
 - Passengers search and book without creating an account.
 - Passengers can retrieve a booking on another device using its reference and an SMS-verified phone number.
-- Bus companies have a dashboard to add, edit, hide, and remove schedules, manage seat capacity, review bookings, and upload a company logo.
+- Bus companies have a dashboard to add, edit, hide, cancel, and remove schedules, manage seat capacity, review bookings, and upload a company logo. Edits preserve existing reservations and their original itinerary details; cancelling a trip cancels its reservations and releases seats. Companies must contact affected passengers directly.
 - Company schedule lists include their own past and full schedules; booking records are restricted to schedules owned by the signed-in company.
 - Schedule fares are calculated from the route distance and selected RURA fare area.
-- A Help Center explains booking, unpaid payment status, cancellations, and contact options.
+- Operators can list intermediate stops and estimated journey duration; online and USSD route labels share the same city-name formatting.
+- Operators must confirm they checked estimated city-center road distance against the actual bus route before saving a fare.
+- Company dashboards can filter schedules and bookings, group bookings by upcoming/completed/cancelled trip status, and download passenger manifests for their own schedules.
+- Passengers review company, bus, route, stops, date, departure, estimated duration, seats and total before saving, and can copy the booking reference.
+- Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
+- A searchable Help Center in the footer suggests answers about booking, payment, cancellations, and contact options; all page footers include legal links, a Made in Rwanda identity, and a current-year copyright.
+- Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
+- Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
 - Passengers can book online now; USSD booking by dialing `*200#` is shown as coming soon until Africa's Talking provisions the code and the service is deployed.
-- Seat reservations update shared availability in Supabase. Passengers contact Wayline or the bus company to request cancellations.
+- Seat reservations update shared availability in Supabase. Passengers request cancellations from the relevant bus company. Wayline support: muvunyieric25@gmail.com and WhatsApp +250 798 230 630; support hours are not published.
+- Planned Eastern, Southern, Northern, and Western Province corridors are listed separately from live route suggestions. Search suggestions are generated only from active, upcoming schedules with seats available.
 - Bus availability is refreshed through Supabase Realtime, with a 30-second fallback refresh.
-- Company records and schedules are protected by Supabase authentication and row-level ownership policies.
+- Company records and schedules are protected by Supabase authentication and row-level ownership policies. Schedule edits keep reservations attached, and seat-capacity edits cannot reduce capacity below the number already reserved.
 - Operators can calculate estimated road distances from route cities and review or edit the result before the RWF fare is calculated using the selected RURA area tariff.
 - Full buses and trips whose departure time has passed are automatically excluded from public search while company schedules and booking records are retained.
 - Operators can hide and restore schedules without deleting the bus or its booking history.
@@ -29,9 +37,9 @@ A browser-based bus schedule and ticket-booking prototype backed by Supabase.
 1. Create a Supabase project.
 2. Open the SQL Editor and run [`supabase/schema.sql`](./supabase/schema.sql).
 3. In `config.js`, configure the Supabase project URL, browser-safe publishable (anon) key, and public `siteUrl`. Never put a service-role key in client-side code.
-4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to the public `siteUrl` and add that exact URL to the Redirect URLs allowlist. Password reset links always return to this configured URL, including when a reset is requested from a local preview.
+4. Serve the repository as a static website (for example, with GitHub Pages). In Supabase Authentication URL Configuration, set the Site URL to `https://erix750.github.io/bus-ticket-demo/` (the project URL, not `https://erix750.github.io/`) and add that exact URL to the Redirect URLs allowlist. Company email-confirmation and password-reset links return to `siteUrl` in `config.js`. If the link expires or is already used, request a new email and open the newest link once.
 5. In Supabase Auth settings, require email confirmations. Create a company account in the app and confirm the email before signing in and publishing schedules. If the address is mistyped or the user cannot access that inbox, they cannot complete confirmation or activate the account.
-6. Re-run the current `supabase/schema.sql` when updating an existing project. It normalizes Rwanda phone numbers, adds the verified passenger booking lookup RPC, limits booking access to phone-verified passengers or the relevant company dashboard, automatically hides full/departed trips from public search, and includes the schedule-edit safeguards.
+6. Re-run the current `supabase/schema.sql` when updating an existing project. It adds route stop and estimated duration fields, normalizes Rwanda phone numbers, adds the verified passenger booking lookup RPC, limits booking access to phone-verified passengers or the relevant company dashboard, automatically hides full/departed trips from public search, and includes the schedule-edit safeguards.
 7. In Supabase Auth, enable phone sign-in and configure Twilio as the SMS provider. Keep the Twilio Account SID, Auth Token, and Messaging Service SID only in Supabase's private Auth provider settings. Test code delivery to both MTN and Airtel numbers before launch; SMS delivery and sender requirements depend on the provider and destination network.
 8. Configure Supabase Auth rate limits and CAPTCHA protection for SMS OTP requests before public use. No SMS or payment credentials belong in this repository or browser code.
 
@@ -41,7 +49,7 @@ Passenger records are not listed publicly. The separate [`booking.html`](./booki
 
 ## Africa's Talking USSD service
 
-The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; searches future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
+The separate [`ussd-service/`](./ussd-service/) Node.js application provides an Africa's Talking callback for passengers using basic phones. It offers English, Kinyarwanda, French, and Swahili menus; lets passengers choose their departure, destination, travel date, and bus company; searches matching future trips and seats in Supabase; and creates bookings through a server-side, idempotent database function. USSD bookings are **unpaid**: selecting MTN or Airtel records the intended method but does not start a payment.
 
 1. Apply the current [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates private USSD session storage and the service-role-only `ussd_book_bus` function.
 2. Deploy `ussd-service/` on a Node.js 20+ HTTPS host and install dependencies with `npm install`. Set `LOCAL_USSD_DEMO=false` and `USSD_SIMULATOR_ENABLED=false` in the host settings so it listens for provider callbacks instead of the local-only simulator.
@@ -66,7 +74,7 @@ Operators can enter the one-way route distance themselves or calculate an estima
 - City of Kigali: RWF 59.28 per passenger per kilometre.
 - Intercity/provincial: RWF 41.58 per passenger per kilometre.
 
-The fare is rounded to the nearest RWF. Existing schedules without a recorded distance remain in the database but are not listed for passengers until a new schedule with a distance is added. Schedule bus name, route, date, and departure time are locked once booking records exist; hide the old schedule and create a new one instead.
+The fare is rounded to the nearest RWF. Existing schedules without a recorded distance remain in the database but are not listed for passengers until a new schedule with a distance is added. Companies can edit schedule details while retaining each reservation's original itinerary details. Seat capacity cannot be reduced below the number of seats already reserved. Cancelling a trip cancels all of its active reservations and releases their seats; passenger notifications and any refunds must be handled directly by the company.
 
 Reference: [RURA applicable pump prices and public transport tariffs](https://www.rura.rw/fileadmin/user_upload/RURA/Documents/Tariffs/Applicaple_pump_prices_and_Public_Transport_tariffs.pdf).
 

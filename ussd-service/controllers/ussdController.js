@@ -69,8 +69,20 @@ function createUssdController(services) {
             return pagePrompt(state, destinations, "destinationPrompt", shortCity, 4).message;
         }
         if (state.step === "date") return translate(state, "datePrompt");
+        if (state.step === "company") {
+            if (!state.companyOptions) {
+                const trips = await tripService.listForRoute(state.origin, state.destination, state.date);
+                state.companyOptions = Array.from(new Set(trips.map(function(trip) {
+                    return trip.company;
+                }).filter(Boolean))).sort(function(first, second) {
+                    return first.localeCompare(second);
+                });
+            }
+            if (!state.companyOptions.length) return translate(state, "noTrips");
+            return pagePrompt(state, state.companyOptions, "companyPrompt", shortCity, 4).message;
+        }
         if (state.step === "trip") {
-            const trips = await tripService.listForRoute(state.origin, state.destination, state.date);
+            const trips = await tripService.listForRoute(state.origin, state.destination, state.date, state.company);
             if (!trips.length) return translate(state, "noTrips");
             const page = locationService.page(trips, state.page, 4);
             if (!state.tripOptions || state.tripPage !== state.page) {
@@ -215,17 +227,41 @@ function createUssdController(services) {
             const dates = tripService.travelDates();
             if (value !== "1" && value !== "2") return invalid();
             state.date = value === "1" ? dates.today : dates.tomorrow;
+            state.step = "company";
+            state.page = 0;
+            state.companyOptions = null;
+            const trips = await tripService.listForRoute(state.origin, state.destination, state.date);
+            state.companyOptions = Array.from(new Set(trips.map(function(trip) {
+                return trip.company;
+            }).filter(Boolean))).sort(function(first, second) {
+                return first.localeCompare(second);
+            });
+            if (!state.companyOptions.length) return answer("END", translate(state, "noTrips"));
+            return saveAndContinue(session, state, nextCursor);
+        }
+
+        if (state.step === "company") {
+            const companies = state.companyOptions || [];
+            if (!companies.length) return answer("END", translate(state, "noTrips"));
+            const page = locationService.page(companies, state.page, 4);
+            const choice = locationService.selectPageChoice(value, page);
+            if (!choice) return invalid();
+            if (choice.direction) {
+                state.page += choice.direction === "next" ? 1 : -1;
+                return saveAndContinue(session, state, nextCursor);
+            }
+            state.company = choice.item;
             state.step = "trip";
             state.page = 0;
             state.tripOptions = null;
             state.tripPage = null;
-            const trips = await tripService.listForRoute(state.origin, state.destination, state.date);
+            const trips = await tripService.listForRoute(state.origin, state.destination, state.date, state.company);
             if (!trips.length) return answer("END", translate(state, "noTrips"));
             return saveAndContinue(session, state, nextCursor);
         }
 
         if (state.step === "trip") {
-            const trips = await tripService.listForRoute(state.origin, state.destination, state.date);
+            const trips = await tripService.listForRoute(state.origin, state.destination, state.date, state.company);
             if (!trips.length) return answer("END", translate(state, "noTrips"));
             const page = locationService.page(trips, state.page, 4);
             if (!state.tripOptions || state.tripPage !== state.page) {

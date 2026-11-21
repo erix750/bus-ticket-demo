@@ -23,8 +23,11 @@ create table if not exists public.buses (
     available_seats integer not null check (available_seats between 0 and total_seats),
     fare numeric(12, 2) not null check (fare >= 0),
     route_distance_km numeric(8, 2) check (route_distance_km between 0.1 and 1000),
+    estimated_duration_minutes integer check (estimated_duration_minutes between 1 and 1440),
+    intermediate_stops text not null default '' check (char_length(intermediate_stops) <= 300),
     fare_category text not null default 'intercity' check (fare_category in ('kigali', 'intercity')),
     is_active boolean not null default true,
+    is_cancelled boolean not null default false,
     created_at timestamptz not null default now(),
     check (lower(trim(from_city)) <> lower(trim(to_city)))
 );
@@ -32,13 +35,28 @@ create table if not exists public.buses (
 alter table public.buses
     add column if not exists route_distance_km numeric(8, 2);
 alter table public.buses
+    add column if not exists estimated_duration_minutes integer
+    check (estimated_duration_minutes between 1 and 1440);
+alter table public.buses
+    add column if not exists intermediate_stops text not null default ''
+    check (char_length(intermediate_stops) <= 300);
+alter table public.buses
     add column if not exists fare_category text not null default 'intercity';
 alter table public.buses
     add column if not exists is_active boolean not null default true;
+alter table public.buses
+    add column if not exists is_cancelled boolean not null default false;
 
 create table if not exists public.bookings (
     id uuid primary key default gen_random_uuid(),
     bus_id uuid not null references public.buses (id) on delete restrict,
+    bus_name text not null,
+    from_city text not null,
+    to_city text not null,
+    travel_date date not null,
+    departure_time time not null,
+    estimated_duration_minutes integer check (estimated_duration_minutes between 1 and 1440),
+    intermediate_stops text not null default '' check (char_length(intermediate_stops) <= 300),
     passenger_name text not null check (char_length(trim(passenger_name)) between 1 and 80),
     passenger_phone text,
     seat_count integer not null check (seat_count between 1 and 20),
@@ -56,6 +74,54 @@ alter table public.bookings
     add column if not exists passenger_phone text;
 alter table public.bookings
     add column if not exists ussd_session_id text;
+alter table public.bookings
+    add column if not exists bus_name text;
+alter table public.bookings
+    add column if not exists from_city text;
+alter table public.bookings
+    add column if not exists to_city text;
+alter table public.bookings
+    add column if not exists travel_date date;
+alter table public.bookings
+    add column if not exists departure_time time;
+alter table public.bookings
+    add column if not exists estimated_duration_minutes integer;
+alter table public.bookings
+    add column if not exists intermediate_stops text;
+update public.bookings
+   set bus_name = buses.name,
+       from_city = buses.from_city,
+       to_city = buses.to_city,
+       travel_date = buses.travel_date,
+       departure_time = buses.departure_time,
+       estimated_duration_minutes = buses.estimated_duration_minutes,
+       intermediate_stops = buses.intermediate_stops
+  from public.buses
+ where buses.id = bookings.bus_id
+   and (bookings.bus_name is null
+        or bookings.from_city is null
+        or bookings.to_city is null
+        or bookings.travel_date is null
+        or bookings.departure_time is null
+        or bookings.intermediate_stops is null);
+alter table public.bookings
+    alter column bus_name set not null,
+    alter column from_city set not null,
+    alter column to_city set not null,
+    alter column travel_date set not null,
+    alter column departure_time set not null,
+    alter column intermediate_stops set default '',
+    alter column intermediate_stops set not null;
+alter table public.bookings
+    drop constraint if exists bookings_estimated_duration_minutes_check;
+alter table public.bookings
+    add constraint bookings_estimated_duration_minutes_check
+    check (estimated_duration_minutes between 1 and 1440);
+alter table public.bookings
+    drop constraint if exists bookings_intermediate_stops_check;
+alter table public.bookings
+    add constraint bookings_intermediate_stops_check
+    check (char_length(intermediate_stops) <= 300);
 drop index if exists public.bookings_cancel_token_idx;
 alter table public.bookings
     drop column if exists cancel_token;
@@ -149,35 +215,8 @@ create trigger preserve_reserved_bus_seats_before_update
     for each row execute function public.preserve_reserved_bus_seats();
 revoke execute on function public.preserve_reserved_bus_seats() from public, anon, authenticated;
 
-create or replace function public.protect_booked_bus_details()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-    if (new.name is distinct from old.name
-        or new.from_city is distinct from old.from_city
-        or new.to_city is distinct from old.to_city
-        or new.travel_date is distinct from old.travel_date
-        or new.departure_time is distinct from old.departure_time)
-       and exists (
-           select 1
-             from public.bookings
-            where bus_id = old.id
-       ) then
-        raise exception 'This schedule has booking records. Its bus name, route, date, and departure time cannot be changed; hide it and add a new schedule instead.';
-    end if;
-    return new;
-end;
-$$;
-
 drop trigger if exists protect_booked_bus_details_before_update on public.buses;
-create trigger protect_booked_bus_details_before_update
-    before update of name, from_city, to_city, travel_date, departure_time
-    on public.buses
-    for each row execute function public.protect_booked_bus_details();
-revoke execute on function public.protect_booked_bus_details() from public, anon, authenticated;
+drop function if exists public.protect_booked_bus_details();
 
 do $$
 begin
@@ -223,6 +262,7 @@ create policy "Public can view future bus schedules"
         or (
             travel_date + departure_time > (now() at time zone 'Africa/Kigali')
             and is_active
+            and not is_cancelled
             and available_seats > 0
         )
     );
@@ -249,10 +289,10 @@ create policy "Companies can remove their own schedules"
 grant usage on schema public to anon, authenticated, service_role;
 grant select on public.companies, public.buses to anon, authenticated;
 revoke insert, delete on public.buses from anon, authenticated;
-grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
+grant insert (company_id, name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, estimated_duration_minutes, intermediate_stops, fare_category)
     on public.buses to authenticated;
 revoke update (fare) on public.buses from anon, authenticated;
-grant update (name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, fare_category)
+grant update (name, from_city, to_city, travel_date, departure_time, total_seats, route_distance_km, estimated_duration_minutes, intermediate_stops, fare_category)
     on public.buses to authenticated;
 grant update (is_active) on public.buses to authenticated;
 grant delete on public.buses to authenticated;
@@ -324,6 +364,7 @@ begin
      where id = p_bus_id
        and travel_date + departure_time > (now() at time zone 'Africa/Kigali')
         and is_active
+          and not is_cancelled
       for update;
 
     if not found or selected_bus.available_seats < p_seat_count then
@@ -338,11 +379,16 @@ begin
      where id = selected_bus.id;
 
     insert into public.bookings (
-        bus_id, passenger_name, passenger_phone, seat_count, base_fare, platform_fee,
+        bus_id, bus_name, from_city, to_city, travel_date, departure_time,
+        estimated_duration_minutes, intermediate_stops,
+        passenger_name, passenger_phone, seat_count, base_fare, platform_fee,
         total_fare, payment_method
     )
     values (
-        selected_bus.id, clean_name, clean_phone, p_seat_count, base_amount, fee_amount,
+        selected_bus.id, selected_bus.name, selected_bus.from_city, selected_bus.to_city,
+        selected_bus.travel_date, selected_bus.departure_time,
+        selected_bus.estimated_duration_minutes, selected_bus.intermediate_stops,
+        clean_name, clean_phone, p_seat_count, base_amount, fee_amount,
         base_amount + fee_amount, p_payment_method
     )
     returning * into new_booking;
@@ -353,11 +399,13 @@ begin
         'passenger_name', new_booking.passenger_name,
         'passenger_phone', new_booking.passenger_phone,
         'company_id', selected_bus.company_id,
-        'bus_name', selected_bus.name,
-        'from_city', selected_bus.from_city,
-        'to_city', selected_bus.to_city,
-        'travel_date', selected_bus.travel_date,
-        'departure_time', selected_bus.departure_time,
+        'bus_name', new_booking.bus_name,
+        'from_city', new_booking.from_city,
+        'to_city', new_booking.to_city,
+        'travel_date', new_booking.travel_date,
+        'departure_time', new_booking.departure_time,
+        'estimated_duration_minutes', new_booking.estimated_duration_minutes,
+        'intermediate_stops', new_booking.intermediate_stops,
         'seat_count', new_booking.seat_count,
         'base_fare', new_booking.base_fare,
         'platform_fee', new_booking.platform_fee,
@@ -390,12 +438,14 @@ begin
     select jsonb_build_object(
         'id', bookings.id,
         'passenger_name', bookings.passenger_name,
-        'bus_name', buses.name,
+        'bus_name', bookings.bus_name,
         'company_name', companies.name,
-        'from_city', buses.from_city,
-        'to_city', buses.to_city,
-        'travel_date', buses.travel_date,
-        'departure_time', buses.departure_time,
+        'from_city', bookings.from_city,
+        'to_city', bookings.to_city,
+        'travel_date', bookings.travel_date,
+        'departure_time', bookings.departure_time,
+        'estimated_duration_minutes', bookings.estimated_duration_minutes,
+        'intermediate_stops', bookings.intermediate_stops,
         'seat_count', bookings.seat_count,
         'base_fare', bookings.base_fare,
         'platform_fee', bookings.platform_fee,
@@ -428,11 +478,13 @@ as $$
         'company_id', buses.company_id,
         'company_name', companies.name,
         'company_logo', companies.logo_data,
-        'bus_name', buses.name,
-        'from_city', buses.from_city,
-        'to_city', buses.to_city,
-        'travel_date', buses.travel_date,
-        'departure_time', buses.departure_time,
+        'bus_name', bookings.bus_name,
+        'from_city', bookings.from_city,
+        'to_city', bookings.to_city,
+        'travel_date', bookings.travel_date,
+        'departure_time', bookings.departure_time,
+        'estimated_duration_minutes', bookings.estimated_duration_minutes,
+        'intermediate_stops', bookings.intermediate_stops,
         'seat_count', bookings.seat_count,
         'base_fare', bookings.base_fare,
         'platform_fee', bookings.platform_fee,
@@ -447,6 +499,61 @@ as $$
     where buses.company_id = (select auth.uid())
     order by bookings.created_at desc;
 $$;
+
+create or replace function public.cancel_bus_trip(p_bus_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    selected_bus public.buses%rowtype;
+    released_seats integer;
+begin
+    if auth.uid() is null then
+        raise exception 'Sign in with the bus company account to cancel this trip.';
+    end if;
+
+    select *
+      into selected_bus
+      from public.buses
+     where id = p_bus_id
+       and company_id = auth.uid()
+     for update;
+    if not found then
+        raise exception 'The schedule was not found or you do not have permission to cancel it.';
+    end if;
+    if selected_bus.is_cancelled then
+        return 0;
+    end if;
+    if selected_bus.travel_date + selected_bus.departure_time <=
+        (now() at time zone 'Africa/Kigali') then
+        raise exception 'A trip cannot be cancelled after its departure time.';
+    end if;
+
+    with cancelled_bookings as (
+        update public.bookings
+           set cancelled = true
+         where bus_id = selected_bus.id
+           and not cancelled
+        returning seat_count
+    )
+    select coalesce(sum(seat_count), 0)::integer
+      into released_seats
+      from cancelled_bookings;
+
+    update public.buses
+       set is_cancelled = true,
+           is_active = false,
+           available_seats = least(total_seats, available_seats + released_seats)
+     where id = selected_bus.id;
+
+    return released_seats;
+end;
+$$;
+
+revoke execute on function public.cancel_bus_trip(uuid) from public, anon, authenticated;
+grant execute on function public.cancel_bus_trip(uuid) to authenticated;
 
 create or replace function public.ussd_book_bus(
     p_session_id text,

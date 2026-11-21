@@ -102,7 +102,12 @@ function createUssdController(services) {
                 return seats + ". " + seats;
             }).join("\n");
         }
-        if (state.step === "name") return translate(state, "namePrompt");
+        if (state.step === "name") {
+            const passengerNumber = (state.passengerNames || []).length + 1;
+            return passengerNumber === 1
+                ? translate(state, "namePrompt")
+                : "Name of passenger " + passengerNumber + ":";
+        }
         if (state.step === "payment") return translate(state, "paymentPrompt");
         if (state.step === "confirm") {
             const trip = await tripService.getAvailableById(state.tripId, state.origin, state.destination);
@@ -295,6 +300,7 @@ function createUssdController(services) {
             }
             if (!seatService.isAvailable(trip.availableSeats, seats) || seats > 4) return invalid();
             state.seats = seats;
+            state.passengerNames = [];
             state.step = "name";
             return saveAndContinue(session, state, nextCursor);
         }
@@ -303,10 +309,14 @@ function createUssdController(services) {
             const name = isValidName(value);
             if (!name) {
                 await sessionService.save(session.sessionId, session.phone, state, parts.length);
-                return answer("CON", translate(state, "invalidName") + "\n" + translate(state, "namePrompt"));
+                return answer("CON", translate(state, "invalidName") + "\n" + await promptFor(state));
             }
-            state.passengerName = name;
-            state.step = "payment";
+            state.passengerNames = state.passengerNames || [];
+            state.passengerNames.push(name);
+            state.passengerName = state.passengerNames[0];
+            if (state.passengerNames.length >= state.seats) {
+                state.step = "payment";
+            }
             return saveAndContinue(session, state, nextCursor);
         }
 
@@ -338,7 +348,8 @@ function createUssdController(services) {
             const booking = await bookingService.create({
                 sessionId: session.sessionId,
                 trip: trip,
-                passengerName: state.passengerName,
+                passengerName: state.passengerNames[0],
+                passengerNames: state.passengerNames,
                 phone: session.phone,
                 seats: state.seats,
                 paymentMethod: state.paymentMethod,

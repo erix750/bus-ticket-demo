@@ -2,7 +2,7 @@ ALTER TABLE public.bookings
     ADD COLUMN IF NOT EXISTS passenger_names text[];
 
 UPDATE public.bookings
-   SET passenger_names = array_fill(passenger_name, ARRAY[seat_count])
+   SET passenger_names = array_fill(btrim(passenger_name), ARRAY[seat_count])
  WHERE passenger_names IS NULL
    AND passenger_name IS NOT NULL;
 
@@ -12,12 +12,7 @@ ALTER TABLE public.bookings
 ALTER TABLE public.bookings
     ADD CONSTRAINT bookings_passenger_names_check CHECK (
         passenger_names IS NOT NULL
-        AND array_length(passenger_names, 1) = seat_count
-        AND NOT EXISTS (
-            SELECT 1
-            FROM unnest(passenger_names) AS name
-            WHERE name IS NULL OR char_length(btrim(name)) NOT BETWEEN 1 AND 80
-        )
+        AND cardinality(passenger_names) = seat_count
     );
 
 CREATE OR REPLACE FUNCTION public.fill_booking_passenger_names()
@@ -25,10 +20,27 @@ RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = ''
 AS $$
+DECLARE
+    clean_names text[];
 BEGIN
     IF NEW.passenger_names IS NULL OR cardinality(NEW.passenger_names) <> NEW.seat_count THEN
         NEW.passenger_names := array_fill(btrim(NEW.passenger_name), ARRAY[NEW.seat_count]);
     END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM unnest(NEW.passenger_names) AS names(name)
+        WHERE names.name IS NULL
+           OR char_length(btrim(names.name)) NOT BETWEEN 1 AND 80
+    ) THEN
+        RAISE EXCEPTION 'Each passenger name must contain 1 to 80 characters.';
+    END IF;
+
+    SELECT array_agg(btrim(names.name) ORDER BY names.ordinality)
+      INTO clean_names
+      FROM unnest(NEW.passenger_names) WITH ORDINALITY AS names(name, ordinality);
+
+    NEW.passenger_names := clean_names;
     NEW.passenger_name := btrim(NEW.passenger_names[1]);
     RETURN NEW;
 END;

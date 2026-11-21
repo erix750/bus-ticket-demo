@@ -6126,8 +6126,51 @@ main.welcome-main {
         position: relative;
     }
 
+    .header-menu-panel {
+        width: min(320px, calc(100vw - 28px));
+        gap: 10px;
+        padding: 14px;
+    }
+
     .header-menu:not([open]) + .header-menu-panel {
         display: none;
+    }
+
+    .header-menu-panel .header-page-nav {
+        gap: 4px;
+    }
+
+    .header-menu-panel .nav-link {
+        display: flex;
+        min-height: 44px;
+        align-items: center;
+        border: 1px solid transparent;
+        transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .header-menu-panel .nav-link:hover,
+    .header-menu-panel .nav-link.is-active {
+        border-color: rgba(23, 63, 112, 0.18);
+        background: #edf3fa;
+        color: #173f70;
+    }
+
+    .header-menu-panel .nav-link[data-page-link="company"] {
+        border-color: rgba(23, 63, 112, 0.3);
+        background: #f7f9fc;
+        font-weight: 700;
+    }
+
+    .header-menu-panel .nav-link[data-page-link="company"]:hover,
+    .header-menu-panel .nav-link[data-page-link="company"].is-active {
+        border-color: #173f70;
+        background: #edf3fa;
+    }
+
+    .header-menu-panel .header-install-button {
+        min-height: 44px;
+        margin-top: 4px;
+        line-height: 1.25;
     }
 
     .header-menu {

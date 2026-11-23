@@ -18,6 +18,17 @@ The migrations expect the Wayline base schema, including the companies, buses, b
 
 Set the site's URL in Supabase Auth's Site URL and Redirect URLs. For the hosted site, use `https://erix750.github.io/bus-ticket-demo/`.
 
+## SMS booking confirmations
+
+The Edge Function in [`supabase/functions/send-booking-sms/`](./supabase/functions/send-booking-sms/) texts the passenger when a booking is created. Apply the `20261123000000_booking_sms_confirmation.sql` migration, then deploy and configure the function:
+
+```sh
+supabase functions deploy send-booking-sms --no-verify-jwt --project-ref <project-ref>
+supabase secrets set AT_USERNAME=<africastalking-username> AT_API_KEY=<api-key> WEBHOOK_SECRET=<long-random-string> SITE_URL=https://erix750.github.io/bus-ticket-demo/ --project-ref <project-ref>
+```
+
+Optionally set `AT_SENDER_ID` once Africa's Talking approves a sender name. Using the username `sandbox` sends to the Africa's Talking sandbox only. In the Supabase dashboard, create a Database Webhook on `public.bookings` for INSERT that calls the function and sends the header `x-webhook-secret` with the same secret. Keep all keys in Supabase secrets, never in the website.
+
 ## USSD service
 
 The Africa's Talking callback is in [`ussd-service/`](./ussd-service/) and requires Node.js 22.9 or newer. For local use, copy `.env.example` to `.env` (it enables sample-data demo mode with `LOCAL_USSD_DEMO=true`; leave that unset on the live host), set the service's Supabase URL, service-role key, callback token, and service code, then run:

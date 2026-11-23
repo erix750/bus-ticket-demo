@@ -35,3 +35,4 @@
 - New company accounts must submit company details and private supporting documents, then wait for administrator verification. Only approved companies can manage schedules or view their bookings.
 - A protected administrator portal lets provisioned Wayline administrators review applications, approve or reject companies, request changes, suspend or reactivate access, and inspect recent company activity.
 - Company application documents use a private Supabase Storage bucket. RLS and database-side approval checks restrict applications, schedules, company profiles, bookings, activity records, and document access.
+- After a web or USSD booking is saved, passengers receive an SMS confirmation with the booking reference, route, time, seats, and total (Supabase Edge Function `send-booking-sms` through Africa's Talking). Delivery status is kept on the booking record for support.

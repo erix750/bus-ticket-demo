@@ -19,13 +19,19 @@ function createSecurityMiddleware(options) {
     const requestsPerMinute = Math.max(10, options.requestsPerMinute || 40);
     const attempts = new Map();
     let lastCleanup = Date.now();
+    let warnedAboutQueryToken = false;
 
     function authenticate(request, response, next) {
         const authorization = request.get("authorization") || "";
         const headerToken = authorization.startsWith("Bearer ")
             ? authorization.slice(7)
             : request.get("x-ussd-token") || "";
-        const providedToken = headerToken || String(request.query.token || "");
+        const queryToken = String((request.query && request.query.token) || "");
+        if (!headerToken && queryToken && !warnedAboutQueryToken) {
+            warnedAboutQueryToken = true;
+            console.warn("USSD callback token received in the URL; prefer the Authorization or x-ussd-token header so it stays out of access logs.");
+        }
+        const providedToken = headerToken || queryToken;
         if (!sameSecret(callbackToken, providedToken)) {
             response.status(401).type("text/plain").send("END Unauthorized.");
             return;
@@ -46,10 +52,14 @@ function createSecurityMiddleware(options) {
             lastCleanup = now;
         }
 
-        const sessionId = request.body && request.body.sessionId;
-        const key = typeof sessionId === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(sessionId)
-            ? sessionId
-            : String(request.ip || "unknown").slice(0, 100);
+        const body = request.body || {};
+        const phone = typeof body.phoneNumber === "string"
+            ? body.phoneNumber.replace(/[^0-9+]/g, "").slice(0, 24)
+            : "";
+        const address = String(request.ip || "unknown").slice(0, 100);
+        // Key on caller address and phone number, never on the client-chosen sessionId,
+        // so rotating session IDs cannot reset the limit.
+        const key = address + "|" + phone;
         const timestamps = (attempts.get(key) || []).filter(function(timestamp) {
             return now - timestamp < 60_000;
         });

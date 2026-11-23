@@ -225,3 +225,30 @@ test("Africa's Talking callback authentication and request validation reject mal
     });
     assert.equal(statusCode, 400);
 });
+
+test("rate limiting cannot be bypassed by rotating session IDs", function() {
+    const middleware = createSecurityMiddleware({
+        callbackToken: "a".repeat(40),
+        requestsPerMinute: 10
+    });
+    let blocked = 0;
+    const response = {
+        status: function(value) { if (value === 429) blocked += 1; return this; },
+        type: function() { return this; },
+        send: function() {}
+    };
+    for (let index = 0; index < 15; index += 1) {
+        middleware.rateLimit({
+            body: { sessionId: "AT-rotating-" + index, phoneNumber: "0781234567" },
+            ip: "203.0.113.5"
+        }, response, function() {});
+    }
+    assert.equal(blocked, 5);
+
+    let allowed = false;
+    middleware.rateLimit({
+        body: { sessionId: "AT-other", phoneNumber: "0789999999" },
+        ip: "203.0.113.5"
+    }, response, function() { allowed = true; });
+    assert.equal(allowed, true);
+});

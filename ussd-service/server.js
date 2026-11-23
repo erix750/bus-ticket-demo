@@ -18,7 +18,12 @@ const { createTripService } = require("./services/tripService");
 const ussdRoutes = require("./routes/ussd");
 const path = require("node:path");
 
-const localDemoMode = process.env.LOCAL_USSD_DEMO !== "false";
+const localDemoMode = process.env.LOCAL_USSD_DEMO === "true";
+if (!localDemoMode && process.env.NODE_ENV === "production" &&
+    (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.USSD_CALLBACK_TOKEN)) {
+    console.error("Production USSD service requires SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and USSD_CALLBACK_TOKEN.");
+    process.exit(1);
+}
 const simulatorEnabled = localDemoMode || process.env.USSD_SIMULATOR_ENABLED === "true";
 const fareService = createFareService();
 const localDemo = localDemoMode ? createLocalDemoService(fareService) : null;
@@ -40,6 +45,10 @@ const services = {
 
 const app = express();
 app.disable("x-powered-by");
+if (process.env.USSD_TRUST_PROXY) {
+    const hops = Number(process.env.USSD_TRUST_PROXY);
+    app.set("trust proxy", Number.isInteger(hops) && hops >= 0 ? hops : process.env.USSD_TRUST_PROXY);
+}
 app.use(express.urlencoded({ extended: false, limit: "8kb" }));
 app.use(express.json({ limit: "8kb" }));
 app.use(express.static(path.join(__dirname, "public")));

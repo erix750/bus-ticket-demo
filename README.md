@@ -20,7 +20,7 @@ Set the site's URL in Supabase Auth's Site URL and Redirect URLs. For the hosted
 
 ## USSD service
 
-The Africa's Talking callback is in [`ussd-service/`](./ussd-service/) and requires Node.js 22.9 or newer. For local use, copy `.env.example` to `.env`, set the service's Supabase URL, service-role key, callback token, and service code, then run:
+The Africa's Talking callback is in [`ussd-service/`](./ussd-service/) and requires Node.js 22.9 or newer. For local use, copy `.env.example` to `.env` (it enables sample-data demo mode with `LOCAL_USSD_DEMO=true`; leave that unset on the live host), set the service's Supabase URL, service-role key, callback token, and service code, then run:
 
 ```sh
 cd ussd-service

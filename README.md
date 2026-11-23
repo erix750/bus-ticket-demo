@@ -27,7 +27,7 @@ cd ussd-service
 npm start
 ```
 
-Keep the service-role key and callback token in private environment settings. Run `npm test` from `ussd-service/`; run the root utility tests with `node --test tests` from the repository root.
+Keep the service-role key and callback token in private environment settings. Run `npm test` from `ussd-service/`; run the root utility tests with `npm run test` from the repository root.
 
 ## Deploy
 

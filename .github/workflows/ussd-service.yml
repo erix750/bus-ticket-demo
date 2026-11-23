@@ -34,4 +34,5 @@ jobs:
           done
       - run: npm test
       - name: Run repository unit tests
-        run: node --test ../tests
+        run: npm run test
+        working-directory: .

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://erix750.github.io/bus-ticket-demo/sitemap.xml

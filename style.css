@@ -5296,11 +5296,16 @@ main.welcome-main {
     align-items: end;
     justify-content: space-between;
     margin-bottom: 20px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 10px 28px rgba(8, 24, 48, 0.16);
 }
 
 .home-trust-heading .eyebrow {
     margin: 0 0 7px;
-    color: #8a6413;
+    color: #7a5610;
     font-size: 0.76rem;
     font-weight: 800;
     letter-spacing: 0.14em;
@@ -5316,7 +5321,7 @@ main.welcome-main {
 .home-trust-heading > p {
     max-width: 40ch;
     margin: 0;
-    color: #637181;
+    color: #4a5a6b;
     font-size: 0.92rem;
     line-height: 1.55;
 }
@@ -5392,7 +5397,8 @@ main.welcome-main {
     padding: 18px;
     border: 1px dashed #b6c8dc;
     border-radius: 16px;
-    color: #637181;
+    background: rgba(255, 255, 255, 0.94);
+    color: #4a5a6b;
 }
 
 .home-trust-points {
@@ -5463,6 +5469,16 @@ main.welcome-main {
 
 html[data-theme="dark"] .home-trust {
     color: #e6edf5;
+}
+
+html[data-theme="dark"] .home-trust-heading,
+html[data-theme="dark"] .home-route-empty {
+    border-color: #34495e;
+    background: rgba(16, 29, 42, 0.94);
+}
+
+html[data-theme="dark"] .home-route-empty {
+    color: #c1ccda;
 }
 
 html[data-theme="dark"] .home-trust-heading h2,

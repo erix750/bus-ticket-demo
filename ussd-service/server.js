@@ -58,7 +58,7 @@ app.get("/health", function(_request, response) {
 if (simulatorEnabled) {
     const security = createSecurityMiddleware({
         callbackToken: require("node:crypto").randomBytes(32).toString("base64url"),
-        serviceCode: process.env.USSD_SERVICE_CODE || "*200#",
+        serviceCode: process.env.USSD_SERVICE_CODE || "*384*16855#",
         requestsPerMinute: Number(process.env.USSD_RATE_LIMIT_PER_MINUTE) || 40
     });
     const simulatorController = createUssdController(services);
@@ -86,7 +86,7 @@ if (simulatorEnabled) {
                 };
             }),
             bookingCount: localDemo ? localDemo.bookings().length : null,
-            serviceCode: process.env.USSD_SERVICE_CODE || "*200#"
+            serviceCode: process.env.USSD_SERVICE_CODE || "*384*16855#"
         });
         } catch (error) {
             next(error);
@@ -106,7 +106,7 @@ if (simulatorEnabled) {
         controller: createUssdController(services),
         security: createSecurityMiddleware({
             callbackToken: process.env.USSD_CALLBACK_TOKEN,
-            serviceCode: process.env.USSD_SERVICE_CODE || "*200#",
+            serviceCode: process.env.USSD_SERVICE_CODE || "*384*16855#",
             requestsPerMinute: Number(process.env.USSD_RATE_LIMIT_PER_MINUTE) || 40
         })
     }));

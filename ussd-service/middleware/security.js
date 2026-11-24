@@ -11,7 +11,7 @@ function createSecurityMiddleware(options) {
     if (callbackToken.length < 32) {
         throw new Error("USSD_CALLBACK_TOKEN must contain at least 32 characters.");
     }
-    const configuredServiceCode = (options.serviceCode || "*200#").trim();
+    const configuredServiceCode = (options.serviceCode || "*384*16855#").trim();
     if (!/^[*#0-9]{1,32}$/.test(configuredServiceCode)) {
         throw new Error("USSD_SERVICE_CODE must be a valid USSD short code.");
     }

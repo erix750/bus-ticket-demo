@@ -163,7 +163,7 @@ test("all four languages continue into a localized booking menu", async function
         const app = createTestController();
         const body = {
             sessionId: "AT-language-" + index,
-            serviceCode: "*200#",
+            serviceCode: "*384*16855#",
             phoneNumber: "0781234567",
             text: ""
         };
@@ -194,7 +194,7 @@ test("Africa's Talking callback authentication and request validation reject mal
     const request = {
         body: {
             sessionId: "AT-session",
-            serviceCode: "*200#",
+            serviceCode: "*384*16855#",
             phoneNumber: "0781234567",
             text: ""
         },

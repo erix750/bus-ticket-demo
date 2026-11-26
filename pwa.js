@@ -2,13 +2,22 @@
     const installButton = document.getElementById("installApp");
     if (!installButton) return;
 
-    const installGuide = document.getElementById("installGuide");
+    let installGuide = document.getElementById("installGuide");
     const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/i.test(navigator.userAgent);
     let installPrompt = null;
     const isInstalled = window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
+
+    if (!installGuide) {
+        installGuide = document.createElement("dialog");
+        installGuide.id = "installGuide";
+        installGuide.className = "checkout-dialog install-dialog";
+        installGuide.setAttribute("aria-labelledby", "installGuideTitle");
+        installGuide.innerHTML = '<div class="checkout-content"><button class="dialog-close" id="closeInstallGuide" type="button" aria-label="Close install instructions">&times;</button><p class="eyebrow">WAYLINE APP</p><h2 id="installGuideTitle">Add Wayline to your phone</h2><p id="installGuideIntro" class="checkout-route"></p><ol id="installGuideSteps" class="install-steps"></ol><button class="button button-primary" id="doneInstallGuide" type="button">Done</button></div>';
+        document.body.appendChild(installGuide);
+    }
 
     installButton.hidden = isInstalled || !(isAppleMobile || isAndroid);
 

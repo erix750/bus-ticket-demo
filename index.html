@@ -40,12 +40,10 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
-            <details class="header-menu">
-                <summary class="header-button header-menu-toggle" aria-label="Menu" title="Menu">
+            <button class="header-button header-menu-toggle" id="siteMenuToggle" type="button" aria-label="Menu" title="Menu" aria-controls="siteMenuPanel" aria-expanded="false">
                     <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-                </summary>
-            </details>
-            <div class="header-menu-panel">
+            </button>
+            <div class="header-menu-panel" id="siteMenuPanel" hidden>
                 <nav class="header-page-nav" aria-label="Main navigation">
                     <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
                     <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
@@ -53,12 +51,12 @@
                     <a class="nav-link" href="#about" data-page-link="about">About Us</a>
                     <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
                 </nav>
+                <div class="site-controls" role="group" aria-label="Website settings">
+                    <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+                        <span id="themeToggleIcon" aria-hidden="true"></span>
+                    </button>
+                </div>
                 <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
-            </div>
-            <div class="site-controls" role="group" aria-label="Website settings">
-                <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
-                    <span id="themeToggleIcon" aria-hidden="true"></span>
-                </button>
             </div>
         </div>
     </header>
@@ -114,6 +112,39 @@
                 <p class="form-message" id="passwordRecoveryMessage" role="status" aria-live="polite"></p>
                 <button class="button button-text" id="backToSignIn" type="button">Back to sign in</button>
             </form>
+        </div>
+    </dialog>
+
+    <dialog class="partner-dialog company-mfa-dialog" id="companyMfaDialog" aria-labelledby="companyMfaTitle">
+        <div class="partner-dialog-content">
+            <p class="eyebrow">TWO-STEP VERIFICATION</p>
+            <h2 id="companyMfaTitle">Secure company access</h2>
+            <p id="companyMfaMessage" class="form-message" role="status" aria-live="polite"></p>
+            <div id="companyMfaEnrollPrompt" hidden>
+                <p>Set up an authenticator app before managing schedules, company details, licences, or staff.</p>
+                <button class="button button-primary" id="beginCompanyMfaSetup" type="button">Set up authenticator</button>
+            </div>
+            <div id="companyMfaEnrollSetup" hidden>
+                <p>Scan the QR code with an authenticator app, then enter its six-digit code.</p>
+                <img id="companyMfaQrCode" alt="Company portal authenticator setup QR code">
+                <p class="field-hint">Manual setup key: <code id="companyMfaSecret"></code></p>
+                <form id="companyMfaEnrollForm" class="login-form">
+                    <div class="field">
+                        <label for="companyMfaEnrollCode">Authenticator code</label>
+                        <input id="companyMfaEnrollCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+                    </div>
+                    <button class="button button-primary" type="submit">Verify and enable</button>
+                </form>
+            </div>
+            <form id="companyMfaChallengeForm" class="login-form" hidden>
+                <p>Enter the current six-digit code from your authenticator app.</p>
+                <div class="field">
+                    <label for="companyMfaChallengeCode">Authenticator code</label>
+                    <input id="companyMfaChallengeCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
+                <button class="button button-primary" type="submit">Verify and continue</button>
+            </form>
+            <button class="button button-text" id="cancelCompanyMfa" type="button">Cancel and sign out</button>
         </div>
     </dialog>
 
@@ -258,6 +289,27 @@
                     <div id="heroPassengerNames" class="hero-passenger-names"></div>
                     <button class="button button-primary" type="submit">Search buses <span aria-hidden="true">→</span></button>
                 </form>
+                <section class="company-staff-management" id="companyStaffManagement" hidden aria-labelledby="companyStaffTitle">
+                    <h4 id="companyStaffTitle">Company staff access</h4>
+                    <p class="field-hint">Only the owner can assign roles. Staff must have a confirmed Wayline account and two-step verification.</p>
+                    <form id="companyStaffForm" class="form-grid">
+                        <div class="field">
+                            <label for="companyStaffEmail">Staff account email</label>
+                            <input id="companyStaffEmail" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="field">
+                            <label for="companyStaffRole">Staff role</label>
+                            <select id="companyStaffRole" required>
+                                <option value="manager">Manager</option>
+                                <option value="cashier">Cashier</option>
+                            </select>
+                        </div>
+                        <div class="field-wide">
+                            <button class="button button-secondary" id="assignCompanyStaff" type="submit">Assign staff role</button>
+                            <p class="form-message" id="companyStaffMessage" role="status" aria-live="polite"></p>
+                        </div>
+                    </form>
+                </section>
             </section>
             <section class="home-trust" aria-labelledby="homeTrustTitle">
                 <div class="home-trust-heading">
@@ -612,8 +664,37 @@
                         <input id="applicationCompanyLocation" name="companyLocation" type="text" autocomplete="address-level2" minlength="2" maxlength="120" required>
                     </div>
                     <div class="field">
-                        <label for="applicationBusinessRegistration">Business registration information</label>
-                        <input id="applicationBusinessRegistration" name="businessRegistration" type="text" maxlength="160" required>
+                        <label for="applicationBusinessRegistration">RDB registration number</label>
+                        <input id="applicationBusinessRegistration" name="rdbRegistrationNumber" type="text" minlength="2" maxlength="80" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationTin">Rwanda TIN</label>
+                        <input id="applicationTin" name="tin" type="text" inputmode="numeric" pattern="[0-9]{9}" minlength="9" maxlength="9" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationTransportLicenseNumber">Transport licence number</label>
+                        <input id="applicationTransportLicenseNumber" name="transportLicenseNumber" type="text" minlength="2" maxlength="100" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationTransportLicenseType">Licence type</label>
+                        <select id="applicationTransportLicenseType" name="transportLicenseType" required>
+                            <option value="">Choose licence type</option>
+                            <option value="Passenger transport">Passenger transport</option>
+                            <option value="Public transport operator">Public transport operator</option>
+                            <option value="Other RURA transport licence">Other RURA transport licence</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="applicationLicenseIssueDate">Licence issue date</label>
+                        <input id="applicationLicenseIssueDate" name="licenseIssueDate" type="date" required>
+                    </div>
+                    <div class="field">
+                        <label for="applicationLicenseExpiryDate">Licence expiry date</label>
+                        <input id="applicationLicenseExpiryDate" name="licenseExpiryDate" type="date" required>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationAllowedRoutes">Allowed routes / areas</label>
+                        <textarea id="applicationAllowedRoutes" name="allowedRoutesAreas" minlength="2" maxlength="1000" rows="2" required></textarea>
                     </div>
                     <div class="field field-wide">
                         <label for="applicationBusinessDocument">Business registration document</label>
@@ -623,10 +704,12 @@
                     <div class="field field-wide">
                         <label for="applicationTransportLicense">Transport operating licence / authorization</label>
                         <input id="applicationTransportLicense" name="transportLicense" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
-                        <label class="application-license-not-applicable" for="applicationLicenseNotApplicable">
-                            <input id="applicationLicenseNotApplicable" name="licenseNotApplicable" type="checkbox">
-                            <span>A separate transport licence is not applicable to my company.</span>
-                        </label>
+                        <small class="field-hint">PDF, JPG, PNG, or WebP; maximum 10 MB. A valid transport licence is required.</small>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationRepresentativeIdDocument">Representative ID document</label>
+                        <input id="applicationRepresentativeIdDocument" name="representativeIdDocument" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+                        <small class="field-hint">PDF, JPG, PNG, or WebP; maximum 10 MB. Stored in private company document storage.</small>
                     </div>
                     <div class="field field-wide application-submit-row">
                         <button class="button button-primary" id="submitCompanyApplication" type="submit">Submit for verification</button>
@@ -661,6 +744,7 @@
                     <button class="header-button" id="partnerLogout" type="button" hidden>Sign out</button>
                 </header>
                 <section class="dashboard-overview" id="dashboardOverview" aria-labelledby="dashboardWelcome">
+                    <p class="license-expiry-warning" id="licenseExpiryWarning" role="status" hidden></p>
                     <div class="dashboard-welcome">
                         <h3 id="dashboardWelcome">Welcome back</h3>
                         <p>Manage your schedules and keep track of seat availability and bookings.</p>
@@ -742,6 +826,18 @@
                     <div class="field">
                         <label for="busName">Bus name or number</label>
                         <input type="text" id="busName" name="busName" maxlength="60" placeholder="e.g. Coach 24" required>
+                    </div>
+                    <div class="field">
+                        <label for="busPlateNumber">Vehicle plate number</label>
+                        <input type="text" id="busPlateNumber" name="busPlateNumber" minlength="2" maxlength="20" required>
+                    </div>
+                    <div class="field">
+                        <label for="busInsuranceExpiry">Insurance expiry</label>
+                        <input type="date" id="busInsuranceExpiry" name="busInsuranceExpiry" required>
+                    </div>
+                    <div class="field">
+                        <label for="busInspectionExpiry">Technical inspection expiry</label>
+                        <input type="date" id="busInspectionExpiry" name="busInspectionExpiry" required>
                     </div>
                     <div class="field">
                         <label for="busFrom">Leaving from</label>
@@ -862,16 +958,6 @@
 
     </main>
 
-    <footer class="navigation-footer">
-        <nav class="footer-page-nav" aria-label="Main navigation">
-            <a class="nav-link is-active" href="#home" data-page-link="home" aria-current="page">Home</a>
-            <a class="nav-link" href="#booking" data-page-link="booking">Book a Ticket</a>
-            <a class="nav-link" href="#company" data-page-link="company">Company Portal</a>
-            <a class="nav-link" href="#about" data-page-link="about">About Us</a>
-            <a class="nav-link" href="#contact" data-page-link="contact">Contact Us</a>
-        </nav>
-    </footer>
-
     <footer class="site-footer" id="siteFooter">
         <div class="footer-inner">
             <a class="footer-brand" href="#home" data-page-link="home" aria-label="Wayline home">
@@ -950,7 +1036,9 @@
     <script src="booking-status.js?v=wayline-hold-expiration-20261119"></script>
     <script src="route-utils.js?v=wayline-rwanda-corridors-20261110"></script>
     <script src="booking-utils.js?v=wayline-unit-test-utils-20261121"></script>
+    <script src="company-application-utils.js?v=wayline-licensing-20261126"></script>
     <script src="script.js?v=wayline-home-search-20261119"></script>
+    <script src="site-menu.js?v=wayline-menu-theme-20261126"></script>
     <script src="pwa.js?v=wayline-home-search-20261119"></script>
     <script src="footer.js?v=wayline-home-search-20261119"></script>
 </body>

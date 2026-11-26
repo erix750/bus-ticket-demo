@@ -15,7 +15,7 @@
 - Passengers review company, bus, route, stops, date, departure, estimated duration, seats, and total before saving, and can copy the booking reference.
 - Search results and company schedules show an estimated arrival time when the operator has supplied a journey duration.
 - A searchable Help Center suggests answers about booking, payment, cancellations, and contact options. Footers include legal links, a Made in Rwanda identity, and the current-year copyright.
-- The booking interface and shared navigation support English, Kinyarwanda, and French. Legal policy documents remain in English.
+- The shared hamburger navigation supports English, Kinyarwanda, French, and Swahili. It remains available at every screen size and contains language, theme, and app-install controls. The booking interface and legal policy documents remain in English.
 - Privacy, terms, and cancellation policies explain passenger information use, booking terms, and how to request cancellation.
 - Footer links show Wayline's Rwanda service area and the current copyright year.
 - Passengers can select MTN Mobile Money or Airtel Money as their intended payment method; Visa and Mastercard are listed as coming soon.
@@ -36,3 +36,8 @@
 - A protected administrator portal lets provisioned Wayline administrators review applications, approve or reject companies, request changes, suspend or reactivate access, and inspect recent company activity.
 - Company application documents use a private Supabase Storage bucket. RLS and database-side approval checks restrict applications, schedules, company profiles, bookings, activity records, and document access.
 - After a web or USSD booking is saved, passengers receive an SMS confirmation with the booking reference, route, time, seats, and total (Supabase Edge Function `send-booking-sms` through Africa's Talking). Delivery status is kept on the booking record for support.
+- Company verification collects structured RDB registration, Rwanda TIN, RURA licence number/type/dates, allowed routes, business and representative identity documents, and requires a manual four-part Wayline review. There is no licence-not-applicable bypass. Licence expiry automatically removes company trips from public search and blocks new bookings in database policies and booking guards; company and admin dashboards warn within 30 days.
+- Every published bus schedule records its plate number, insurance expiry, and technical-inspection expiry. Database checks reject schedules and bookings when either cover does not extend through the trip date.
+- Approved company owners and managers use TOTP MFA for company, licence, schedule, and staff edits. Company sessions sign out after 15 minutes of inactivity. Owners can assign confirmed accounts as managers or cashiers; cashiers have view-only booking access. Supabase Auth rate limits and available session inactivity controls should also be configured in the project dashboard.
+- Passengers with an SMS-verified booking can privately report the associated company. Reports and manual review notes are visible to Wayline administrators only.
+- Migration `20261126000000_company_licensing_security.sql` adds the licence/vehicle fields, reviewer checklist, staff roles, report workflow, private representative-ID documents, and database-enforced licence and vehicle validity. Existing approvals lacking this evidence are unverified until manually reviewed.

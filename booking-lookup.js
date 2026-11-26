@@ -7,6 +7,7 @@
     const referenceInput = document.getElementById("bookingLookupReference");
     const codeInput = document.getElementById("bookingLookupCode");
     let pendingLookup = null;
+    let activeReportBookingId = "";
 
     const normalizeRwandaPhoneNumber = window.WaylineBookingUtils.normalizeRwandaPhoneNumber;
 
@@ -146,6 +147,15 @@
                 }
             });
             actions.appendChild(copyButton);
+            const reportButton = makeElement("button", "button button-secondary", "Report this company");
+            reportButton.type = "button";
+            reportButton.addEventListener("click", function() {
+                activeReportBookingId = booking.id;
+                document.getElementById("companyReportForm").reset();
+                document.getElementById("companyReportMessage").textContent = "";
+                document.getElementById("companyReportDialog").showModal();
+            });
+            actions.appendChild(reportButton);
             card.append(top, reference, details);
 
             if (!booking.cancelled) {
@@ -173,6 +183,42 @@
 
     referenceInput.addEventListener("input", function() {
         referenceInput.setCustomValidity("");
+    });
+
+    document.getElementById("closeCompanyReport").addEventListener("click", function() {
+        document.getElementById("companyReportDialog").close();
+    });
+
+    document.getElementById("companyReportForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const button = document.getElementById("submitCompanyReport");
+        const reportMessage = document.getElementById("companyReportMessage");
+        if (!activeReportBookingId) {
+            reportMessage.textContent = "Find and verify a booking before reporting a company.";
+            return;
+        }
+        button.disabled = true;
+        reportMessage.textContent = "";
+        try {
+            await window.WaylineDatabase.reportBookingCompany(
+                activeReportBookingId,
+                document.getElementById("companyReportCategory").value,
+                document.getElementById("companyReportDetails").value.trim()
+            );
+            reportMessage.textContent = "Your report was sent privately to Wayline for review.";
+            this.reset();
+            activeReportBookingId = "";
+            try {
+                await window.WaylineDatabase.clearPassengerBookingSession();
+            } catch (error) {
+                console.error("Could not clear the temporary passenger verification session.", error);
+                reportMessage.textContent += " Reload this page to clear the temporary verification session.";
+            }
+        } catch (error) {
+            reportMessage.textContent = error.message || "Could not send your company report.";
+        } finally {
+            button.disabled = false;
+        }
     });
 
     startForm.addEventListener("submit", async function(event) {
@@ -225,13 +271,19 @@
         }
     });
 
-    document.getElementById("changeBookingPhone").addEventListener("click", function() {
+    document.getElementById("changeBookingPhone").addEventListener("click", async function() {
         pendingLookup = null;
         codeInput.value = "";
         message.textContent = "";
         verifyForm.hidden = true;
         startForm.hidden = false;
         phoneInput.focus();
+        try {
+            await window.WaylineDatabase.clearPassengerBookingSession();
+        } catch (error) {
+            console.error("Could not clear the temporary passenger verification session.", error);
+            message.textContent = "Reload this page before starting another booking lookup.";
+        }
     });
 
     verifyForm.addEventListener("submit", async function(event) {
@@ -258,16 +310,15 @@
             lookupError = error;
         }
 
-        try {
-            await window.WaylineDatabase.clearPassengerBookingSession();
-        } catch (error) {
-            console.error("Could not clear the temporary passenger verification session.", error);
-            if (!lookupError) {
+        if (lookupError && phoneVerified) {
+            try {
+                await window.WaylineDatabase.clearPassengerBookingSession();
+            } catch (error) {
+                console.error("Could not clear the temporary passenger verification session.", error);
                 lookupError = new Error("Your phone was verified, but the temporary session could not be cleared. Please reload this page.");
             }
-        } finally {
-            button.disabled = false;
         }
+        button.disabled = false;
 
         if (lookupError) {
             message.textContent = lookupError.message ||
@@ -291,6 +342,12 @@
         if (bookings.length === 0) {
             message.textContent =
                 "We couldn’t find a booking for that reference and verified phone number. Check both and try again.";
+            try {
+                await window.WaylineDatabase.clearPassengerBookingSession();
+            } catch (error) {
+                console.error("Could not clear the temporary passenger verification session.", error);
+                message.textContent += " Reload this page to clear the temporary verification session.";
+            }
             return;
         }
 

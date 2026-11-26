@@ -1,14 +1,355 @@
 :root {
     color-scheme: light;
-    --ink: #20364e;
-    --muted: #637181;
+    --background: #f4f7fb;
+    --surface: #ffffff;
+    --text: #20364e;
+    --muted-text: #58697c;
+    --border: #dce5ef;
+    --accent-gold: #b77910;
+    --focus-ring: #805500;
+    --ink: var(--text);
+    --muted: var(--muted-text);
     --forest: #173f70;
     --forest-hover: #112f54;
     --leaf: #f2c078;
     --coral: #d66f4d;
-    --paper: #f4f7fb;
-    --line: #dce5ef;
-    --white: #fff;
+    --paper: var(--background);
+    --line: var(--border);
+    --white: var(--surface);
+}
+
+.site-header {
+    position: relative;
+    z-index: 20;
+    overflow: visible;
+}
+
+.header-inner {
+    position: relative;
+}
+
+.header-inner > .brand {
+    margin-right: auto;
+}
+
+.header-menu-toggle {
+    display: inline-flex;
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    background: var(--surface);
+}
+
+.header-menu-toggle .menu-icon {
+    display: grid;
+    width: 20px;
+    gap: 5px;
+}
+
+.header-menu-toggle .menu-icon span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.header-menu-toggle[aria-expanded="true"] .menu-icon span:first-child {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.header-menu-toggle[aria-expanded="true"] .menu-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.header-menu-toggle[aria-expanded="true"] .menu-icon span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+.header-menu-panel:not([hidden]) {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    width: min(390px, calc(100vw - 28px));
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    color: var(--text);
+    background: var(--surface);
+    box-shadow: 0 18px 48px rgba(8, 24, 40, 0.2);
+}
+
+.header-menu-panel .header-page-nav {
+    display: grid;
+    gap: 7px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.header-menu-panel .nav-link {
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text);
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.header-menu-panel .nav-link:hover,
+.header-menu-panel .nav-link.is-active {
+    border-color: var(--border);
+    color: var(--forest);
+    background: var(--background);
+}
+
+.header-menu-panel .nav-link.is-active {
+    box-shadow: inset 3px 0 var(--accent-gold);
+}
+
+.header-menu-panel .site-controls {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin: 0;
+}
+
+.header-menu-panel .footer-language-control {
+    display: grid;
+    gap: 5px;
+    color: var(--muted-text);
+    font-size: 0.82rem;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.header-menu-panel .footer-language-control select {
+    width: auto;
+    min-width: 150px;
+    max-width: 100%;
+    min-height: 42px;
+    padding: 7px 34px 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    background: var(--surface);
+    font: inherit;
+}
+
+.header-menu-panel .header-install-button {
+    width: 100%;
+    min-height: 48px;
+}
+
+.header-menu-panel .header-button:focus-visible,
+.header-menu-toggle:focus-visible,
+.header-menu-panel .nav-link:focus-visible,
+.header-menu-panel .footer-language-control select:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+.hero-search {
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+.hero-search .field {
+    border-color: var(--border);
+}
+
+.hero-search .field label {
+    color: var(--text);
+}
+
+.hero-search .field input {
+    color: var(--text);
+}
+
+.hero-search .field input:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+.hero-passenger-names {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.hero-search .hero-passenger-names input {
+    min-height: 42px;
+    padding-inline: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--background);
+}
+
+.hero-search .hero-passenger-names .field {
+    padding-inline: 0;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .admin-page,
+html[data-theme="dark"] .policy-page,
+html[data-theme="dark"] .booking-page {
+    color: var(--text);
+    background-color: var(--background);
+}
+
+html[data-theme="dark"] .hero-search,
+html[data-theme="dark"] .admin-login-card,
+html[data-theme="dark"] .admin-panel,
+html[data-theme="dark"] .policy-content,
+html[data-theme="dark"] .policy-card,
+html[data-theme="dark"] .booking-card,
+html[data-theme="dark"] .company-dashboard-card,
+html[data-theme="dark"] .partner-dialog-content,
+html[data-theme="dark"] .checkout-content,
+html[data-theme="dark"] .trip-card,
+html[data-theme="dark"] .home-route-card,
+html[data-theme="dark"] .home-trust-card {
+    border-color: var(--border);
+    color: var(--text);
+    background-color: var(--surface);
+}
+
+html[data-theme="dark"] .hero-search .field label,
+html[data-theme="dark"] .field label,
+html[data-theme="dark"] .policy-page h1,
+html[data-theme="dark"] .policy-page h2,
+html[data-theme="dark"] .policy-page h3,
+html[data-theme="dark"] .admin-page h1,
+html[data-theme="dark"] .admin-page h2,
+html[data-theme="dark"] .admin-page h3 {
+    color: var(--text);
+}
+
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .hero-search .hero-passenger-names input {
+    border-color: var(--border);
+    color: var(--text);
+    background-color: var(--background);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: var(--muted-text);
+    opacity: 1;
+}
+
+html[data-theme="dark"] .hero-search .field input {
+    border-color: transparent;
+    background: transparent;
+}
+
+html[data-theme="dark"] .hero-search .field input:focus-visible,
+html[data-theme="dark"] input:focus-visible,
+html[data-theme="dark"] select:focus-visible,
+html[data-theme="dark"] textarea:focus-visible,
+html[data-theme="dark"] button:focus-visible,
+html[data-theme="dark"] a:focus-visible {
+    outline-color: var(--focus-ring);
+}
+
+html[data-theme="dark"] .policy-page p,
+html[data-theme="dark"] .policy-page li,
+html[data-theme="dark"] .admin-page p,
+html[data-theme="dark"] .admin-page .muted,
+html[data-theme="dark"] .hero-search .field input,
+html[data-theme="dark"] .booking-page p {
+    color: var(--muted-text);
+}
+
+.not-found-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+    color: var(--text);
+    background: var(--background);
+}
+
+.not-found-page .site-header {
+    width: 100%;
+}
+
+.not-found-page main {
+    align-self: center;
+    margin: auto;
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .not-found-page #message {
+    color: var(--muted-text);
+}
+
+@media (max-width: 700px) {
+    .header-menu-panel:not([hidden]) {
+        right: 0;
+    }
+
+    .hero-search {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero-search > .field:nth-of-type(3),
+    .hero-search > .field:nth-of-type(4),
+    .hero-search > .button {
+        grid-column: 1 / -1;
+    }
+}
+
+html[data-theme="dark"] .result-card,
+html[data-theme="dark"] .record-card,
+html[data-theme="dark"] .booking-lookup-panel,
+html[data-theme="dark"] .policy-panel,
+html[data-theme="dark"] .admin-application-card,
+html[data-theme="dark"] .admin-activity-row,
+html[data-theme="dark"] .dashboard-panel,
+html[data-theme="dark"] .company-application-panel,
+html[data-theme="dark"] .application-status-card,
+html[data-theme="dark"] .home-trust-heading,
+html[data-theme="dark"] .home-route-empty {
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .policy-panel h1,
+html[data-theme="dark"] .policy-panel h2,
+html[data-theme="dark"] .policy-panel h3,
+html[data-theme="dark"] .policy-panel p,
+html[data-theme="dark"] .policy-panel li,
+html[data-theme="dark"] .admin-application-card p,
+html[data-theme="dark"] .admin-activity-row p,
+html[data-theme="dark"] .result-card p,
+html[data-theme="dark"] .record-card p {
+    color: var(--text);
+}
+
+html[data-theme="dark"] :focus-visible {
+    outline-color: var(--focus-ring);
+}
+
+.license-expiry-warning {
+    background: var(--surface);
 }
 
 .booking-lookup-back {
@@ -3243,13 +3584,20 @@ summary:focus-visible {
 
 html[data-theme="dark"] {
     color-scheme: dark;
-    --ink: #e5edf5;
-    --muted: #a8b8c9;
+    --background: #0d1620;
+    --surface: #172635;
+    --text: #edf3fa;
+    --muted-text: #bdc9d6;
+    --border: #405366;
+    --accent-gold: #ffd166;
+    --focus-ring: #ffe08a;
+    --ink: var(--text);
+    --muted: var(--muted-text);
     --forest: #77c99a;
     --forest-hover: #50a978;
-    --paper: #15212e;
-    --line: #35485a;
-    --white: #1c2a39;
+    --paper: #101d2a;
+    --line: var(--border);
+    --white: var(--surface);
 }
 
 html[data-theme="dark"] body {
@@ -6202,5 +6550,280 @@ main.welcome-main {
 
     .site-controls {
         order: 2;
+    }
+}
+
+.header-menu-toggle {
+    display: inline-flex !important;
+}
+
+.header-menu-panel .header-page-nav {
+    display: grid !important;
+    flex: none;
+    order: initial;
+    justify-content: stretch;
+    gap: 7px;
+    margin: 0;
+    padding: 0 0 12px;
+}
+
+.header-menu-panel .nav-link {
+    min-height: 50px;
+    flex: initial;
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text);
+    background: transparent;
+    font-size: 1rem;
+    text-decoration: none;
+    white-space: normal;
+}
+
+.header-menu-panel .nav-link:hover,
+.header-menu-panel .nav-link.is-active,
+.header-menu-panel .nav-link[data-page-link="company"] {
+    border-color: var(--border);
+    color: var(--forest);
+    background: var(--background);
+}
+
+.header-menu-panel .nav-link.is-active {
+    box-shadow: inset 3px 0 var(--accent-gold);
+}
+
+.header-menu-panel .header-install-button {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    background: var(--background);
+    font-size: 1rem;
+    white-space: normal;
+}
+
+.hero-search {
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+.hero-search .field {
+    border-color: var(--border);
+}
+
+.hero-search .field label {
+    color: var(--text);
+}
+
+.hero-search .field input {
+    color: var(--text);
+}
+
+.hero-search .field input:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+.hero-passenger-names {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.hero-search .hero-passenger-names input {
+    min-height: 42px;
+    padding-inline: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--background);
+}
+
+.hero-search .hero-passenger-names .field {
+    padding-inline: 0;
+}
+
+html[data-theme="dark"] .hero-search,
+html[data-theme="dark"] .hero-search .field {
+    border-color: var(--border);
+}
+
+html[data-theme="dark"] .hero-search .field label,
+html[data-theme="dark"] .field label {
+    color: var(--text);
+}
+
+html[data-theme="dark"] .hero-search .field input {
+    color: var(--text);
+}
+
+html[data-theme="dark"] .hero-search .field input:focus-visible,
+html[data-theme="dark"] input:focus-visible,
+html[data-theme="dark"] select:focus-visible,
+html[data-theme="dark"] textarea:focus-visible,
+html[data-theme="dark"] button:focus-visible,
+html[data-theme="dark"] a:focus-visible {
+    outline-color: var(--focus-ring);
+}
+
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .hero-search .hero-passenger-names input {
+    border-color: var(--border);
+    color: var(--text);
+    background-color: var(--background);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: var(--muted-text);
+    opacity: 1;
+}
+
+html[data-theme="dark"] .hero-search .field input {
+    border-color: transparent;
+    background: transparent;
+}
+
+html[data-theme="dark"] .policy-page,
+html[data-theme="dark"] .admin-page,
+html[data-theme="dark"] .booking-page {
+    color: var(--text);
+    background-color: var(--background);
+}
+
+html[data-theme="dark"] .policy-page h1,
+html[data-theme="dark"] .policy-page h2,
+html[data-theme="dark"] .policy-page h3,
+html[data-theme="dark"] .admin-page h1,
+html[data-theme="dark"] .admin-page h2,
+html[data-theme="dark"] .admin-page h3,
+html[data-theme="dark"] .policy-page p,
+html[data-theme="dark"] .policy-page li,
+html[data-theme="dark"] .admin-page p,
+html[data-theme="dark"] .booking-page p {
+    color: var(--text);
+}
+
+html[data-theme="dark"] .admin-login-card,
+html[data-theme="dark"] .admin-panel,
+html[data-theme="dark"] .policy-content,
+html[data-theme="dark"] .policy-card,
+html[data-theme="dark"] .booking-card,
+html[data-theme="dark"] .company-dashboard-card,
+html[data-theme="dark"] .partner-dialog-content,
+html[data-theme="dark"] .checkout-content,
+html[data-theme="dark"] .trip-card,
+html[data-theme="dark"] .home-route-card,
+html[data-theme="dark"] .home-trust-card {
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .admin-page .muted,
+html[data-theme="dark"] .policy-page .muted,
+html[data-theme="dark"] .booking-page .muted,
+html[data-theme="dark"] .field-hint,
+html[data-theme="dark"] .muted-label,
+html[data-theme="dark"] .record-details,
+html[data-theme="dark"] .result-details,
+html[data-theme="dark"] .record-company,
+html[data-theme="dark"] .footer-service-area,
+html[data-theme="dark"] .footer-made-in-rwanda {
+    color: var(--muted-text);
+}
+
+.license-expiry-warning {
+    padding: 12px 16px;
+    border: 1px solid var(--accent-gold);
+    border-radius: 12px;
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent-gold) 12%, var(--surface));
+}
+
+.company-verification-badge {
+    width: fit-content;
+    padding: 6px 10px;
+    border: 1px solid #2b7950;
+    border-radius: 999px;
+    color: #155d36;
+    background: #e6f4eb;
+    font-size: 0.82rem;
+    font-weight: 750;
+}
+
+.admin-verification-checklist {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+}
+
+.admin-verification-checklist label {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+}
+
+.admin-verification-checklist input {
+    margin-top: 4px;
+}
+
+.company-staff-management {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+html[data-theme="dark"] .company-verification-badge {
+    border-color: #52b981;
+    color: #d7f3e2;
+    background: #1d4732;
+}
+
+html[data-theme="dark"] .license-expiry-warning {
+    color: var(--text);
+}
+
+.not-found-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+    color: var(--text);
+    background: var(--background);
+}
+
+.not-found-page .site-header {
+    width: 100%;
+}
+
+.not-found-page main {
+    align-self: center;
+    margin: auto;
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .not-found-page #message {
+    color: var(--muted-text);
+}
+
+@media (max-width: 700px) {
+    .hero-search {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero-search > .field:nth-of-type(3),
+    .hero-search > .field:nth-of-type(4),
+    .hero-search > .button {
+        grid-column: 1 / -1;
     }
 }

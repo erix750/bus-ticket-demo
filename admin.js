@@ -163,6 +163,28 @@ function renderApplication(application) {
     });
     card.appendChild(details);
 
+    appendText(card, "h4", "RRA / EBM information");
+    const ebmDetails = document.createElement("dl");
+    ebmDetails.className = "admin-application-details";
+    [
+        ["Company TIN", application.tin],
+        ["VAT registered", application.vat_registered === true ? "Yes" :
+            application.vat_registered === false ? "No" : "Not provided"],
+        ["Ticket tax category", application.ticket_tax_category],
+        ["EBM / VSDC identifier", application.ebm_device_identifier],
+        ["RRA registered business name", application.rra_registered_business_name],
+        ["EBM status", application.ebm_status],
+        ["Owner confirmation", formatAdminDate(application.ebm_owner_confirmed_at)],
+        ["EBM reviewer", application.ebm_reviewer_name],
+        ["EBM review date", formatAdminDate(application.ebm_reviewed_at)]
+    ].forEach(function(entry) {
+        const row = document.createElement("div");
+        appendText(row, "dt", entry[0]);
+        appendText(row, "dd", entry[1] || "Not provided");
+        ebmDetails.appendChild(row);
+    });
+    card.appendChild(ebmDetails);
+
     const documents = document.createElement("div");
     documents.className = "admin-document-actions";
     addDocumentButton(documents, application.business_document_path, "Open business registration");
@@ -172,6 +194,7 @@ function renderApplication(application) {
         "Open transport licence"
     );
     addDocumentButton(documents, application.representative_id_document_path, "Open representative ID");
+    addDocumentButton(documents, application.ebm_registration_certificate_path, "Open RRA / EBM certificate");
     card.appendChild(documents);
 
     const expiry = application.transport_license_expiry_date;
@@ -235,6 +258,75 @@ function renderApplication(application) {
     checklist.appendChild(saveChecklistButton);
     card.appendChild(checklist);
 
+    const ebmChecklist = document.createElement("fieldset");
+    ebmChecklist.className = "admin-verification-checklist";
+    appendText(ebmChecklist, "legend", "RRA / EBM verification checklist");
+    [
+        ["ebm_tin_checked", "TIN matches the registration documents"],
+        ["ebm_device_checked", "EBM device / VSDC information is valid"],
+        ["ebm_business_name_checked", "Business name matches RRA records"]
+    ].forEach(function(item) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = item[0];
+        input.checked = application[item[0]] === true;
+        label.append(input, document.createTextNode(item[1]));
+        ebmChecklist.appendChild(label);
+    });
+    const ebmReviewNote = document.createElement("textarea");
+    ebmReviewNote.className = "admin-review-input";
+    ebmReviewNote.rows = 2;
+    ebmReviewNote.maxLength = 2000;
+    ebmReviewNote.placeholder = "Add a note when rejecting EBM information.";
+    ebmReviewNote.value = application.ebm_review_notes || "";
+    ebmReviewNote.setAttribute("aria-label", "EBM review note for " + application.company_name);
+    ebmChecklist.appendChild(ebmReviewNote);
+    if (application.ebm_review_notes) {
+        appendText(card, "p", "Previous EBM review note: " + application.ebm_review_notes, "admin-review-note");
+    }
+
+    async function saveEbmReview(status) {
+        const note = ebmReviewNote.value.trim();
+        if (status === "rejected" && note.length < 3) {
+            ebmReviewNote.setCustomValidity("Add a short reason when rejecting EBM information.");
+            ebmReviewNote.reportValidity();
+            return;
+        }
+        ebmReviewNote.setCustomValidity("");
+        const button = ebmChecklist.querySelector('[data-ebm-status="' + status + '"]');
+        button.disabled = true;
+        adminDashboardMessage.textContent = "";
+        try {
+            await adminDatabase.reviewCompanyEbmInformation(application.id, {
+                tinChecked: ebmChecklist.querySelector('[name="ebm_tin_checked"]').checked,
+                deviceChecked: ebmChecklist.querySelector('[name="ebm_device_checked"]').checked,
+                businessNameChecked: ebmChecklist.querySelector('[name="ebm_business_name_checked"]').checked
+            }, status, note);
+            adminDashboardMessage.textContent = "RRA / EBM review saved as " + status + ".";
+            await loadAdminDashboard();
+        } catch (error) {
+            adminDashboardMessage.textContent = error.message || "Could not save the RRA / EBM review.";
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    [
+        ["pending", "Save EBM checklist"],
+        ["approved", "Approve EBM information"],
+        ["rejected", "Reject EBM information"]
+    ].forEach(function(item) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = item[0] === "approved" ? "button button-primary" : "button button-secondary";
+        button.textContent = item[1];
+        button.dataset.ebmStatus = item[0];
+        button.addEventListener("click", function() { saveEbmReview(item[0]); });
+        ebmChecklist.appendChild(button);
+    });
+    card.appendChild(ebmChecklist);
+
     if (application.review_notes) {
         appendText(card, "p", "Previous review note: " + application.review_notes, "admin-review-note");
     }
@@ -250,16 +342,25 @@ function renderApplication(application) {
 
     const actions = document.createElement("div");
     actions.className = "admin-review-actions";
+    if (application.ebm_status !== "approved") {
+        appendText(card, "p", "Approve the RRA / EBM information before approving this company.", "field-hint");
+    }
     if (application.status === "pending") {
         addReviewAction(actions, application, "under_review", "Mark under review", notes);
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
         addReviewAction(actions, application, "rejected", "Reject application", notes);
     } else if (application.status === "under_review") {
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
         addReviewAction(actions, application, "rejected", "Reject / request changes", notes);
     } else if (application.status === "rejected") {
         addReviewAction(actions, application, "under_review", "Review resubmission", notes);
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
     } else if (application.status === "approved") {
         addReviewAction(actions, application, "suspended", "Suspend company", notes);
     } else if (application.status === "suspended") {

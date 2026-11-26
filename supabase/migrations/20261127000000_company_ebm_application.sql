@@ -573,7 +573,7 @@ DECLARE
     clean_note text := pg_catalog.btrim(coalesce(p_review_note, ''));
 BEGIN
     IF NOT public.is_wayline_admin()
-       OR p_status NOT IN ('approved', 'rejected')
+       OR p_status NOT IN ('pending', 'approved', 'rejected')
        OR char_length(clean_note) > 2000
        OR (p_status = 'rejected' AND char_length(clean_note) < 3) THEN
         RAISE EXCEPTION 'Only a Wayline administrator can save a valid EBM review.';

@@ -82,11 +82,10 @@ const companyApplicationPanel = document.getElementById("companyApplicationPanel
 const siteFooter = document.getElementById("siteFooter");
 const pageViews = Array.from(document.querySelectorAll("[data-page-view]"));
 const loginMessage = document.getElementById("loginMessage");
-const companyNameField = document.getElementById("companyNameField");
-const partnerCompanyName = document.getElementById("partnerCompanyName");
 const passwordRecoveryForm = document.getElementById("passwordRecoveryForm");
 let activePage = "home";
 let companyPortalStatus = null;
+let applicationWizardStep = 2;
 let passengerNames = [];
 let companyMfaFactorId = null;
 let companyMfaSetupFactorId = null;
@@ -345,7 +344,9 @@ function setPartnerPreview(active) {
     companyPortalEntry.hidden = signedIn;
     document.getElementById("partnerLogout").hidden = !isApproved;
     document.getElementById("applicationLogout").hidden = !signedIn || isApproved;
-    const companyName = isApproved ? partnerCompanyName.value || currentUser.email : "";
+    const companyName = isApproved
+        ? companyPortalStatus.company_name || currentUser.email
+        : "Company application";
     document.getElementById("dashboardCompanyName").textContent = companyName;
     document.getElementById("dashboardWelcome").textContent = isApproved
         ? "Welcome back, " + companyName
@@ -361,7 +362,14 @@ function renderCompanyPortalStatus(status) {
     document.getElementById("companyStaffManagement").hidden = status.company_role !== "owner";
     const canManageCompany = ["owner", "manager"].includes(status.company_role);
     document.getElementById("companyProfileForm").hidden = !canManageCompany;
-    document.getElementById("busForm").hidden = !canManageCompany;
+    const ebmApproved = status.ebm_status === "approved";
+    document.getElementById("busForm").hidden = !canManageCompany || !ebmApproved;
+    document.getElementById("dashboardSchedules").hidden = !ebmApproved;
+    document.getElementById("dashboardBookings").hidden = !ebmApproved;
+    document.getElementById("companyEbmNavItem").hidden =
+        !canManageCompany || !status.submitted_at || !status.ebm_mfa_verified;
+    document.getElementById("dashboardEbm").hidden =
+        !canManageCompany || !status.submitted_at || !status.ebm_mfa_verified;
     const applicationStatus = status.application_status || status.approval_status;
     const submitted = Boolean(status.submitted_at);
     const statusLabels = {
@@ -373,8 +381,8 @@ function renderCompanyPortalStatus(status) {
     };
     const messages = {
         pending: submitted
-            ? "Your company registration application has been submitted successfully. Your information is under review. You will receive an update once the verification process is complete."
-            : "Complete the company and document details below to submit your application for verification.",
+            ? "Your application is pending review. Schedules and bookings stay locked until Wayline approves your company and EBM information."
+            : "Complete each company application step and submit all required documents for review.",
         under_review: "Your application is being checked by Wayline. If we requested more information or documents, use the form below to send an update; it will return to the pending queue for review.",
         rejected: "Your application was not accepted. Review the administrator's note, correct the information or documents, and submit an updated application.",
         suspended: "Access to your company account has been restricted. Contact Wayline support if you need more information."
@@ -403,6 +411,63 @@ function renderCompanyPortalStatus(status) {
     document.getElementById("applicationLicenseIssueDate").value = status.transport_license_issue_date || "";
     document.getElementById("applicationLicenseExpiryDate").value = status.transport_license_expiry_date || "";
     document.getElementById("applicationAllowedRoutes").value = status.allowed_routes_areas || "";
+    document.getElementById("applicationEbmTinPreview").textContent =
+        status.tin || "Enter the TIN in Step 3";
+    document.getElementById("applicationVatRegistered").value =
+        status.vat_registered === null || status.vat_registered === undefined
+            ? ""
+            : String(status.vat_registered);
+    document.getElementById("applicationTicketTaxCategory").value = status.ticket_tax_category || "";
+    document.getElementById("applicationEbmDeviceIdentifier").value = status.ebm_device_identifier || "";
+    document.getElementById("applicationRraBusinessName").value =
+        status.rra_registered_business_name || "";
+    document.getElementById("applicationEbmOwnerConfirmation").checked =
+        Boolean(status.ebm_owner_confirmed_at);
+    document.getElementById("applicationEbmCertificate").required =
+        !status.ebm_registration_certificate_path;
+    document.getElementById("applicationEbmCertificateStatus").textContent =
+        status.ebm_registration_certificate_path
+            ? "Certificate uploaded. Choose a new file to replace it."
+            : "PDF, JPG, PNG, or WebP up to 10 MB. Upload your company's certificate from RRA.";
+
+    const ebmStatusLabels = {
+        not_submitted: "Not submitted",
+        pending: "Pending review",
+        approved: "Approved",
+        rejected: "Rejected"
+    };
+    const ebmStatusElement = document.getElementById("companyEbmStatus");
+    ebmStatusElement.textContent = ebmStatusLabels[status.ebm_status] || "Not submitted";
+    ebmStatusElement.dataset.status = status.ebm_status || "not_submitted";
+    document.getElementById("companyEbmTin").textContent = status.tin || "Not provided";
+    document.getElementById("companyEbmVatStatus").textContent =
+        status.vat_registered === true ? "VAT registered" :
+            status.vat_registered === false ? "Not VAT registered" : "Not provided";
+    document.getElementById("companyEbmTaxCategory").textContent =
+        status.ticket_tax_category || "Not provided";
+    document.getElementById("companyEbmDevice").textContent =
+        status.ebm_device_identifier || "Not provided";
+    document.getElementById("companyEbmBusinessName").textContent =
+        status.rra_registered_business_name || "Not provided";
+    document.getElementById("companyEbmCertificateStatus").textContent =
+        status.ebm_registration_certificate_path ? "Uploaded to private storage" : "Not uploaded";
+    document.getElementById("companyEbmCredentialsStatus").textContent =
+        status.ebm_credentials_configured ? "Saved securely (masked)" : "Not provided";
+    const ebmReviewNote = document.getElementById("companyEbmReviewNote");
+    ebmReviewNote.textContent = status.ebm_status === "rejected"
+        ? status.ebm_review_notes || "Wayline requested an update to your RRA/EBM information."
+        : "";
+    ebmReviewNote.hidden = !ebmReviewNote.textContent;
+
+    document.getElementById("applicationReviewSummary").textContent =
+        "Company: " + (status.company_name || "Not provided") +
+        " · RDB: " + (status.rdb_registration_number || "Not provided") +
+        " · TIN: " + (status.tin || "Not provided") +
+        " · RRA/EBM: " + (ebmStatusLabels[status.ebm_status] || "Not submitted") +
+        " · Certificate: " + (status.ebm_registration_certificate_path ? "uploaded" : "missing");
+    if (!submitted || applicationStatus === "rejected" || applicationStatus === "under_review") {
+        setApplicationWizardStep(Math.max(2, Math.min(5, Number(status.application_draft_step) || 2)));
+    }
 
     const licenseWarning = document.getElementById("licenseExpiryWarning");
     const daysRemaining = Number(status.license_days_remaining);
@@ -422,7 +487,11 @@ function renderCompanyPortalStatus(status) {
     const renewalRequired = status.approval_status === "approved" &&
         (!licenceValid || daysRemaining <= 30);
     const canSubmit = applicationStatus !== "suspended" &&
-        (status.approval_status !== "approved" || (renewalRequired && applicationStatus !== "under_review"));
+        !status.ebm_reapproval_required &&
+        ((!submitted && status.approval_status !== "approved") ||
+            applicationStatus === "rejected" ||
+            (applicationStatus === "under_review" && status.ebm_status !== "pending") ||
+            (renewalRequired && applicationStatus !== "under_review"));
     applicationForm.hidden = !canSubmit;
     document.getElementById("submitCompanyApplication").textContent =
         renewalRequired
@@ -432,6 +501,102 @@ function renderCompanyPortalStatus(status) {
             : applicationStatus === "rejected" || submitted
                 ? "Update and resubmit application"
                 : "Submit for verification";
+}
+
+function setApplicationWizardStep(step) {
+    applicationWizardStep = Math.max(2, Math.min(5, Number(step) || 2));
+    document.querySelectorAll("[data-application-step]").forEach(function(panel) {
+        panel.hidden = Number(panel.dataset.applicationStep) !== applicationWizardStep;
+    });
+    document.querySelectorAll("[data-progress-step]").forEach(function(item) {
+        const itemStep = Number(item.dataset.progressStep);
+        item.classList.toggle("is-complete", itemStep < applicationWizardStep);
+        item.classList.toggle("is-current", itemStep === applicationWizardStep);
+        if (itemStep === applicationWizardStep) item.setAttribute("aria-current", "step");
+        else item.removeAttribute("aria-current");
+    });
+    const activeStep = document.querySelector('[data-application-step="' + applicationWizardStep + '"]');
+    const heading = activeStep && activeStep.querySelector("h4");
+    if (heading) heading.focus({ preventScroll: true });
+}
+
+function getCompanyApplicationValues() {
+    const vatValue = document.getElementById("applicationVatRegistered").value;
+    return {
+        companyName: document.getElementById("applicationCompanyName").value.trim(),
+        representativeName: document.getElementById("applicationRepresentativeName").value.trim(),
+        officialEmail: document.getElementById("applicationOfficialEmail").value.trim(),
+        contactPhone: document.getElementById("applicationContactPhone").value.trim(),
+        companyAddress: document.getElementById("applicationCompanyAddress").value.trim(),
+        companyLocation: document.getElementById("applicationCompanyLocation").value.trim(),
+        rdbRegistrationNumber: document.getElementById("applicationBusinessRegistration").value.trim(),
+        tin: document.getElementById("applicationTin").value.trim(),
+        transportLicenseNumber: document.getElementById("applicationTransportLicenseNumber").value.trim(),
+        transportLicenseType: document.getElementById("applicationTransportLicenseType").value,
+        licenseIssueDate: document.getElementById("applicationLicenseIssueDate").value,
+        licenseExpiryDate: document.getElementById("applicationLicenseExpiryDate").value,
+        allowedRoutesAreas: document.getElementById("applicationAllowedRoutes").value.trim(),
+        vatRegistered: vatValue === "" ? null : vatValue === "true",
+        ticketTaxCategory: document.getElementById("applicationTicketTaxCategory").value.trim(),
+        ebmDeviceIdentifier: document.getElementById("applicationEbmDeviceIdentifier").value.trim(),
+        rraRegisteredBusinessName: document.getElementById("applicationRraBusinessName").value.trim(),
+        ebmRegistrationCertificatePath: companyPortalStatus
+            ? companyPortalStatus.ebm_registration_certificate_path || ""
+            : "",
+        ebmCertificate: document.getElementById("applicationEbmCertificate").files[0] || null,
+        ebmOwnerConfirmation: document.getElementById("applicationEbmOwnerConfirmation").checked,
+        ebmCredentials: document.getElementById("applicationEbmCredentials").value,
+        certificatePath: companyPortalStatus
+            ? companyPortalStatus.ebm_registration_certificate_path || ""
+            : "",
+        certificate: document.getElementById("applicationEbmCertificate").files[0] || null,
+        ownerConfirmation: document.getElementById("applicationEbmOwnerConfirmation").checked,
+        credentials: document.getElementById("applicationEbmCredentials").value,
+        renewal: Boolean(companyPortalStatus && companyPortalStatus.approval_status === "approved")
+    };
+}
+
+async function saveAndContinueCompanyApplication(nextStep) {
+    const application = getCompanyApplicationValues();
+    const activePanel = document.querySelector('[data-application-step="' + applicationWizardStep + '"]');
+    const invalidField = activePanel && activePanel.querySelector(":invalid");
+    if (invalidField) {
+        invalidField.reportValidity();
+        invalidField.focus();
+        return;
+    }
+    if (applicationWizardStep === 3) {
+        const validationError = companyApplicationUtils.validateCompanyApplication(application, new Date());
+        if (validationError) {
+            document.getElementById("companyApplicationFormMessage").textContent = validationError;
+            return;
+        }
+    }
+    if (applicationWizardStep === 4) {
+        const validationError = companyApplicationUtils.validateCompanyEbmInformation(application);
+        if (validationError) {
+            document.getElementById("companyApplicationFormMessage").textContent = validationError;
+            return;
+        }
+    }
+
+    const message = document.getElementById("companyApplicationFormMessage");
+    const button = activePanel.querySelector('[data-application-next="' + nextStep + '"]');
+    message.textContent = "";
+    button.disabled = true;
+    try {
+        const draft = await window.WaylineDatabase.saveCompanyApplicationDraft(application, nextStep);
+        companyPortalStatus = Object.assign({}, companyPortalStatus, draft);
+        if (application.ebmCredentials) {
+            document.getElementById("applicationEbmCredentials").value = "";
+        }
+        renderCompanyPortalStatus(companyPortalStatus);
+        setApplicationWizardStep(nextStep);
+    } catch (error) {
+        message.textContent = error.message || "Could not save your application progress.";
+    } finally {
+        button.disabled = false;
+    }
 }
 
 async function loadCompanyPortalStatus() {
@@ -451,13 +616,11 @@ function setCompanyProfilePicture(logo) {
 
 function setPartnerFormMode(signUp) {
     isPartnerSignUp = signUp;
-    companyNameField.hidden = !signUp;
-    partnerCompanyName.required = signUp;
     document.getElementById("partnerFormTitle").textContent = signUp
-        ? "Create a company account"
+        ? "Step 1: create your company account"
         : "Company sign in";
     document.getElementById("partnerFormIntro").textContent = signUp
-        ? "Use an email inbox you can access. Confirm it before publishing schedules."
+        ? "Enter your email and password. Confirm your email before continuing to company details."
         : "Access your company schedules and bookings.";
     document.getElementById("partnerSubmitButton").textContent = signUp
         ? "Create account"
@@ -666,20 +829,12 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
                 document.getElementById("partnerPassword").focus();
                 return;
             }
-            const companyName = partnerCompanyName.value.trim();
-            if (companyName.length < 2) {
-                loginMessage.textContent = "Enter a company name with at least 2 characters.";
-                partnerCompanyName.focus();
-                return;
-            }
-            const result = await window.WaylineDatabase.signUp(email, password, companyName);
+            const result = await window.WaylineDatabase.signUp(email, password);
             if (!result.session) {
                 loginMessage.textContent = "Check your inbox and confirm your email before signing in. If you can't receive the link, this email isn't available—check the address and try again.";
                 return;
             }
             currentUser = result.user;
-            partnerCompanyName.value = companyName;
-            document.getElementById("company").value = companyName;
             setCompanyProfilePicture("");
             await loadCompanyPortalStatus();
             await refreshAppData();
@@ -701,11 +856,13 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
                 : "This account does not have a company profile. Register a company account or contact Wayline support.";
             return;
         }
-        partnerCompanyName.value = profile.name;
         document.getElementById("company").value = profile.name;
         setCompanyProfilePicture(profile.logo_data);
         await loadCompanyPortalStatus();
-        if (companyPortalStatus.approval_status === "approved" && !(await ensureCompanyMfa())) {
+        const requiresCompanyMfa = companyPortalStatus.approval_status === "approved" ||
+            (companyPortalStatus.submitted_at &&
+                ["owner", "manager"].includes(companyPortalStatus.company_role));
+        if (requiresCompanyMfa && !(await ensureCompanyMfa())) {
             currentUser = null;
             companyPortalStatus = null;
             setCompanyProfilePicture("");
@@ -713,6 +870,7 @@ document.getElementById("partnerLoginForm").addEventListener("submit", async fun
             loginMessage.textContent = "Two-step verification is required to manage company records.";
             return;
         }
+        if (requiresCompanyMfa) await loadCompanyPortalStatus();
         await refreshAppData();
         resetCompanyIdleTimer();
         setPartnerPreview(true);
@@ -781,35 +939,36 @@ document.getElementById("togglePartnerMode").addEventListener("click", function(
     setPartnerFormMode(!isPartnerSignUp);
 });
 
+document.querySelectorAll("[data-application-next]").forEach(function(button) {
+    button.addEventListener("click", function() {
+        saveAndContinueCompanyApplication(Number(button.dataset.applicationNext));
+    });
+});
+
+document.querySelectorAll("[data-application-previous]").forEach(function(button) {
+    button.addEventListener("click", function() {
+        setApplicationWizardStep(Number(button.dataset.applicationPrevious));
+    });
+});
+
 document.getElementById("companyApplicationForm").addEventListener("submit", async function(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    if (applicationWizardStep !== 5) {
+        await saveAndContinueCompanyApplication(applicationWizardStep + 1);
+        return;
+    }
     const businessDocument = document.getElementById("applicationBusinessDocument").files[0];
     const transportLicense = document.getElementById("applicationTransportLicense").files[0];
     const representativeIdDocument = document.getElementById("applicationRepresentativeIdDocument").files[0];
     const message = document.getElementById("companyApplicationFormMessage");
     const button = document.getElementById("submitCompanyApplication");
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-    const documents = [businessDocument, transportLicense, representativeIdDocument].filter(Boolean);
-    const application = {
-        companyName: document.getElementById("applicationCompanyName").value.trim(),
-        representativeName: document.getElementById("applicationRepresentativeName").value.trim(),
-        officialEmail: document.getElementById("applicationOfficialEmail").value.trim(),
-        contactPhone: document.getElementById("applicationContactPhone").value.trim(),
-        companyAddress: document.getElementById("applicationCompanyAddress").value.trim(),
-        companyLocation: document.getElementById("applicationCompanyLocation").value.trim(),
-        rdbRegistrationNumber: document.getElementById("applicationBusinessRegistration").value.trim(),
-        tin: document.getElementById("applicationTin").value.trim(),
-        transportLicenseNumber: document.getElementById("applicationTransportLicenseNumber").value.trim(),
-        transportLicenseType: document.getElementById("applicationTransportLicenseType").value,
-        licenseIssueDate: document.getElementById("applicationLicenseIssueDate").value,
-        licenseExpiryDate: document.getElementById("applicationLicenseExpiryDate").value,
-        allowedRoutesAreas: document.getElementById("applicationAllowedRoutes").value.trim(),
-        businessDocument: businessDocument,
-        transportLicense: transportLicense,
-        representativeIdDocument: representativeIdDocument,
-        renewal: Boolean(companyPortalStatus && companyPortalStatus.approval_status === "approved")
-    };
+    const application = getCompanyApplicationValues();
+    application.businessDocument = businessDocument;
+    application.transportLicense = transportLicense;
+    application.representativeIdDocument = representativeIdDocument;
+    const documents = [businessDocument, transportLicense, representativeIdDocument];
 
     message.textContent = "";
     if (!currentUser) {
@@ -830,16 +989,27 @@ document.getElementById("companyApplicationForm").addEventListener("submit", asy
         message.textContent = validationError;
         return;
     }
+    const ebmValidationError = companyApplicationUtils.validateCompanyEbmInformation(application);
+    if (ebmValidationError) {
+        message.textContent = ebmValidationError;
+        return;
+    }
+    const invalidField = form.querySelector('[data-application-step="5"] :invalid');
+    if (invalidField) {
+        invalidField.reportValidity();
+        invalidField.focus();
+        return;
+    }
 
     button.disabled = true;
-    button.textContent = "Submitting securely...";
+    button.textContent = "Submitting for review...";
     try {
         const status = await window.WaylineDatabase.submitCompanyApplication(application);
         form.reset();
         renderCompanyPortalStatus(status);
         message.textContent = application.renewal
-            ? "Your updated licence documents were submitted for manual review. Schedule sales stay blocked until Wayline verifies them."
-            : "Your company registration application has been submitted successfully. Your information is under review. You will receive an update once the verification process is complete.";
+            ? "Your updated licence documents are pending review. Schedule sales stay blocked until Wayline approves the updated information."
+            : "Your application is pending review. Schedules and bookings stay locked until Wayline approves your company and EBM information.";
     } catch (error) {
         message.textContent = error.message || "Could not submit the company application. Please try again.";
     } finally {
@@ -882,6 +1052,94 @@ document.getElementById("applicationLogout").addEventListener("click", function(
 
 document.getElementById("companyApplicationForm").addEventListener("input", function() {
     document.getElementById("companyApplicationFormMessage").textContent = "";
+    document.getElementById("applicationEbmTinPreview").textContent =
+        document.getElementById("applicationTin").value.trim() || "Enter the TIN in Step 3";
+});
+
+document.getElementById("applicationEbmCertificate").addEventListener("change", function() {
+    this.required = !this.files.length &&
+        !(companyPortalStatus && companyPortalStatus.ebm_registration_certificate_path);
+});
+
+document.getElementById("companyApplicationForm").addEventListener("input", function() {
+    document.getElementById("companyApplicationFormMessage").textContent = "";
+});
+
+document.getElementById("requestEbmChange").addEventListener("click", function() {
+    const form = document.getElementById("companyEbmChangeForm");
+    form.hidden = false;
+    document.getElementById("companyEbmChangeTin").value = companyPortalStatus.tin || "";
+    document.getElementById("companyEbmChangeVatRegistered").value =
+        companyPortalStatus.vat_registered === null || companyPortalStatus.vat_registered === undefined
+            ? ""
+            : String(companyPortalStatus.vat_registered);
+    document.getElementById("companyEbmChangeTaxCategory").value =
+        companyPortalStatus.ticket_tax_category || "";
+    document.getElementById("companyEbmChangeDevice").value =
+        companyPortalStatus.ebm_device_identifier || "";
+    document.getElementById("companyEbmChangeBusinessName").value =
+        companyPortalStatus.rra_registered_business_name || "";
+    document.getElementById("companyEbmChangeCertificate").required =
+        !companyPortalStatus.ebm_registration_certificate_path;
+    document.getElementById("companyEbmChangeConfirmation").checked = false;
+    document.getElementById("companyEbmChangeCredentials").value = "";
+    document.getElementById("companyEbmChangeMessage").textContent = "";
+});
+
+document.getElementById("cancelCompanyEbmChange").addEventListener("click", function() {
+    document.getElementById("companyEbmChangeForm").hidden = true;
+});
+
+document.getElementById("companyEbmChangeCertificate").addEventListener("change", function() {
+    this.required = !this.files.length &&
+        !(companyPortalStatus && companyPortalStatus.ebm_registration_certificate_path);
+});
+
+document.getElementById("companyEbmChangeForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const message = document.getElementById("companyEbmChangeMessage");
+    const button = document.getElementById("saveCompanyEbmChange");
+    const certificate = document.getElementById("companyEbmChangeCertificate").files[0] || null;
+    const vatValue = document.getElementById("companyEbmChangeVatRegistered").value;
+    const application = {
+        tin: document.getElementById("companyEbmChangeTin").value.trim(),
+        vatRegistered: vatValue === "" ? null : vatValue === "true",
+        ticketTaxCategory: document.getElementById("companyEbmChangeTaxCategory").value.trim(),
+        ebmDeviceIdentifier: document.getElementById("companyEbmChangeDevice").value.trim(),
+        rraRegisteredBusinessName: document.getElementById("companyEbmChangeBusinessName").value.trim(),
+        ebmRegistrationCertificatePath: companyPortalStatus.ebm_registration_certificate_path || "",
+        ebmCertificate: certificate,
+        ebmOwnerConfirmation: document.getElementById("companyEbmChangeConfirmation").checked,
+        ebmCredentials: document.getElementById("companyEbmChangeCredentials").value
+    };
+    application.certificatePath = application.ebmRegistrationCertificatePath;
+    application.certificate = certificate;
+    application.ownerConfirmation = application.ebmOwnerConfirmation;
+    application.credentials = application.ebmCredentials;
+    const invalidField = form.querySelector(":invalid");
+    if (invalidField) {
+        invalidField.reportValidity();
+        invalidField.focus();
+        return;
+    }
+    const validationError = companyApplicationUtils.validateCompanyEbmInformation(application);
+    if (validationError) {
+        message.textContent = validationError;
+        return;
+    }
+    button.disabled = true;
+    message.textContent = "";
+    try {
+        await window.WaylineDatabase.submitCompanyEbmInformation(application);
+        await loadCompanyPortalStatus();
+        form.hidden = true;
+        message.textContent = "Your RRA / EBM information is pending Wayline review. Ticket sales are blocked until it is approved.";
+    } catch (error) {
+        message.textContent = error.message || "Could not submit your RRA / EBM update.";
+    } finally {
+        button.disabled = false;
+    }
 });
 
 document.getElementById("companyStaffForm").addEventListener("submit", async function(event) {
@@ -916,11 +1174,14 @@ async function initializeApp() {
     if (currentUser) {
         const profile = await window.WaylineDatabase.getCompanyProfile(currentUser.id);
         if (profile) {
-            partnerCompanyName.value = profile.name;
             document.getElementById("company").value = profile.name;
             setCompanyProfilePicture(profile.logo_data);
             await loadCompanyPortalStatus();
-            if (companyPortalStatus.approval_status !== "approved" || await ensureCompanyMfa()) {
+            const requiresCompanyMfa = companyPortalStatus.approval_status === "approved" ||
+                (companyPortalStatus.submitted_at &&
+                    ["owner", "manager"].includes(companyPortalStatus.company_role));
+            if (!requiresCompanyMfa || await ensureCompanyMfa()) {
+                if (requiresCompanyMfa) await loadCompanyPortalStatus();
                 resetCompanyIdleTimer();
                 setPartnerPreview(true);
             } else {
@@ -2689,7 +2950,6 @@ busForm.addEventListener("submit", async function(event) {
             const savedBus = await window.WaylineDatabase.createSchedule(bus, logo);
             buses.unshift(savedBus);
         }
-        partnerCompanyName.value = company;
         if (logo) setCompanyProfilePicture(logo);
         document.getElementById("dashboardCompanyName").textContent = company;
         document.getElementById("dashboardWelcome").textContent = "Welcome back, " + company;

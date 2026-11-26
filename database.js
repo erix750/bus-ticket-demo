@@ -188,7 +188,19 @@
         const result = await supabase.rpc("get_company_portal_status");
         const status = throwIfError(result);
         activeCompanyId = status && status.company_id ? status.company_id : "";
-        return status;
+        if (!status || !["owner", "manager"].includes(status.company_role)) return status;
+        if (status.submitted_at) {
+            const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+            if (assurance.error) throw new Error(assurance.error.message);
+            if (assurance.data.currentLevel !== "aal2") {
+                status.ebm_mfa_verified = false;
+                return status;
+            }
+        }
+        const draftResult = await supabase.rpc("get_company_application_draft");
+        return Object.assign({}, status, throwIfError(draftResult), {
+            ebm_mfa_verified: Boolean(status.submitted_at)
+        });
     }
 
     function createCompanyDocumentPath(userId, file) {
@@ -210,6 +222,65 @@
         return userId + "/" + fileId + "." + extension;
     }
 
+    async function saveCompanyApplicationDraft(application, nextStep) {
+        const userResult = await supabase.auth.getUser();
+        if (userResult.error) throw new Error(userResult.error.message);
+        const user = userResult.data.user;
+        if (!user) throw new Error("Sign in with your company account before saving application progress.");
+
+        let certificatePath = application.ebmRegistrationCertificatePath || "";
+        let uploadedPath = "";
+        if (application.ebmCertificate) {
+            certificatePath = createCompanyDocumentPath(user.id, application.ebmCertificate);
+            const uploadResult = await supabase.storage
+                .from("company-documents")
+                .upload(certificatePath, application.ebmCertificate, {
+                    contentType: application.ebmCertificate.type,
+                    upsert: false
+                });
+            throwIfError(uploadResult);
+            uploadedPath = certificatePath;
+        }
+
+        try {
+            const result = await supabase.rpc("save_company_application_draft", {
+                p_application: {
+                    company_name: application.companyName,
+                    representative_name: application.representativeName,
+                    official_email: application.officialEmail,
+                    contact_phone: application.contactPhone,
+                    company_address: application.companyAddress,
+                    company_location: application.companyLocation,
+                    rdb_registration_number: application.rdbRegistrationNumber,
+                    tin: application.tin,
+                    transport_license_number: application.transportLicenseNumber,
+                    transport_license_type: application.transportLicenseType,
+                    transport_license_issue_date: application.licenseIssueDate,
+                    transport_license_expiry_date: application.licenseExpiryDate,
+                    allowed_routes_areas: application.allowedRoutesAreas,
+                    vat_registered: application.vatRegistered,
+                    ticket_tax_category: application.ticketTaxCategory,
+                    ebm_device_identifier: application.ebmDeviceIdentifier,
+                    rra_registered_business_name: application.rraRegisteredBusinessName,
+                    ebm_registration_certificate_path: certificatePath,
+                    ebm_owner_confirmation: application.ebmOwnerConfirmation,
+                    ebm_credentials: application.ebmCredentials || ""
+                },
+                p_next_step: nextStep
+            });
+            const draft = throwIfError(result);
+            return draft;
+        } catch (error) {
+            if (uploadedPath) {
+                const cleanupResult = await supabase.storage.from("company-documents").remove([uploadedPath]);
+                if (cleanupResult.error) {
+                    console.error("Could not remove a temporary company EBM certificate.", cleanupResult.error);
+                }
+            }
+            throw error;
+        }
+    }
+
     async function submitCompanyApplication(application) {
         const userResult = await supabase.auth.getUser();
         if (userResult.error) throw new Error(userResult.error.message);
@@ -218,6 +289,9 @@
         if (!application.businessDocument || !application.transportLicense ||
             !application.representativeIdDocument) {
             throw new Error("Upload the required company documents before submitting the application.");
+        }
+        if (!application.renewal && !application.ebmRegistrationCertificatePath) {
+            throw new Error("Save your RRA/EBM certificate in Step 4 before submitting the application.");
         }
 
         const uploadedPaths = [];
@@ -251,23 +325,32 @@
                 });
                 return throwIfError(renewalResult);
             }
-            const result = await supabase.rpc("submit_company_application", {
-                p_company_name: application.companyName,
-                p_representative_name: application.representativeName,
-                p_official_email: application.officialEmail,
-                p_contact_phone: application.contactPhone,
-                p_company_address: application.companyAddress,
-                p_company_location: application.companyLocation,
-                p_rdb_registration_number: application.rdbRegistrationNumber,
-                p_tin: application.tin,
-                p_transport_license_number: application.transportLicenseNumber,
-                p_transport_license_type: application.transportLicenseType,
-                p_transport_license_issue_date: application.licenseIssueDate,
-                p_transport_license_expiry_date: application.licenseExpiryDate,
-                p_allowed_routes_areas: application.allowedRoutesAreas,
-                p_business_document_path: businessDocumentPath,
-                p_transport_license_path: transportLicensePath,
-                p_representative_id_document_path: representativeIdDocumentPath
+            const result = await supabase.rpc("submit_company_application_with_ebm", {
+                p_application: {
+                    company_name: application.companyName,
+                    representative_name: application.representativeName,
+                    official_email: application.officialEmail,
+                    contact_phone: application.contactPhone,
+                    company_address: application.companyAddress,
+                    company_location: application.companyLocation,
+                    rdb_registration_number: application.rdbRegistrationNumber,
+                    tin: application.tin,
+                    transport_license_number: application.transportLicenseNumber,
+                    transport_license_type: application.transportLicenseType,
+                    transport_license_issue_date: application.licenseIssueDate,
+                    transport_license_expiry_date: application.licenseExpiryDate,
+                    allowed_routes_areas: application.allowedRoutesAreas,
+                    business_document_path: businessDocumentPath,
+                    transport_license_path: transportLicensePath,
+                    representative_id_document_path: representativeIdDocumentPath,
+                    vat_registered: application.vatRegistered,
+                    ticket_tax_category: application.ticketTaxCategory,
+                    ebm_device_identifier: application.ebmDeviceIdentifier,
+                    rra_registered_business_name: application.rraRegisteredBusinessName,
+                    ebm_registration_certificate_path: application.ebmRegistrationCertificatePath,
+                    ebm_owner_confirmation: application.ebmOwnerConfirmation,
+                    ebm_credentials: application.ebmCredentials || ""
+                }
             });
             return throwIfError(result);
         } catch (error) {
@@ -285,6 +368,49 @@
         }
     }
 
+    async function submitCompanyEbmInformation(application) {
+        const userResult = await supabase.auth.getUser();
+        if (userResult.error) throw new Error(userResult.error.message);
+        const user = userResult.data.user;
+        if (!user) throw new Error("Sign in with your company account before updating RRA/EBM information.");
+
+        let certificatePath = application.ebmRegistrationCertificatePath || "";
+        let uploadedPath = "";
+        if (application.ebmCertificate) {
+            certificatePath = createCompanyDocumentPath(user.id, application.ebmCertificate);
+            const uploadResult = await supabase.storage
+                .from("company-documents")
+                .upload(certificatePath, application.ebmCertificate, {
+                    contentType: application.ebmCertificate.type,
+                    upsert: false
+                });
+            throwIfError(uploadResult);
+            uploadedPath = certificatePath;
+        }
+
+        try {
+            const result = await supabase.rpc("submit_company_ebm_information", {
+                p_tin: application.tin,
+                p_vat_registered: application.vatRegistered,
+                p_ticket_tax_category: application.ticketTaxCategory,
+                p_ebm_device_identifier: application.ebmDeviceIdentifier,
+                p_rra_registered_business_name: application.rraRegisteredBusinessName,
+                p_ebm_registration_certificate_path: certificatePath,
+                p_owner_confirmation: application.ebmOwnerConfirmation,
+                p_ebm_credentials: application.ebmCredentials || ""
+            });
+            return throwIfError(result);
+        } catch (error) {
+            if (uploadedPath) {
+                const cleanupResult = await supabase.storage.from("company-documents").remove([uploadedPath]);
+                if (cleanupResult.error) {
+                    console.error("Could not remove a temporary company EBM certificate.", cleanupResult.error);
+                }
+            }
+            throw error;
+        }
+    }
+
     async function isWaylineAdmin() {
         const result = await supabase.rpc("is_wayline_admin");
         return throwIfError(result) === true;
@@ -293,7 +419,7 @@
     async function getAdminApplications() {
         const result = await supabase
             .from("company_applications")
-            .select("id, company_id, company_name, representative_name, official_email, contact_phone, company_address, company_location, business_registration, rdb_registration_number, tin, transport_license_number, transport_license_type, transport_license_issue_date, transport_license_expiry_date, allowed_routes_areas, business_document_path, transport_license_path, representative_id_document_path, registration_checked, tin_valid, rura_license_valid, documents_match, verification_reviewer_name, verification_date, status, review_notes, submitted_at, updated_at")
+            .select("id, company_id, company_name, representative_name, official_email, contact_phone, company_address, company_location, business_registration, rdb_registration_number, tin, transport_license_number, transport_license_type, transport_license_issue_date, transport_license_expiry_date, allowed_routes_areas, business_document_path, transport_license_path, representative_id_document_path, registration_checked, tin_valid, rura_license_valid, documents_match, verification_reviewer_name, verification_date, vat_registered, ticket_tax_category, ebm_device_identifier, rra_registered_business_name, ebm_registration_certificate_path, ebm_owner_confirmed_at, ebm_status, ebm_tin_checked, ebm_device_checked, ebm_business_name_checked, ebm_reviewer_name, ebm_reviewed_at, ebm_review_notes, status, review_notes, submitted_at, updated_at")
             .not("submitted_at", "is", null)
             .order("submitted_at", { ascending: true });
         return throwIfError(result);
@@ -349,6 +475,18 @@
             p_tin_valid: checklist.tinValid,
             p_rura_license_valid: checklist.ruraLicenseValid,
             p_documents_match: checklist.documentsMatch
+        });
+        return throwIfError(result);
+    }
+
+    async function reviewCompanyEbmInformation(applicationId, checklist, status, notes) {
+        const result = await supabase.rpc("review_company_ebm_information", {
+            p_application_id: applicationId,
+            p_tin_checked: checklist.tinChecked,
+            p_device_checked: checklist.deviceChecked,
+            p_business_name_checked: checklist.businessNameChecked,
+            p_status: status,
+            p_review_note: notes
         });
         return throwIfError(result);
     }
@@ -592,7 +730,7 @@
         return throwIfError(result);
     }
 
-    async function signUp(email, password, companyName) {
+    async function signUp(email, password) {
         const normalizedEmail = normalizeEmail(email);
         if (!isValidEmail(normalizedEmail)) throw new Error("Enter a valid company email address.");
         const passwordError = getPasswordValidationError(password);
@@ -603,7 +741,7 @@
             email: normalizedEmail,
             password: password,
             options: {
-                data: { company_name: companyName },
+                data: { company_name: "Company application" },
                 emailRedirectTo: siteUrl
             }
         });
@@ -623,7 +761,9 @@
         getCompanyProfile: getCompanyProfile,
         updateCompanyProfilePicture: updateCompanyProfilePicture,
         getCompanyPortalStatus: getCompanyPortalStatus,
+        saveCompanyApplicationDraft: saveCompanyApplicationDraft,
         submitCompanyApplication: submitCompanyApplication,
+        submitCompanyEbmInformation: submitCompanyEbmInformation,
         isWaylineAdmin: isWaylineAdmin,
         getAdminApplications: getAdminApplications,
         getAdminCompanies: getAdminCompanies,
@@ -632,6 +772,7 @@
         reviewCompanyApplication: reviewCompanyApplication,
         setCompanyAccessStatus: setCompanyAccessStatus,
         saveCompanyVerificationChecklist: saveCompanyVerificationChecklist,
+        reviewCompanyEbmInformation: reviewCompanyEbmInformation,
         getAdminCompanyReports: getAdminCompanyReports,
         reviewCompanyReport: reviewCompanyReport,
         setCompanyStaffRole: setCompanyStaffRole,

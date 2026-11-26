@@ -71,12 +71,9 @@
             </section>
             <form id="partnerLoginForm" class="login-form">
                 <p class="eyebrow">COMPANY ACCOUNT</p>
+                <p class="field-hint" id="companyAccountStepHint">Step 1 of 5: create your account and confirm your email.</p>
                 <h2 id="partnerFormTitle">Company sign in</h2>
                 <p class="login-intro" id="partnerFormIntro">Access your company schedules and bookings.</p>
-                <div class="field" id="companyNameField" hidden>
-                    <label for="partnerCompanyName">Company name</label>
-                    <input type="text" id="partnerCompanyName" autocomplete="organization" maxlength="80" placeholder="Your bus company">
-                </div>
                 <div class="field">
                     <label for="partnerEmail">Email address</label>
                     <input type="email" id="partnerEmail" autocomplete="username" placeholder="you@company.com" required>
@@ -631,13 +628,21 @@
                 <p id="companyApplicationMessage" role="status" aria-live="polite"></p>
                 <p id="companyApplicationReviewNotes" class="application-review-notes" hidden></p>
             </div>
-            <form id="companyApplicationForm" class="application-form" enctype="multipart/form-data">
+            <form id="companyApplicationForm" class="application-form" enctype="multipart/form-data" novalidate>
                 <div>
                     <p class="eyebrow">COMPANY APPLICATION</p>
                     <h3>Register your transport company</h3>
-                    <p class="section-note">Applications are reviewed by Wayline before company schedules or bookings can be managed. Your documents are stored privately and are visible only to your company and authorized reviewers.</p>
+                    <p class="section-note">Complete each step in order. Progress is saved when you continue, and company schedules stay locked until your application and EBM information are approved.</p>
                 </div>
-                <div class="application-fields">
+                <ol class="application-progress" id="applicationProgress" aria-label="Company application progress">
+                    <li data-progress-step="1">1. Account</li>
+                    <li data-progress-step="2">2. Company details</li>
+                    <li data-progress-step="3">3. Registration and licence</li>
+                    <li data-progress-step="4">4. RRA / EBM</li>
+                    <li data-progress-step="5">5. Documents and review</li>
+                </ol>
+                <section class="application-step application-fields" data-application-step="2" aria-labelledby="applicationCompanyStepTitle">
+                    <h4 id="applicationCompanyStepTitle" class="field-wide">Step 2: Company details</h4>
                     <div class="field">
                         <label for="applicationCompanyName">Official company name</label>
                         <input id="applicationCompanyName" name="companyName" type="text" autocomplete="organization" minlength="2" maxlength="80" required>
@@ -663,6 +668,12 @@
                         <label for="applicationCompanyLocation">City / location</label>
                         <input id="applicationCompanyLocation" name="companyLocation" type="text" autocomplete="address-level2" minlength="2" maxlength="120" required>
                     </div>
+                    <div class="field-wide application-step-actions">
+                        <button class="button button-primary" type="button" data-application-next="3">Save and continue</button>
+                    </div>
+                </section>
+                <section class="application-step application-fields" data-application-step="3" aria-labelledby="applicationLicenceStepTitle" hidden>
+                    <h4 id="applicationLicenceStepTitle" class="field-wide">Step 3: Registration and transport licence</h4>
                     <div class="field">
                         <label for="applicationBusinessRegistration">RDB registration number</label>
                         <input id="applicationBusinessRegistration" name="rdbRegistrationNumber" type="text" minlength="2" maxlength="80" required>
@@ -696,6 +707,65 @@
                         <label for="applicationAllowedRoutes">Allowed routes / areas</label>
                         <textarea id="applicationAllowedRoutes" name="allowedRoutesAreas" minlength="2" maxlength="1000" rows="2" required></textarea>
                     </div>
+                    <div class="field-wide application-step-actions">
+                        <button class="button button-text" type="button" data-application-previous="2">Back</button>
+                        <button class="button button-primary" type="button" data-application-next="4">Save and continue</button>
+                    </div>
+                </section>
+                <section class="application-step application-fields" data-application-step="4" aria-labelledby="applicationEbmStepTitle" hidden>
+                    <h4 id="applicationEbmStepTitle" class="field-wide">Step 4: RRA / EBM information</h4>
+                    <p class="section-note field-wide">Enter your company's own details as registered with RRA. Wayline does not provide a company TIN.</p>
+                    <div class="field field-wide">
+                        <span class="field-label">Company TIN</span>
+                        <strong id="applicationEbmTinPreview">Enter the TIN in Step 3</strong>
+                        <small class="field-hint">This reuses the Rwanda TIN entered in Step 3. It is not entered twice.</small>
+                    </div>
+                    <div class="field">
+                        <label for="applicationVatRegistered">VAT registration status</label>
+                        <select id="applicationVatRegistered" name="vatRegistered" required>
+                            <option value="">Choose status</option>
+                            <option value="true">VAT registered</option>
+                            <option value="false">Not VAT registered</option>
+                        </select>
+                        <small class="field-hint">Check your current RRA VAT registration records.</small>
+                    </div>
+                    <div class="field">
+                        <label for="applicationTicketTaxCategory">Tax category used for tickets</label>
+                        <input id="applicationTicketTaxCategory" name="ticketTaxCategory" type="text" minlength="2" maxlength="120" required>
+                        <small class="field-hint">Use the category shown in your RRA / EBM registration or tax records.</small>
+                    </div>
+                    <div class="field">
+                        <label for="applicationEbmDeviceIdentifier">EBM device or VSDC identifier / serial</label>
+                        <input id="applicationEbmDeviceIdentifier" name="ebmDeviceIdentifier" type="text" minlength="2" maxlength="160" required>
+                        <small class="field-hint">Find this on your EBM device, VSDC account, or registration certificate.</small>
+                    </div>
+                    <div class="field">
+                        <label for="applicationRraBusinessName">Registered business name</label>
+                        <input id="applicationRraBusinessName" name="rraRegisteredBusinessName" type="text" minlength="2" maxlength="160" required>
+                        <small class="field-hint">Enter the name exactly as it appears in your RRA records.</small>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationEbmCredentials">EBM credentials or keys (if issued)</label>
+                        <input id="applicationEbmCredentials" name="ebmCredentials" type="password" maxlength="10000" autocomplete="new-password">
+                        <small class="field-hint">The required credential fields are not yet confirmed with RRA. Leave blank until RRA provides the official field list. Saved credentials are encrypted and never returned to this page.</small>
+                    </div>
+                    <div class="field field-wide">
+                        <label for="applicationEbmCertificate">RRA / EBM registration certificate</label>
+                        <input id="applicationEbmCertificate" name="ebmCertificate" type="file" accept="application/pdf,image/jpeg,image/png,image/webp">
+                        <small class="field-hint" id="applicationEbmCertificateStatus">PDF, JPG, PNG, or WebP up to 10 MB. Upload your company's certificate from RRA.</small>
+                    </div>
+                    <label class="field-wide route-check-label" for="applicationEbmOwnerConfirmation">
+                        <input id="applicationEbmOwnerConfirmation" type="checkbox" required>
+                        <span>I confirm this is my company's own RRA information and I am authorized to use it.</span>
+                    </label>
+                    <div class="field-wide application-step-actions">
+                        <button class="button button-text" type="button" data-application-previous="3">Back</button>
+                        <button class="button button-primary" type="button" data-application-next="5">Save and continue</button>
+                    </div>
+                </section>
+                <section class="application-step application-fields" data-application-step="5" aria-labelledby="applicationDocumentsStepTitle" hidden>
+                    <h4 id="applicationDocumentsStepTitle" class="field-wide">Step 5: Documents and review</h4>
+                    <p id="applicationReviewSummary" class="section-note field-wide"></p>
                     <div class="field field-wide">
                         <label for="applicationBusinessDocument">Business registration document</label>
                         <input id="applicationBusinessDocument" name="businessDocument" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
@@ -711,11 +781,12 @@
                         <input id="applicationRepresentativeIdDocument" name="representativeIdDocument" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
                         <small class="field-hint">PDF, JPG, PNG, or WebP; maximum 10 MB. Stored in private company document storage.</small>
                     </div>
-                    <div class="field field-wide application-submit-row">
-                        <button class="button button-primary" id="submitCompanyApplication" type="submit">Submit for verification</button>
-                        <p id="companyApplicationFormMessage" class="form-message" role="status" aria-live="polite"></p>
+                    <div class="field-wide application-step-actions">
+                        <button class="button button-text" type="button" data-application-previous="4">Back</button>
+                        <button class="button button-primary" id="submitCompanyApplication" type="submit">Submit for review</button>
                     </div>
-                </div>
+                    <p id="companyApplicationFormMessage" class="form-message field-wide" role="status" aria-live="polite"></p>
+                </section>
             </form>
             <p class="field-hint">Need help? <a href="mailto:muvunyieric25@gmail.com">Contact Wayline support</a>.</p>
         </section>
@@ -729,6 +800,7 @@
                     <a class="is-active" href="#dashboardOverview">Dashboard</a>
                     <a href="#dashboardSchedules">Schedule management</a>
                     <a href="#dashboardBookings">Bookings</a>
+                    <a id="companyEbmNavItem" href="#dashboardEbm" hidden>RRA / EBM</a>
                 </nav>
                 <div class="dashboard-sidebar-account">
                     <span class="eyebrow">SIGNED IN AS</span>
@@ -950,6 +1022,71 @@
                         </label>
                     </div>
                     <div id="companyBookingList" class="booking-status-groups"></div>
+                </section>
+                <section class="dashboard-panel" id="dashboardEbm" aria-labelledby="dashboardEbmTitle" hidden>
+                    <div class="dashboard-section-heading">
+                        <div>
+                            <p class="eyebrow">COMPANY TAX PROFILE</p>
+                            <h3 id="dashboardEbmTitle">RRA / EBM information</h3>
+                        </div>
+                        <span id="companyEbmStatus" class="status-badge">Not submitted</span>
+                    </div>
+                    <p id="companyEbmReviewNote" class="application-review-notes" hidden></p>
+                    <dl class="admin-application-details">
+                        <div><dt>Company TIN</dt><dd id="companyEbmTin">Not provided</dd></div>
+                        <div><dt>VAT registration</dt><dd id="companyEbmVatStatus">Not provided</dd></div>
+                        <div><dt>Ticket tax category</dt><dd id="companyEbmTaxCategory">Not provided</dd></div>
+                        <div><dt>EBM / VSDC identifier</dt><dd id="companyEbmDevice">Not provided</dd></div>
+                        <div><dt>RRA registered business name</dt><dd id="companyEbmBusinessName">Not provided</dd></div>
+                        <div><dt>Registration certificate</dt><dd id="companyEbmCertificateStatus">Not provided</dd></div>
+                        <div><dt>Credentials</dt><dd id="companyEbmCredentialsStatus">Not provided</dd></div>
+                    </dl>
+                    <button class="button button-secondary" id="requestEbmChange" type="button">Request change</button>
+                    <form id="companyEbmChangeForm" class="form-grid" hidden novalidate>
+                        <div class="field">
+                            <label for="companyEbmChangeTin">Company TIN</label>
+                            <input id="companyEbmChangeTin" type="text" inputmode="numeric" pattern="[0-9]{9}" minlength="9" maxlength="9" required>
+                        </div>
+                        <div class="field">
+                            <label for="companyEbmChangeVatRegistered">VAT registration status</label>
+                            <select id="companyEbmChangeVatRegistered" required>
+                                <option value="">Choose status</option>
+                                <option value="true">VAT registered</option>
+                                <option value="false">Not VAT registered</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="companyEbmChangeTaxCategory">Tax category used for tickets</label>
+                            <input id="companyEbmChangeTaxCategory" type="text" minlength="2" maxlength="120" required>
+                        </div>
+                        <div class="field">
+                            <label for="companyEbmChangeDevice">EBM device or VSDC identifier / serial</label>
+                            <input id="companyEbmChangeDevice" type="text" minlength="2" maxlength="160" required>
+                        </div>
+                        <div class="field">
+                            <label for="companyEbmChangeBusinessName">RRA registered business name</label>
+                            <input id="companyEbmChangeBusinessName" type="text" minlength="2" maxlength="160" required>
+                        </div>
+                        <div class="field">
+                            <label for="companyEbmChangeCertificate">Replacement registration certificate</label>
+                            <input id="companyEbmChangeCertificate" type="file" accept="application/pdf,image/jpeg,image/png,image/webp">
+                            <small class="field-hint" id="companyEbmChangeCertificateStatus">Leave blank to keep the current certificate. PDF, JPG, PNG, or WebP up to 10 MB.</small>
+                        </div>
+                        <div class="field field-wide">
+                            <label for="companyEbmChangeCredentials">New credentials or keys (optional)</label>
+                            <input id="companyEbmChangeCredentials" type="password" maxlength="10000" autocomplete="new-password">
+                            <small class="field-hint">Leave blank to keep saved credentials. Values are encrypted and never returned to this page.</small>
+                        </div>
+                        <label class="field-wide route-check-label" for="companyEbmChangeConfirmation">
+                            <input id="companyEbmChangeConfirmation" type="checkbox" required>
+                            <span>I confirm this is my company's own RRA information and I am authorized to use it.</span>
+                        </label>
+                        <div class="field-wide application-step-actions">
+                            <button class="button button-primary" id="saveCompanyEbmChange" type="submit">Submit changes for review</button>
+                            <button class="button button-text" id="cancelCompanyEbmChange" type="button">Cancel</button>
+                        </div>
+                        <p id="companyEbmChangeMessage" class="form-message field-wide" role="status" aria-live="polite"></p>
+                    </form>
                 </section>
             </div>
         </section>

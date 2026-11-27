@@ -145,7 +145,15 @@ function renderApplication(application) {
         ["Contact phone", application.contact_phone],
         ["Address", application.company_address],
         ["Location", application.company_location],
-        ["Business registration", application.business_registration],
+        ["RDB registration", application.rdb_registration_number || application.business_registration],
+        ["TIN", application.tin],
+        ["Transport licence number", application.transport_license_number],
+        ["Licence type", application.transport_license_type],
+        ["Licence issued", formatAdminDate(application.transport_license_issue_date)],
+        ["Licence expires", formatAdminDate(application.transport_license_expiry_date)],
+        ["Allowed routes / areas", application.allowed_routes_areas],
+        ["Verified by", application.verification_reviewer_name],
+        ["Verification date", formatAdminDate(application.verification_date)],
         ["Submitted", formatAdminDate(application.submitted_at)]
     ].forEach(function(entry) {
         const row = document.createElement("div");
@@ -155,15 +163,169 @@ function renderApplication(application) {
     });
     card.appendChild(details);
 
+    appendText(card, "h4", "RRA / EBM information");
+    const ebmDetails = document.createElement("dl");
+    ebmDetails.className = "admin-application-details";
+    [
+        ["Company TIN", application.tin],
+        ["VAT registered", application.vat_registered === true ? "Yes" :
+            application.vat_registered === false ? "No" : "Not provided"],
+        ["Ticket tax category", application.ticket_tax_category],
+        ["EBM / VSDC identifier", application.ebm_device_identifier],
+        ["RRA registered business name", application.rra_registered_business_name],
+        ["EBM status", application.ebm_status],
+        ["Owner confirmation", formatAdminDate(application.ebm_owner_confirmed_at)],
+        ["EBM reviewer", application.ebm_reviewer_name],
+        ["EBM review date", formatAdminDate(application.ebm_reviewed_at)]
+    ].forEach(function(entry) {
+        const row = document.createElement("div");
+        appendText(row, "dt", entry[0]);
+        appendText(row, "dd", entry[1] || "Not provided");
+        ebmDetails.appendChild(row);
+    });
+    card.appendChild(ebmDetails);
+
     const documents = document.createElement("div");
     documents.className = "admin-document-actions";
     addDocumentButton(documents, application.business_document_path, "Open business registration");
     addDocumentButton(
         documents,
         application.transport_license_path,
-        application.license_not_applicable ? "Licence marked not applicable" : "Open transport licence"
+        "Open transport licence"
     );
+    addDocumentButton(documents, application.representative_id_document_path, "Open representative ID");
+    addDocumentButton(documents, application.ebm_registration_certificate_path, "Open RRA / EBM certificate");
     card.appendChild(documents);
+
+    const expiry = application.transport_license_expiry_date;
+    if (expiry) {
+        const daysRemaining = Math.floor(
+            (new Date(expiry + "T00:00:00Z").getTime() - new Date().setUTCHours(0, 0, 0, 0)) / 86400000
+        );
+        if (daysRemaining <= 30) {
+            appendText(
+                card,
+                "p",
+                daysRemaining < 0
+                    ? "Licence expired " + Math.abs(daysRemaining) + " days ago. Company selling is blocked."
+                    : "Licence expires in " + daysRemaining + " days.",
+                "license-expiry-warning"
+            );
+        }
+    } else {
+        appendText(card, "p", "No current structured licence record; company selling is blocked.", "license-expiry-warning");
+    }
+
+    const checklist = document.createElement("fieldset");
+    checklist.className = "admin-verification-checklist";
+    appendText(checklist, "legend", "Manual verification checklist");
+    [
+        ["registration_checked", "Registration checked against RDB"],
+        ["tin_valid", "TIN checked and valid"],
+        ["rura_license_valid", "RURA transport licence checked and valid"],
+        ["documents_match", "Documents match the company and representative"]
+    ].forEach(function(item) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = item[0];
+        input.checked = application[item[0]] === true;
+        label.append(input, document.createTextNode(item[1]));
+        checklist.appendChild(label);
+    });
+    const saveChecklistButton = document.createElement("button");
+    saveChecklistButton.type = "button";
+    saveChecklistButton.className = "button button-secondary";
+    saveChecklistButton.textContent = "Save verification checklist";
+    saveChecklistButton.addEventListener("click", async function() {
+        saveChecklistButton.disabled = true;
+        adminDashboardMessage.textContent = "";
+        try {
+            await adminDatabase.saveCompanyVerificationChecklist(application.id, {
+                    registrationChecked: checklist.querySelector('[name="registration_checked"]').checked,
+                    tinValid: checklist.querySelector('[name="tin_valid"]').checked,
+                    ruraLicenseValid: checklist.querySelector('[name="rura_license_valid"]').checked,
+                    documentsMatch: checklist.querySelector('[name="documents_match"]').checked
+            });
+            adminDashboardMessage.textContent = "Verification checklist saved. Approval still requires all four checks and a current licence.";
+            await loadAdminDashboard();
+        } catch (error) {
+            adminDashboardMessage.textContent = error.message || "Could not save the verification checklist.";
+        } finally {
+            saveChecklistButton.disabled = false;
+        }
+    });
+    checklist.appendChild(saveChecklistButton);
+    card.appendChild(checklist);
+
+    const ebmChecklist = document.createElement("fieldset");
+    ebmChecklist.className = "admin-verification-checklist";
+    appendText(ebmChecklist, "legend", "RRA / EBM verification checklist");
+    [
+        ["ebm_tin_checked", "TIN matches the registration documents"],
+        ["ebm_device_checked", "EBM device / VSDC information is valid"],
+        ["ebm_business_name_checked", "Business name matches RRA records"]
+    ].forEach(function(item) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = item[0];
+        input.checked = application[item[0]] === true;
+        label.append(input, document.createTextNode(item[1]));
+        ebmChecklist.appendChild(label);
+    });
+    const ebmReviewNote = document.createElement("textarea");
+    ebmReviewNote.className = "admin-review-input";
+    ebmReviewNote.rows = 2;
+    ebmReviewNote.maxLength = 2000;
+    ebmReviewNote.placeholder = "Add a note when rejecting EBM information.";
+    ebmReviewNote.value = application.ebm_review_notes || "";
+    ebmReviewNote.setAttribute("aria-label", "EBM review note for " + application.company_name);
+    ebmChecklist.appendChild(ebmReviewNote);
+    if (application.ebm_review_notes) {
+        appendText(card, "p", "Previous EBM review note: " + application.ebm_review_notes, "admin-review-note");
+    }
+
+    async function saveEbmReview(status) {
+        const note = ebmReviewNote.value.trim();
+        if (status === "rejected" && note.length < 3) {
+            ebmReviewNote.setCustomValidity("Add a short reason when rejecting EBM information.");
+            ebmReviewNote.reportValidity();
+            return;
+        }
+        ebmReviewNote.setCustomValidity("");
+        const button = ebmChecklist.querySelector('[data-ebm-status="' + status + '"]');
+        button.disabled = true;
+        adminDashboardMessage.textContent = "";
+        try {
+            await adminDatabase.reviewCompanyEbmInformation(application.id, {
+                tinChecked: ebmChecklist.querySelector('[name="ebm_tin_checked"]').checked,
+                deviceChecked: ebmChecklist.querySelector('[name="ebm_device_checked"]').checked,
+                businessNameChecked: ebmChecklist.querySelector('[name="ebm_business_name_checked"]').checked
+            }, status, note);
+            adminDashboardMessage.textContent = "RRA / EBM review saved as " + status + ".";
+            await loadAdminDashboard();
+        } catch (error) {
+            adminDashboardMessage.textContent = error.message || "Could not save the RRA / EBM review.";
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    [
+        ["pending", "Save EBM checklist"],
+        ["approved", "Approve EBM information"],
+        ["rejected", "Reject EBM information"]
+    ].forEach(function(item) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = item[0] === "approved" ? "button button-primary" : "button button-secondary";
+        button.textContent = item[1];
+        button.dataset.ebmStatus = item[0];
+        button.addEventListener("click", function() { saveEbmReview(item[0]); });
+        ebmChecklist.appendChild(button);
+    });
+    card.appendChild(ebmChecklist);
 
     if (application.review_notes) {
         appendText(card, "p", "Previous review note: " + application.review_notes, "admin-review-note");
@@ -180,16 +342,25 @@ function renderApplication(application) {
 
     const actions = document.createElement("div");
     actions.className = "admin-review-actions";
+    if (application.ebm_status !== "approved") {
+        appendText(card, "p", "Approve the RRA / EBM information before approving this company.", "field-hint");
+    }
     if (application.status === "pending") {
         addReviewAction(actions, application, "under_review", "Mark under review", notes);
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
         addReviewAction(actions, application, "rejected", "Reject application", notes);
     } else if (application.status === "under_review") {
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
         addReviewAction(actions, application, "rejected", "Reject / request changes", notes);
     } else if (application.status === "rejected") {
         addReviewAction(actions, application, "under_review", "Review resubmission", notes);
-        addReviewAction(actions, application, "approved", "Approve company", notes);
+        if (application.ebm_status === "approved") {
+            addReviewAction(actions, application, "approved", "Approve company", notes);
+        }
     } else if (application.status === "approved") {
         addReviewAction(actions, application, "suspended", "Suspend company", notes);
     } else if (application.status === "suspended") {
@@ -205,10 +376,29 @@ function renderCompanyAccount(company) {
     const heading = document.createElement("div");
     heading.className = "admin-application-heading";
     appendText(heading, "h3", company.name);
-    const badge = appendText(heading, "span", company.approval_status, "status-badge");
+    const licenseCurrent = company.wayline_verified === true &&
+        company.transport_license_valid_until &&
+        company.transport_license_valid_until >= new Date().toISOString().slice(0, 10);
+    const badge = appendText(
+        heading,
+        "span",
+        licenseCurrent ? "verified" : "unverified · schedules blocked",
+        "status-badge"
+    );
     badge.dataset.status = company.approval_status;
     card.appendChild(heading);
     appendText(card, "p", "Company account: " + company.id, "field-hint");
+    if (company.transport_license_valid_until) {
+        const daysRemaining = Math.floor(
+            (new Date(company.transport_license_valid_until + "T00:00:00Z").getTime() -
+                new Date().setUTCHours(0, 0, 0, 0)) / 86400000
+        );
+        if (daysRemaining <= 30) {
+            appendText(card, "p", daysRemaining < 0
+                ? "Licence expired. Ticket sales are blocked."
+                : "Licence expires in " + daysRemaining + " days.", "license-expiry-warning");
+        }
+    }
 
     const notes = document.createElement("textarea");
     notes.className = "admin-review-input";
@@ -266,19 +456,66 @@ function renderActivity(entry) {
     return row;
 }
 
+function renderCompanyReport(report) {
+    const card = document.createElement("article");
+    card.className = "admin-application-card";
+    const heading = document.createElement("div");
+    heading.className = "admin-application-heading";
+    appendText(heading, "h3", report.category + " report");
+    const badge = appendText(heading, "span", report.status, "status-badge");
+    badge.dataset.status = report.status;
+    card.appendChild(heading);
+    appendText(card, "p", report.details);
+    appendText(card, "p", "Company: " + report.company_id + " · Booking: " + report.booking_id, "field-hint");
+    appendText(card, "time", formatAdminDate(report.created_at));
+    const notes = document.createElement("textarea");
+    notes.className = "admin-review-input";
+    notes.rows = 2;
+    notes.maxLength = 2000;
+    notes.placeholder = "Optional private review note.";
+    notes.setAttribute("aria-label", "Private review note for " + report.id);
+    card.appendChild(notes);
+    const actions = document.createElement("div");
+    actions.className = "admin-review-actions";
+    ["reviewing", "resolved", "dismissed"].forEach(function(status) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = status === "resolved" ? "button button-primary" : "button button-secondary";
+        button.textContent = status === "reviewing" ? "Mark reviewing" : status === "resolved" ? "Resolve" : "Dismiss";
+        button.addEventListener("click", async function() {
+            button.disabled = true;
+            adminDashboardMessage.textContent = "";
+            try {
+                await adminDatabase.reviewCompanyReport(report.id, status, notes.value.trim());
+                await loadAdminDashboard();
+            } catch (error) {
+                adminDashboardMessage.textContent = error.message || "Could not update this report.";
+            } finally {
+                button.disabled = false;
+            }
+        });
+        actions.appendChild(button);
+    });
+    card.appendChild(actions);
+    return card;
+}
+
 async function loadAdminDashboard() {
     adminDashboardMessage.textContent = "Loading applications and activity...";
     const results = await Promise.all([
         adminDatabase.getAdminApplications(),
         adminDatabase.getAdminCompanies(),
-        adminDatabase.getAdminActivityLog()
+        adminDatabase.getAdminActivityLog(),
+        adminDatabase.getAdminCompanyReports()
     ]);
     const applicationList = document.getElementById("adminApplicationList");
     const companyList = document.getElementById("adminCompanyList");
     const activityList = document.getElementById("adminActivityList");
+    const reportList = document.getElementById("adminReportList");
     applicationList.replaceChildren();
     companyList.replaceChildren();
     activityList.replaceChildren();
+    reportList.replaceChildren();
     if (!results[0].length) {
         appendText(applicationList, "p", "There are no submitted applications to review.", "field-hint");
     } else {
@@ -298,6 +535,13 @@ async function loadAdminDashboard() {
     } else {
         results[2].forEach(function(entry) {
             activityList.appendChild(renderActivity(entry));
+        });
+    }
+    if (!results[3].length) {
+        appendText(reportList, "p", "There are no passenger company reports.", "field-hint");
+    } else {
+        results[3].forEach(function(report) {
+            reportList.appendChild(renderCompanyReport(report));
         });
     }
     adminDashboardMessage.textContent = "";

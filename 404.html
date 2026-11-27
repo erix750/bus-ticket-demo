@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#173f70">
+    <link rel="stylesheet" href="style.css?v=wayline-menu-theme-20261126">
     <title>Page not found | Wayline</title>
     <style>
         :root {
             color-scheme: light;
             font-family: Arial, Helvetica, sans-serif;
-            color: #20364e;
-            background: #f3f6fa;
+            color: var(--text);
+            background: var(--background);
         }
 
         body {
@@ -24,15 +25,15 @@
         main {
             width: min(100%, 520px);
             padding: clamp(24px, 6vw, 44px);
-            border: 1px solid #d7e1ed;
+            border: 1px solid var(--border);
             border-radius: 18px;
-            background: #fff;
+            background: var(--surface);
             box-shadow: 0 18px 50px rgba(23, 63, 112, 0.1);
         }
 
         .brand {
             margin: 0 0 28px;
-            color: #173f70;
+            color: var(--forest);
             font-size: 15px;
             font-weight: 800;
             letter-spacing: 0.12em;
@@ -40,7 +41,7 @@
 
         .eyebrow {
             margin: 0 0 8px;
-            color: #9a6a22;
+            color: var(--accent-gold);
             font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -55,7 +56,7 @@
 
         #message {
             margin: 14px 0 24px;
-            color: #5d7084;
+            color: var(--muted-text);
             line-height: 1.6;
         }
 
@@ -66,19 +67,39 @@
             justify-content: center;
             padding: 0 20px;
             border-radius: 8px;
-            color: #fff;
-            background: #173f70;
+            color: var(--background);
+            background: var(--forest);
             font-weight: 700;
             text-decoration: none;
         }
 
         .home-link:focus-visible {
-            outline: 3px solid #9dc9f0;
+            outline: 3px solid var(--focus-ring);
             outline-offset: 3px;
         }
     </style>
 </head>
-<body>
+<body class="not-found-page">
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/bus-ticket-demo/" aria-label="Wayline home">
+                <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
+                <span>WAYLINE</span>
+            </a>
+            <button class="header-button header-menu-toggle" id="siteMenuToggle" type="button" aria-label="Menu" title="Menu" aria-controls="siteMenuPanel" aria-expanded="false">
+                <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+            </button>
+            <div class="header-menu-panel" id="siteMenuPanel" hidden>
+                <nav class="header-page-nav" aria-label="Main navigation">
+                    <a class="nav-link" href="/bus-ticket-demo/#home" data-site-page="home">Home</a><a class="nav-link" href="/bus-ticket-demo/#booking" data-site-page="booking">Book a Ticket</a><a class="nav-link" href="/bus-ticket-demo/#company" data-site-page="company">Company Portal</a><a class="nav-link" href="/bus-ticket-demo/#about" data-site-page="about">About Us</a><a class="nav-link" href="/bus-ticket-demo/#contact" data-site-page="contact">Contact Us</a>
+                </nav>
+                <div class="site-controls" role="group" aria-label="Website settings">
+                    <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><span id="themeToggleIcon" aria-hidden="true"></span></button>
+                </div>
+                <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
+            </div>
+        </div>
+    </header>
     <main>
         <p class="brand">WAYLINE</p>
         <p class="eyebrow" id="status">404 · PAGE NOT FOUND</p>
@@ -86,20 +107,9 @@
         <p id="message">The address may be incorrect or the page may have moved. Return to Wayline to continue.</p>
         <a class="home-link" id="homeLink" href="/bus-ticket-demo/">Go to Wayline</a>
     </main>
-    <script>
-        const homeUrl = new URL("/bus-ticket-demo/", window.location.origin);
-        homeUrl.search = window.location.search;
-        homeUrl.hash = window.location.hash;
-        document.getElementById("homeLink").href = homeUrl.href;
-
-        const query = new URLSearchParams(window.location.search);
-        const fragment = new URLSearchParams(window.location.hash.slice(1));
-        if (query.get("error_code") === "otp_expired" || fragment.get("error_code") === "otp_expired") {
-            document.getElementById("status").textContent = "EMAIL LINK EXPIRED";
-            document.getElementById("title").textContent = "This email link has expired.";
-            document.getElementById("message").textContent =
-                "Email links can only be used once and may expire. Return to Wayline, request a fresh confirmation or password-reset email, and open the newest link.";
-        }
-    </script>
+    <script src="not-found.js"></script>
+    <script src="site-menu.js?v=wayline-menu-theme-20261126"></script>
+    <script src="pwa.js"></script>
+    <script src="footer.js"></script>
 </body>
 </html>

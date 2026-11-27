@@ -1,0 +1,111 @@
+(function(root) {
+    "use strict";
+
+    function parseDate(value) {
+        if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+        const parts = value.split("-").map(Number);
+        const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+        if (date.getUTCFullYear() !== parts[0] ||
+            date.getUTCMonth() !== parts[1] - 1 ||
+            date.getUTCDate() !== parts[2]) return null;
+        return date;
+    }
+
+    function toUtcDate(value) {
+        if (value instanceof Date) {
+            return new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+        }
+        return parseDate(value);
+    }
+
+    function validateCompanyApplication(application, today) {
+        const currentDate = toUtcDate(today || new Date());
+        const issueDate = parseDate(application.licenseIssueDate);
+        const expiryDate = parseDate(application.licenseExpiryDate);
+        const required = [
+            application.companyName,
+            application.representativeName,
+            application.officialEmail,
+            application.contactPhone,
+            application.companyAddress,
+            application.companyLocation,
+            application.rdbRegistrationNumber,
+            application.tin,
+            application.transportLicenseNumber,
+            application.transportLicenseType,
+            application.allowedRoutesAreas
+        ];
+
+        if (required.some(function(value) { return !String(value || "").trim(); })) {
+            return "Complete every required company and licence field.";
+        }
+        if (!/^\d{9}$/.test(String(application.tin).trim())) {
+            return "Enter the 9-digit Rwanda TIN.";
+        }
+        if (!issueDate || !expiryDate) {
+            return "Enter valid licence issue and expiry dates.";
+        }
+        if (!currentDate || issueDate > currentDate) {
+            return "The licence issue date cannot be in the future.";
+        }
+        if (expiryDate <= currentDate) {
+            return "The transport licence must be valid beyond today.";
+        }
+        if (expiryDate < issueDate) {
+            return "The licence expiry date cannot be before its issue date.";
+        }
+        return "";
+    }
+
+    function validateCompanyEbmInformation(application) {
+        const required = [
+            application.ticketTaxCategory,
+            application.ebmDeviceIdentifier,
+            application.rraRegisteredBusinessName
+        ];
+        if (!/^\d{9}$/.test(String(application.tin || "").trim())) {
+            return "Enter the 9-digit Rwanda TIN from the registration step.";
+        }
+        if (application.vatRegistered !== true && application.vatRegistered !== false) {
+            return "Choose whether your company is VAT registered.";
+        }
+        if (required.some(function(value) { return !String(value || "").trim(); })) {
+            return "Complete every required RRA/EBM information field.";
+        }
+        if (!application.ownerConfirmation) {
+            return "Provide confirmation that this is your company's own RRA information and that you are authorized to use it.";
+        }
+        if (!application.certificatePath && !application.certificate) {
+            return "Upload your company's RRA/EBM registration certificate.";
+        }
+        if (application.certificate) {
+            const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+            if (!allowedTypes.includes(application.certificate.type) ||
+                application.certificate.size > 10 * 1024 * 1024) {
+                return "The RRA/EBM certificate must be PDF, JPG, PNG, or WebP up to 10 MB.";
+            }
+        }
+        if (String(application.credentials || "").length > 10000) {
+            return "EBM credentials must be 10,000 characters or fewer.";
+        }
+        return "";
+    }
+
+    function isLicenceExpiring(expiryValue, todayValue) {
+        const expiry = parseDate(expiryValue);
+        const today = toUtcDate(todayValue || new Date());
+        if (!expiry || !today) return false;
+        const days = Math.floor((expiry.getTime() - today.getTime()) / 86400000);
+        return days <= 30;
+    }
+
+    const api = {
+        parseDate: parseDate,
+        validateCompanyApplication: validateCompanyApplication,
+        validateCompanyEbmInformation: validateCompanyEbmInformation,
+        isLicenceExpiring: isLicenceExpiring
+    };
+
+    if (typeof module !== "undefined" && module.exports) module.exports = api;
+    else root.WaylineCompanyApplicationUtils = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);

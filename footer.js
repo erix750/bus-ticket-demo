@@ -6,11 +6,11 @@ document.querySelectorAll("[data-current-year]").forEach(function(element) {
 
 const siteTranslations = {
     "Your journey, your way.": { rw: "Urugendo rwawe, uko ubishaka.", fr: "Votre voyage, à votre façon." },
-    "Home": { rw: "Ahabanza", fr: "Accueil" },
-    "Book a Ticket": { rw: "Andika itike", fr: "Réserver un billet" },
-    "Company Portal": { rw: "Urubuga rw’amakompanyi", fr: "Espace des compagnies" },
-    "About Us": { rw: "Ibyerekeye", fr: "À propos" },
-    "Contact Us": { rw: "Twandikire", fr: "Contactez-nous" },
+    "Home": { rw: "Ahabanza", fr: "Accueil", sw: "Nyumbani" },
+    "Book a Ticket": { rw: "Andika itike", fr: "Réserver un billet", sw: "Weka nafasi ya tiketi" },
+    "Company Portal": { rw: "Urubuga rw’amakompanyi", fr: "Espace des compagnies", sw: "Tovuti ya Kampuni" },
+    "About Us": { rw: "Ibyerekeye", fr: "À propos", sw: "Kuhusu Sisi" },
+    "Contact Us": { rw: "Twandikire", fr: "Contactez-nous", sw: "Wasiliana Nasi" },
     "Register Your Company": { rw: "Iyandikishe nka kompanyi", fr: "Inscrire votre compagnie" },
     "Register your transport company for verification, or sign in if your company has already been approved.": { rw: "Iyandikishe nka kompanyi y’ubwikorezi kugira ngo igenzurwe, cyangwa winjire niba yamaze kwemezwa.", fr: "Inscrivez votre compagnie de transport pour vérification, ou connectez-vous si elle a déjà été approuvée." },
     "Only approved companies can publish bus schedules or access company bookings.": { rw: "Amakompanyi yemejwe gusa ni yo ashobora gushyiraho ingengabihe za bisi no kubona booking zayo.", fr: "Seules les compagnies approuvées peuvent publier des horaires ou accéder à leurs réservations." },
@@ -31,15 +31,15 @@ const siteTranslations = {
     "Service": { rw: "Serivisi", fr: "Service" },
     "Service area: Rwanda.": { rw: "Aho dukorera: u Rwanda.", fr: "Zone desservie : Rwanda." },
     "Made in Rwanda": { rw: "Byakorewe mu Rwanda", fr: "Fabriqué au Rwanda" },
-    "Language": { rw: "Ururimi", fr: "Langue" },
-    "Turn on dark mode": { rw: "Fungura uburyo bwijimye", fr: "Activer le mode sombre" },
-    "Turn off dark mode": { rw: "Zimya uburyo bwijimye", fr: "Désactiver le mode sombre" },
-    "Switch to dark mode": { rw: "Fungura uburyo bwijimye", fr: "Activer le mode sombre" },
-    "Switch to light mode": { rw: "Fungura uburyo busanzwe", fr: "Activer le mode clair" },
-    "Menu": { rw: "Ibikubiyemo", fr: "Menu" },
-    "Light mode": { rw: "Uburyo busanzwe", fr: "Mode clair" },
-    "Dark mode": { rw: "Uburyo bwijimye", fr: "Mode sombre" },
-    "Install app": { rw: "Shyira porogaramu muri telefoni", fr: "Installer l’application" },
+    "Language": { rw: "Ururimi", fr: "Langue", sw: "Lugha" },
+    "Turn on dark mode": { rw: "Fungura uburyo bwijimye", fr: "Activer le mode sombre", sw: "Washa hali ya giza" },
+    "Turn off dark mode": { rw: "Zimya uburyo bwijimye", fr: "Désactiver le mode sombre", sw: "Zima hali ya giza" },
+    "Switch to dark mode": { rw: "Fungura uburyo bwijimye", fr: "Activer le mode sombre", sw: "Washa hali ya giza" },
+    "Switch to light mode": { rw: "Fungura uburyo busanzwe", fr: "Activer le mode clair", sw: "Washa hali ya mwanga" },
+    "Menu": { rw: "Ibikubiyemo", fr: "Menu", sw: "Menyu" },
+    "Light mode": { rw: "Uburyo busanzwe", fr: "Mode clair", sw: "Hali ya mwanga" },
+    "Dark mode": { rw: "Uburyo bwijimye", fr: "Mode sombre", sw: "Hali ya giza" },
+    "Install app": { rw: "Shyira porogaramu muri telefoni", fr: "Installer l’application", sw: "Sakinisha programu" },
     "All rights reserved.": { rw: "Uburenganzira bwose burarinzwe.", fr: "Tous droits réservés." },
     "Created by": { rw: "Byakozwe na", fr: "Créé par" },
     "Skip": { rw: "Simbuka", fr: "Passer" },
@@ -160,10 +160,13 @@ const siteTranslations = {
     "City of Kigali (RWF 59.28 per km)": { rw: "Umujyi wa Kigali (RWF 59.28 kuri km)", fr: "Ville de Kigali (59,28 RWF par km)" },
     "Intercity / provincial (RWF 41.58 per km)": { rw: "Hagati y’imijyi / intara (RWF 41.58 kuri km)", fr: "Interurbain / province (41,58 RWF par km)" },
     "Complete every schedule field with a value.": { rw: "Uzuza imyanya yose y’ingengabihe.", fr: "Veuillez remplir tous les champs de l’horaire." },
-    "Choose a language": { rw: "Hitamo ururimi", fr: "Choisir une langue" },
-    "English": { rw: "Icyongereza", fr: "Anglais" },
-    "Kinyarwanda": { rw: "Ikinyarwanda", fr: "Kinyarwanda" },
-    "French": { rw: "Igifaransa", fr: "Français" },
+    "Choose a language": { rw: "Hitamo ururimi", fr: "Choisir une langue", sw: "Chagua lugha" },
+    "English": { rw: "Icyongereza", fr: "Anglais", sw: "Kiingereza" },
+    "Kinyarwanda": { rw: "Ikinyarwanda", fr: "Kinyarwanda", sw: "Kinyarwanda" },
+    "French": { rw: "Igifaransa", fr: "Français", sw: "Kifaransa" },
+    "Swahili": { rw: "Igiswahili", fr: "Swahili", sw: "Kiswahili" },
+    "Website settings": { rw: "Igenamiterere ry’urubuga", fr: "Paramètres du site", sw: "Mipangilio ya tovuti" },
+    "Main navigation": { rw: "Ibikubiyemo by’ingenzi", fr: "Navigation principale", sw: "Urambazaji mkuu" },
     "What can we help you find?": { rw: "Ni iki twagufasha kubona?", fr: "Que recherchez-vous ?" },
     "Type a question or topic": { rw: "Andika ikibazo cyangwa ingingo", fr: "Saisissez une question ou un sujet" },
     "Frequently asked questions": { rw: "Ibibazo bikunze kubazwa", fr: "Questions fréquentes" },
@@ -253,10 +256,11 @@ const siteTranslations = {
     "Wayline. All rights reserved.": { rw: "Wayline. Uburenganzira bwose burarinzwe.", fr: "Wayline. Tous droits réservés." }
 };
 
-const languageNames = { en: "English", rw: "Kinyarwanda", fr: "French" };
-const translationReverse = { en: {}, rw: {}, fr: {} };
+const languageNames = { en: "English", rw: "Kinyarwanda", fr: "French", sw: "Swahili" };
+const translationReverse = { en: {}, rw: {}, fr: {}, sw: {} };
 Object.keys(siteTranslations).forEach(function(source) {
-    ["rw", "fr"].forEach(function(language) {
+    ["rw", "fr", "sw"].forEach(function(language) {
+        if (!siteTranslations[source][language]) return;
         translationReverse[language][siteTranslations[source][language]] = source;
     });
 });
@@ -315,14 +319,15 @@ function translateTree(root) {
 function installLanguageSelector() {
     const headerControls = document.querySelector(".site-controls");
     const footerGroup = document.querySelector(".footer-link-group:last-child");
+    const menuPanel = document.getElementById("siteMenuPanel");
     let controls = headerControls || (footerGroup && footerGroup.querySelector(".footer-controls"));
-    if (!controls && !footerGroup) return;
+    if (!controls && !footerGroup && !menuPanel) return;
     if (!controls) {
         controls = document.createElement("div");
         controls.className = "footer-controls";
         controls.setAttribute("role", "group");
         controls.setAttribute("aria-label", "Website settings");
-        footerGroup.appendChild(controls);
+        (menuPanel || footerGroup).appendChild(controls);
     }
     const label = document.createElement("label");
     label.className = "footer-language-control";
@@ -346,16 +351,16 @@ function installLanguageSelector() {
         } catch (error) {
             console.error("Could not save the Wayline language preference.", error);
         }
-        translateTree(document);
+        translateTree(document.querySelector(".policy-page") ? menuPanel : document);
         select.value = currentLanguage;
     });
     label.appendChild(select);
     controls.prepend(label);
 }
 
+installLanguageSelector();
+document.documentElement.lang = currentLanguage === "rw" ? "rw" : currentLanguage;
 if (!document.querySelector(".policy-page")) {
-    installLanguageSelector();
-    document.documentElement.lang = currentLanguage === "rw" ? "rw" : currentLanguage;
     translateTree(document);
     new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -363,6 +368,8 @@ if (!document.querySelector(".policy-page")) {
             mutation.addedNodes?.forEach(translateTree);
         });
     }).observe(document.body, { childList: true, characterData: true, subtree: true });
+} else {
+    translateTree(document.getElementById("siteMenuPanel"));
 }
 
 const helpSearch = document.getElementById("footerHelpSearch");

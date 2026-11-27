@@ -28,7 +28,18 @@
                 <img class="brand-mark" src="icons/wayline-192.png" alt="" aria-hidden="true">
                 <span>WAYLINE</span>
             </a>
-            <a class="header-button" href="index.html#searchPanel">Search buses</a>
+            <button class="header-button header-menu-toggle" id="siteMenuToggle" type="button" aria-label="Menu" title="Menu" aria-controls="siteMenuPanel" aria-expanded="false">
+                <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+            </button>
+            <div class="header-menu-panel" id="siteMenuPanel" hidden>
+                <nav class="header-page-nav" aria-label="Main navigation">
+                    <a class="nav-link" href="index.html#home" data-site-page="home">Home</a><a class="nav-link" href="index.html#booking" data-site-page="booking">Book a Ticket</a><a class="nav-link" href="index.html#company" data-site-page="company">Company Portal</a><a class="nav-link" href="index.html#about" data-site-page="about">About Us</a><a class="nav-link" href="index.html#contact" data-site-page="contact">Contact Us</a>
+                </nav>
+                <div class="site-controls" role="group" aria-label="Website settings">
+                    <button class="header-button icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><span id="themeToggleIcon" aria-hidden="true"></span></button>
+                </div>
+                <button class="header-button header-install-button" id="installApp" type="button" aria-label="Install app" title="Install app" hidden>Install app</button>
+            </div>
         </div>
     </header>
 
@@ -96,6 +107,8 @@
             </div>
         </div>
     </footer>
+    <script src="site-menu.js?v=wayline-menu-theme-20261126"></script>
+    <script src="pwa.js"></script>
     <script src="footer.js"></script>
 </body>
 </html>

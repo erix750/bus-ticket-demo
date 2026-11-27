@@ -26,6 +26,7 @@ test("local prototype books a seat, reduces availability, and is idempotent by U
         p_session_id: "AT-local-session",
         p_bus_id: trip.id,
         p_passenger_name: "Test Passenger",
+        p_passenger_names: ["Test Passenger", "Second Passenger"],
         p_passenger_phone: "+250781234567",
         p_seat_count: 2,
         p_payment_method: "MTN Mobile Money"
@@ -38,6 +39,7 @@ test("local prototype books a seat, reduces availability, and is idempotent by U
     assert.equal(first.error, null);
     assert.equal(first.data.id, repeated.data.id);
     assert.equal(first.data.payment_status, "demo-unpaid");
+    assert.deepEqual(first.data.passenger_names, ["Test Passenger", "Second Passenger"]);
     assert.equal(refreshedTrip.availableSeats, originalSeats - 2);
     assert.equal(demo.bookings().length, 1);
 });
@@ -49,6 +51,7 @@ test("local prototype rejects overselling and invalid caller data", async functi
         p_session_id: "AT-invalid-session",
         p_bus_id: trip.id,
         p_passenger_name: "Test Passenger",
+        p_passenger_names: ["Test Passenger"],
         p_passenger_phone: "+250781234567",
         p_seat_count: trip.availableSeats + 1,
         p_payment_method: "Airtel Money"
@@ -67,6 +70,7 @@ test("local prototype enforces the three-booking and twenty-seat hold limits", a
             p_session_id: "AT-limit-" + index,
             p_bus_id: trip.id,
             p_passenger_name: "Test Passenger",
+            p_passenger_names: ["Test Passenger"],
             p_passenger_phone: phone,
             p_seat_count: 1,
             p_payment_method: "MTN Mobile Money"
@@ -78,6 +82,7 @@ test("local prototype enforces the three-booking and twenty-seat hold limits", a
         p_session_id: "AT-limit-fourth",
         p_bus_id: trip.id,
         p_passenger_name: "Test Passenger",
+        p_passenger_names: ["Test Passenger"],
         p_passenger_phone: phone,
         p_seat_count: 1,
         p_payment_method: "MTN Mobile Money"

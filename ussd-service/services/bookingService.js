@@ -11,6 +11,7 @@ function createBookingService(supabase) {
                 p_session_id: input.sessionId,
                 p_bus_id: input.trip.id,
                 p_passenger_name: input.passengerName,
+                p_passenger_names: input.passengerNames,
                 p_passenger_phone: input.phone,
                 p_seat_count: input.seats,
                 p_payment_method: input.paymentMethod
@@ -21,6 +22,7 @@ function createBookingService(supabase) {
                 p_origin_city: input.origin,
                 p_destination_city: input.destination,
                 p_passenger_name: input.passengerName,
+                p_passenger_names: input.passengerNames,
                 p_passenger_phone: input.phone,
                 p_seat_count: input.seats,
                 p_payment_method: input.paymentMethod

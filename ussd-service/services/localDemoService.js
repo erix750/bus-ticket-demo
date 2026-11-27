@@ -171,11 +171,16 @@ function createLocalDemoService(fareService) {
                 return item.id === parameters.p_bus_id;
             });
             const phone = String(parameters.p_passenger_phone || "").trim();
-            const nameIsValid = typeof parameters.p_passenger_name === "string" &&
-                parameters.p_passenger_name.trim().length >= 2 &&
-                parameters.p_passenger_name.trim().length <= 80;
+            const passengerNames = parameters.p_passenger_names;
+            const namesAreValid = Array.isArray(passengerNames) &&
+                passengerNames.length === parameters.p_seat_count &&
+                passengerNames.every(function(name) {
+                    return typeof name === "string" &&
+                        name.trim().length >= 1 &&
+                        name.trim().length <= 80;
+                });
             if (!bus || !bus.is_active || bus.available_seats < parameters.p_seat_count ||
-                !nameIsValid || !/^\+2507[0-9]{8}$/.test(phone) ||
+                !namesAreValid || !/^\+2507[0-9]{8}$/.test(phone) ||
                 !["MTN Mobile Money", "Airtel Money"].includes(parameters.p_payment_method)) {
                 return { data: null, error: { message: "Trip or requested seats are no longer available." } };
             }
@@ -231,7 +236,8 @@ function createLocalDemoService(fareService) {
             const booking = {
                 id: randomUUID(),
                 bus_id: bus.id,
-                passenger_name: parameters.p_passenger_name.trim(),
+                passenger_name: passengerNames[0].trim(),
+                passenger_names: passengerNames.map(function(name) { return name.trim(); }),
                 passenger_phone: phone,
                 seat_count: parameters.p_seat_count,
                 base_fare: bus.fare * parameters.p_seat_count,
